@@ -1,0 +1,13 @@
+# Ignore common editor and OS files
+.DS_Store
+Thumbs.db
+*.log
+
+# Node modules if any accidentally added
+node_modules/
+
+# Netlify build output
+.netlify/
+
+# VS Code settings
+.vscode/

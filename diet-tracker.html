@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Diet Tracker">
+<meta name="theme-color" content="#10B981">
+<title>Diet &amp; Meal Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ── */
+:root{
+  --bg:#0B0F1A;--sf:#111827;--s2:#1A1F2E;--b1:#1E293B;--b2:#2E3650;
+  --t1:#E2E8F0;--t2:#94A3B8;--t3:#64748B;
+  --ac:#10B981;--ac2:#059669;
+  --pro:#8B5CF6;--carb:#F59E0B;--fat:#EF4444;--water:#3B82F6;
+  --hdr:#0D1117;--shadow:rgba(0,0,0,.55);--overlay:rgba(0,0,0,.65);
+  --radius:10px;--tr:.2s;
+  --font:'DM Sans','Helvetica Neue',sans-serif;
+  --disp:'Barlow Condensed',sans-serif;
+}
+body.light{
+  --bg:#F0FDF9;--sf:#FFFFFF;--s2:#F8FAFC;--b1:#E2E8F0;--b2:#CBD5E1;
+  --t1:#0F172A;--t2:#475569;--t3:#94A3B8;
+  --ac:#059669;--ac2:#047857;
+  --hdr:#FFFFFF;--shadow:rgba(0,0,0,.1);--overlay:rgba(0,0,0,.4);
+}
+
+/* ── RESET ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--t1);font-family:var(--font);font-size:14px;min-height:100vh;-webkit-font-smoothing:antialiased;transition:background var(--tr),color var(--tr)}
+button{cursor:pointer;font-family:var(--font);touch-action:manipulation;border:none;background:none;transition:opacity .15s}
+button:active{opacity:.7}
+a{color:var(--ac);text-decoration:none}
+input,select,textarea{font-family:var(--font);font-size:16px;color:var(--t1);background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:11px 14px;width:100%;outline:none;-webkit-appearance:none;box-sizing:border-box;transition:border-color var(--tr),background var(--tr)}
+input:focus,select:focus,textarea:focus{border-color:var(--ac)}
+input::placeholder,textarea::placeholder{color:var(--t3)}
+select option{background:var(--s2);color:var(--t1)}
+input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.4);cursor:pointer}
+body.light input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6)}
+textarea{resize:vertical}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes slideup{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── SETUP ── */
+#setup{display:none;min-height:100vh;align-items:center;justify-content:center;padding:20px}
+#setup.active{display:flex}
+.setup-card{background:var(--sf);border:1px solid var(--b2);border-radius:16px;padding:28px 24px;width:100%;max-width:480px;box-shadow:0 20px 60px var(--shadow)}
+.setup-logo{font-family:var(--disp);font-size:28px;font-weight:900;color:var(--ac);letter-spacing:.05em;margin-bottom:4px}
+.setup-sub{color:var(--t3);font-size:13px;margin-bottom:24px;line-height:1.5}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.field-err{color:#EF4444;font-size:11px;margin-top:4px;display:none}
+.radio-group{display:flex;gap:8px;flex-wrap:wrap}
+.radio-btn{flex:1;min-width:0;padding:10px 8px;border:1px solid var(--b2);border-radius:8px;background:var(--s2);color:var(--t2);font-size:13px;font-weight:600;text-align:center;cursor:pointer;transition:all var(--tr)}
+.radio-btn.sel{border-color:var(--ac);background:rgba(16,185,129,.12);color:var(--ac)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.sql-box{background:var(--bg);border:1px solid var(--b2);border-radius:8px;padding:12px;font-family:monospace;font-size:11px;color:#34D399;white-space:pre;overflow-x:auto;margin:10px 0 14px}
+.setup-step{color:var(--t3);font-size:12px;margin-bottom:6px}
+.setup-step strong{color:var(--t2)}
+details summary{color:var(--t2);font-size:13px;cursor:pointer;padding:8px 0;list-style:none}
+details summary::before{content:"▶ "}
+details[open] summary::before{content:"▼ "}
+
+/* ── HEADER ── */
+#header{background:var(--hdr);border-bottom:1px solid var(--b1);padding:12px 16px;position:sticky;top:0;z-index:50;transition:background var(--tr)}
+body.light #header{box-shadow:0 1px 8px rgba(0,0,0,.08)}
+.hinner{max-width:720px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+.app-logo{font-family:var(--disp);font-size:20px;font-weight:900;color:var(--ac);letter-spacing:.05em;line-height:1}
+.hbtns{display:flex;gap:8px;align-items:center}
+.theme-btn{background:var(--s2);border:1px solid var(--b2);border-radius:20px;padding:4px 8px;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--t2);cursor:pointer}
+
+/* ── BOTTOM NAV ── */
+#nav{position:fixed;bottom:0;left:0;right:0;background:var(--hdr);border-top:1px solid var(--b1);z-index:50;padding-bottom:env(safe-area-inset-bottom)}
+body.light #nav{box-shadow:0 -1px 8px rgba(0,0,0,.08)}
+.nav-inner{max-width:720px;margin:0 auto;display:flex}
+.nav-btn{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--t3);font-size:10px;font-weight:600;letter-spacing:.03em;cursor:pointer;transition:color var(--tr)}
+.nav-btn.active{color:var(--ac)}
+.nav-icon{font-size:20px;line-height:1}
+
+/* ── MAIN ── */
+#app{display:none}
+#app.active{display:block}
+#view{max-width:720px;margin:0 auto;padding:14px 14px 90px}
+
+/* ── SECTION HEADER ── */
+.view-title{font-family:var(--disp);font-size:22px;font-weight:900;color:var(--t1);letter-spacing:.04em;margin-bottom:2px}
+.view-sub{font-size:12px;color:var(--t3);margin-bottom:16px}
+
+/* ── MACRO RING ── */
+.macro-ring-wrap{display:flex;align-items:center;gap:20px;background:var(--sf);border:1px solid var(--b1);border-radius:var(--radius);padding:16px;margin-bottom:12px;animation:slideup .3s ease}
+body.light .macro-ring-wrap{box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.ring-svg{flex-shrink:0}
+.ring-center{font-family:var(--disp);text-anchor:middle;dominant-baseline:middle}
+.macro-legends{flex:1;min-width:0}
+.macro-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.macro-label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--t2)}
+.macro-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.macro-val{font-size:12px;color:var(--t1);font-weight:700}
+.macro-bar{height:4px;background:var(--b2);border-radius:2px;margin-top:2px;overflow:hidden}
+.macro-bar-fill{height:100%;border-radius:2px;transition:width .5s ease}
+.cal-summary{text-align:center;margin-top:4px}
+.cal-num{font-family:var(--disp);font-size:32px;font-weight:900;color:var(--t1);line-height:1}
+.cal-label{font-size:11px;color:var(--t3);margin-top:2px}
+.cal-remain{font-size:12px;color:var(--ac);font-weight:600;margin-top:2px}
+
+/* ── WATER ── */
+.water-card{background:var(--sf);border:1px solid var(--b1);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;animation:slideup .3s ease}
+body.light .water-card{box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.water-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.water-title{font-size:13px;font-weight:700;color:var(--t1)}
+.water-count{font-size:12px;color:var(--water);font-weight:700}
+.water-cups{display:flex;gap:6px;flex-wrap:wrap}
+.cup-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--b2);background:var(--s2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.cup-btn.filled{background:rgba(59,130,246,.15);border-color:var(--water)}
+
+/* ── MEAL CARDS ── */
+.meal-section-title{font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;margin:14px 0 8px;padding-left:2px}
+.meal-card{background:var(--sf);border:1px solid var(--b1);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;animation:slideup .3s ease;transition:border-color var(--tr)}
+body.light .meal-card{box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.meal-card.done{border-left:3px solid var(--ac);opacity:.75}
+.meal-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
+.meal-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--b2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;cursor:pointer}
+.meal-check.checked{background:var(--ac);border-color:var(--ac);color:#fff}
+.meal-info{flex:1;min-width:0}
+.meal-name{font-size:14px;font-weight:600;color:var(--t1);margin-bottom:2px}
+.meal-macros{display:flex;gap:10px;font-size:11px;color:var(--t3)}
+.meal-macro-item{display:flex;align-items:center;gap:3px}
+.meal-cal{font-size:13px;font-weight:700;color:var(--t1);flex-shrink:0}
+.meal-expand-btn{color:var(--t3);font-size:16px;flex-shrink:0;padding:4px}
+.meal-detail{padding:0 14px 14px;display:none;border-top:1px solid var(--b1)}
+.meal-detail.open{display:block}
+.detail-tabs{display:flex;gap:8px;margin:12px 0 10px}
+.dtab{padding:5px 12px;border-radius:20px;border:1px solid var(--b2);background:var(--s2);color:var(--t2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.dtab.active{background:var(--ac);border-color:var(--ac);color:#fff}
+.detail-panel{display:none}
+.detail-panel.active{display:block}
+.ingredient-list{list-style:none}
+.ingredient-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--b1);font-size:13px}
+.ingredient-item:last-child{border-bottom:none}
+.ing-name{color:var(--t1)}
+.ing-amount{color:var(--ac);font-weight:600;flex-shrink:0}
+.recipe-steps{list-style:none;counter-reset:steps}
+.recipe-step{counter-increment:steps;display:flex;gap:10px;margin-bottom:10px;font-size:13px;color:var(--t2);line-height:1.5}
+.recipe-step::before{content:counter(steps);background:var(--ac);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.meal-actions{display:flex;gap:8px;margin-top:12px}
+.meal-action-btn{flex:1;padding:8px;border-radius:8px;border:1px solid var(--b2);background:var(--s2);color:var(--t2);font-size:12px;font-weight:600;cursor:pointer;text-align:center}
+.meal-action-btn.fav{color:var(--carb);border-color:var(--carb)}
+.meal-action-btn.fav.active{background:rgba(245,158,11,.12)}
+.prep-badge{display:inline-flex;align-items:center;gap:4px;background:var(--s2);border:1px solid var(--b2);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--t3);margin-bottom:10px}
+
+/* ── WEEK VIEW ── */
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px}
+.week-day-card{background:var(--sf);border:1px solid var(--b1);border-radius:8px;padding:8px 4px;text-align:center;cursor:pointer;transition:all .15s}
+.week-day-card:hover{border-color:var(--ac)}
+.week-day-card.today{border-color:var(--ac);background:rgba(16,185,129,.08)}
+.week-day-card.complete{border-color:var(--ac)}
+.wday-name{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em}
+.wday-num{font-size:16px;font-weight:700;color:var(--t1);margin:2px 0}
+.wday-pct{font-size:10px;font-weight:700}
+.wday-dot{width:6px;height:6px;border-radius:50%;margin:4px auto 0;background:var(--b2)}
+.week-meal-table{background:var(--sf);border:1px solid var(--b1);border-radius:var(--radius);overflow:hidden}
+.wmt-header{display:grid;grid-template-columns:80px repeat(5,1fr);background:var(--s2);border-bottom:1px solid var(--b1)}
+.wmt-cell{padding:8px 6px;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;text-align:center}
+.wmt-row{display:grid;grid-template-columns:80px repeat(5,1fr);border-bottom:1px solid var(--b1)}
+.wmt-row:last-child{border-bottom:none}
+.wmt-label{padding:8px 6px;font-size:11px;font-weight:700;color:var(--t2);display:flex;align-items:center}
+.wmt-item{padding:6px 4px;text-align:center;font-size:10px;color:var(--t3);display:flex;align-items:center;justify-content:center}
+.wmt-check{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--b2);display:inline-flex;align-items:center;justify-content:center;font-size:9px}
+.wmt-check.ok{background:var(--ac);border-color:var(--ac);color:#fff}
+
+/* ── MONTH VIEW ── */
+.month-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.month-nav-btn{background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:6px 12px;color:var(--t2);font-size:14px;cursor:pointer}
+.cal-grid-header{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
+.cal-dow{text-align:center;font-size:10px;font-weight:700;color:var(--t3);padding:4px 0;text-transform:uppercase}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-day{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;position:relative;transition:all .15s}
+.cal-day.other-month{opacity:.3}
+.cal-day.today-cal{border-color:var(--ac);font-weight:700}
+.cal-day-num{font-size:13px;font-weight:600;color:var(--t1)}
+.cal-day-dot{width:5px;height:5px;border-radius:50%;margin-top:2px}
+.cal-day.done-full{background:rgba(16,185,129,.15)}
+.cal-day.done-partial{background:rgba(245,158,11,.15)}
+.streak-banner{background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.05));border:1px solid rgba(16,185,129,.3);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
+.streak-flame{font-size:32px}
+.streak-info{flex:1}
+.streak-num{font-family:var(--disp);font-size:28px;font-weight:900;color:var(--ac);line-height:1}
+.streak-label{font-size:12px;color:var(--t3);margin-top:2px}
+.month-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}
+.mstat{background:var(--sf);border:1px solid var(--b1);border-radius:8px;padding:12px 10px;text-align:center}
+.mstat-val{font-family:var(--disp);font-size:22px;font-weight:800;color:var(--ac)}
+.mstat-lbl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+
+/* ── PROGRESS VIEW ── */
+.weight-chart-wrap{background:var(--sf);border:1px solid var(--b1);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.chart-title{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:12px}
+.weight-svg{width:100%;height:140px}
+.wlog-entry{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--b1)}
+.wlog-entry:last-child{border-bottom:none}
+.wlog-date{font-size:13px;color:var(--t2)}
+.wlog-weight{font-size:14px;font-weight:700;color:var(--t1)}
+.wlog-delta{font-size:12px}
+.wlog-delta.pos{color:#EF4444}
+.wlog-delta.neg{color:var(--ac)}
+.stat-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat-card{background:var(--sf);border:1px solid var(--b1);border-radius:var(--radius);padding:14px;text-align:center}
+.stat-card-val{font-family:var(--disp);font-size:28px;font-weight:900;color:var(--t1);line-height:1}
+.stat-card-unit{font-size:12px;color:var(--t3);margin-left:2px}
+.stat-card-lbl{font-size:11px;color:var(--t3);margin-top:4px;text-transform:uppercase;letter-spacing:.08em}
+.stat-card-sub{font-size:11px;color:var(--ac);margin-top:2px}
+.add-weight-btn{width:100%;padding:12px;border-radius:var(--radius);border:1.5px dashed var(--b2);background:none;color:var(--t2);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:14px;transition:all .15s}
+.add-weight-btn:hover{border-color:var(--ac);color:var(--ac)}
+
+/* ── GROCERY ── */
+.grocery-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.grocery-clear-btn{font-size:12px;color:var(--t3);background:none;border:none;cursor:pointer;padding:4px}
+.grocery-cat{margin-bottom:16px}
+.grocery-cat-title{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.grocery-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--sf);border:1px solid var(--b1);border-radius:8px;margin-bottom:5px;cursor:pointer;transition:opacity .15s}
+body.light .grocery-item{box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.grocery-item.checked{opacity:.45}
+.grocery-item.checked .gi-name{text-decoration:line-through}
+.gi-check{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--b2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;transition:all .15s}
+.gi-check.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.gi-name{flex:1;font-size:13px;color:var(--t1)}
+.gi-amount{font-size:12px;color:var(--t3);flex-shrink:0}
+
+/* ── SETTINGS VIEW ── */
+.settings-section{margin-bottom:20px}
+.settings-section-title{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.settings-row{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--sf);border:1px solid var(--b1);border-radius:8px;margin-bottom:6px}
+.settings-label{font-size:14px;color:var(--t1);font-weight:500}
+.settings-val{font-size:13px;color:var(--t3)}
+.settings-edit-btn{font-size:12px;color:var(--ac);font-weight:600;background:none;border:none;cursor:pointer;padding:4px 8px}
+
+/* ── MODALS ── */
+.overlay{position:fixed;inset:0;background:var(--overlay);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.sheet{background:var(--sf);border-radius:16px 16px 0 0;width:100%;max-width:620px;max-height:85vh;overflow-y:auto;padding:20px 18px 40px;box-shadow:0 -20px 60px var(--shadow)}
+body.light .sheet{box-shadow:0 -8px 40px rgba(0,0,0,.12)}
+.sheet-handle{width:36px;height:4px;background:var(--b2);border-radius:2px;margin:0 auto 16px}
+.sheet-title{font-family:var(--disp);font-size:20px;font-weight:900;color:var(--t1);margin-bottom:16px}
+.sheet-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.sheet-close{color:var(--t3);font-size:22px;padding:4px;background:none;border:none;cursor:pointer}
+.swap-option{display:flex;align-items:center;gap:12px;padding:12px;background:var(--s2);border:1px solid var(--b2);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.swap-option:hover{border-color:var(--ac)}
+.swap-option-name{flex:1;font-size:13px;font-weight:600;color:var(--t1)}
+.swap-option-cal{font-size:12px;color:var(--t3)}
+
+/* ── EMPTY / LOADING ── */
+.empty-state{text-align:center;padding:60px 20px;color:var(--t3)}
+.empty-icon{font-size:44px;margin-bottom:14px}
+.empty-title{font-family:var(--disp);font-size:22px;font-weight:700;color:var(--t1);margin-bottom:6px}
+.loading-wrap{display:flex;justify-content:center;padding:60px;color:var(--t3);font-size:13px}
+
+/* ── BUTTONS ── */
+.btn-primary{background:var(--ac);border:none;border-radius:10px;color:#fff;padding:13px 24px;font-size:15px;font-weight:700;cursor:pointer;width:100%;letter-spacing:.02em;transition:background .2s}
+.btn-primary:hover{background:var(--ac2)}
+.btn-ghost{background:none;border:1.5px solid var(--b2);border-radius:10px;color:var(--t2);padding:11px 24px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-danger{background:none;border:1.5px solid #EF4444;border-radius:10px;color:#EF4444;padding:11px 24px;font-size:14px;font-weight:600;cursor:pointer}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(10px);border-radius:99px;padding:10px 20px;font-size:13px;font-weight:700;z-index:9999;opacity:0;transition:opacity .2s,transform .2s;white-space:nowrap;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ok{background:#34D399;color:#0a0a0a}
+#toast.er{background:#EF4444;color:#fff}
+#toast.info{background:var(--sf);color:var(--t1);border:1px solid var(--b2);box-shadow:0 4px 20px var(--shadow)}
+
+/* ── UTILITY ── */
+.divider{height:1px;background:var(--b1);margin:12px 0}
+.badge-pill{display:inline-flex;align-items:center;gap:4px;border-radius:99px;padding:3px 10px;font-size:11px;font-weight:700}
+.pill-green{background:rgba(16,185,129,.12);color:var(--ac);border:1px solid rgba(16,185,129,.3)}
+.pill-amber{background:rgba(245,158,11,.12);color:var(--carb);border:1px solid rgba(245,158,11,.3)}
+.pill-red{background:rgba(239,68,68,.12);color:var(--fat);border:1px solid rgba(239,68,68,.3)}
+.pills-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup">
+<div class="setup-card">
+  <div class="setup-logo">🥗 DIET TRACKER</div>
+  <div class="setup-sub">Personalised meal planning &amp; nutrition tracking</div>
+
+  <details style="margin-bottom:16px">
+    <summary>⚙️ First time? Set up your database (30 seconds)</summary>
+    <div style="padding:8px 0">
+      <div class="setup-step"><strong>1.</strong> Go to <a href="https://supabase.com" target="_blank">supabase.com</a> → your project → SQL Editor</div>
+      <div class="setup-step"><strong>2.</strong> Paste and run this SQL:</div>
+      <div class="sql-box">create table diet_data (
+  id text primary key,
+  data jsonb not null,
+  created_at timestamptz default now()
+);
+alter table diet_data enable row level security;
+create policy "allow all" on diet_data
+  for all using (true) with check (true);</div>
+      <div class="setup-step"><strong>3.</strong> Come back here and complete your profile below</div>
+    </div>
+  </details>
+
+  <div id="setup-err" style="background:rgba(239,68,68,.1);border:1px solid #EF4444;border-radius:8px;color:#EF4444;padding:10px 12px;font-size:13px;margin-bottom:14px;display:none"></div>
+
+  <div class="field">
+    <label>Gender</label>
+    <div class="radio-group">
+      <button class="radio-btn sel" data-field="gender" data-val="male" onclick="pick('gender',this)">Male</button>
+      <button class="radio-btn" data-field="gender" data-val="female" onclick="pick('gender',this)">Female</button>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="field">
+      <label>Age (years)</label>
+      <input type="number" id="s-age" placeholder="25" min="16" max="99" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>Height (cm)</label>
+      <input type="number" id="s-height" placeholder="175" min="140" max="220" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>Current Weight (kg)</label>
+      <input type="number" id="s-weight" placeholder="75" min="40" max="200" step="0.1" inputmode="decimal">
+    </div>
+    <div class="field">
+      <label>Target Weight (kg)</label>
+      <input type="number" id="s-target-weight" placeholder="70" min="40" max="200" step="0.1" inputmode="decimal">
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Goal</label>
+    <div class="radio-group">
+      <button class="radio-btn sel" data-field="goal" data-val="lose" onclick="pick('goal',this)">Lose Weight</button>
+      <button class="radio-btn" data-field="goal" data-val="build" onclick="pick('goal',this)">Build Muscle</button>
+      <button class="radio-btn" data-field="goal" data-val="definition" onclick="pick('goal',this)">Definition</button>
+      <button class="radio-btn" data-field="goal" data-val="maintenance" onclick="pick('goal',this)">Maintain</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Activity Level</label>
+    <select id="s-activity">
+      <option value="1.2">Sedentary — desk job, minimal exercise</option>
+      <option value="1.375">Lightly Active — 1–3 workouts/week</option>
+      <option value="1.55" selected>Moderately Active — 3–5 workouts/week</option>
+      <option value="1.725">Very Active — 6–7 workouts/week</option>
+      <option value="1.9">Extremely Active — physical job + training</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Name (optional)</label>
+    <input type="text" id="s-name" placeholder="e.g. Alex" autocomplete="off" autocorrect="off">
+  </div>
+
+  <button class="btn-primary" onclick="submitSetup()" id="setup-btn" style="margin-top:8px">Start My Plan →</button>
+</div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div id="header">
+    <div class="hinner">
+      <div>
+        <div class="app-logo">🥗 DIET TRACKER</div>
+        <div id="h-sub" style="font-size:11px;color:var(--t3);margin-top:1px"></div>
+      </div>
+      <div class="hbtns">
+        <button class="theme-btn" onclick="toggleTheme()"><span id="theme-icon">☀️</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="view"></div>
+
+  <div id="nav">
+    <div class="nav-inner">
+      <button class="nav-btn active" id="nb-today" onclick="navigate('today')"><span class="nav-icon">🏠</span>Today</button>
+      <button class="nav-btn" id="nb-week" onclick="navigate('week')"><span class="nav-icon">📅</span>Week</button>
+      <button class="nav-btn" id="nb-month" onclick="navigate('month')"><span class="nav-icon">📆</span>Month</button>
+      <button class="nav-btn" id="nb-progress" onclick="navigate('progress')"><span class="nav-icon">📈</span>Progress</button>
+      <button class="nav-btn" id="nb-grocery" onclick="navigate('grocery')"><span class="nav-icon">🛒</span>Grocery</button>
+      <button class="nav-btn" id="nb-settings" onclick="navigate('settings')"><span class="nav-icon">⚙️</span>Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- SWAP MODAL -->
+<div class="overlay" id="swap-modal" onclick="if(event.target===this)closeSwap()">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title">🔄 Swap Meal</div>
+    <button class="sheet-close" onclick="closeSwap()">✕</button>
+  </div>
+  <div id="swap-options"></div>
+</div>
+</div>
+
+<!-- WEIGHT MODAL -->
+<div class="overlay" id="weight-modal" onclick="if(event.target===this)closeWeightModal()">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">⚖️ Log Weight</div>
+  <div class="field"><label>Weight (kg)</label><input type="number" id="wm-weight" step="0.1" min="30" max="300" inputmode="decimal" placeholder="e.g. 74.5"></div>
+  <div class="field"><label>Note (optional)</label><input type="text" id="wm-note" placeholder="e.g. Morning, after workout" autocomplete="off"></div>
+  <div style="display:flex;gap:10px;margin-top:8px">
+    <button class="btn-ghost" onclick="closeWeightModal()" style="flex:1">Cancel</button>
+    <button class="btn-primary" onclick="saveWeight()" style="flex:2">Save</button>
+  </div>
+</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════════
+// SUPABASE MODULE
+// ═══════════════════════════════════════════════════════════════
+const SB_URL = 'https://nkanizeemmcywnekchhr.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rYW5pemVlbW1jeXduZWtjaGhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MjQ5NzksImV4cCI6MjA5MjEwMDk3OX0.9ysJLTD2HJhAp2bijElkBPgDTague3cm6LIcyrvaRn0';
+const DTABLE = SB_URL + '/rest/v1/diet_data';
+const DH = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
+
+const DB = {
+  async get(id) {
+    const r = await fetch(`${DTABLE}?id=eq.${encodeURIComponent(id)}&select=data`, { headers: DH });
+    if (!r.ok) throw new Error(r.status);
+    const rows = await r.json();
+    return rows.length ? rows[0].data : null;
+  },
+  async set(id, data) {
+    const r = await fetch(DTABLE, {
+      method: 'POST',
+      headers: { ...DH, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ id, data })
+    });
+    if (!r.ok) throw new Error(r.status);
+  },
+  async getAll(prefix) {
+    const r = await fetch(`${DTABLE}?id=like.${encodeURIComponent(prefix + '*')}&select=id,data&order=created_at.desc`, { headers: DH });
+    if (!r.ok) throw new Error(r.status);
+    return await r.json();
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// CALCULATION MODULE
+// ═══════════════════════════════════════════════════════════════
+const CALC = {
+  bmr(gender, weight, height, age) {
+    // Mifflin-St Jeor
+    const base = (10 * weight) + (6.25 * height) - (5 * age);
+    return gender === 'male' ? base + 5 : base - 161;
+  },
+  tdee(bmr, activity) {
+    return Math.round(bmr * parseFloat(activity));
+  },
+  goalCalories(tdee, goal) {
+    const adj = { lose: -500, build: 300, definition: -250, maintenance: 0 };
+    return Math.max(1200, tdee + (adj[goal] || 0));
+  },
+  macros(calories, goal) {
+    const splits = {
+      lose:        { p: .35, c: .35, f: .30 },
+      build:       { p: .30, c: .45, f: .25 },
+      definition:  { p: .40, c: .35, f: .25 },
+      maintenance: { p: .30, c: .40, f: .30 }
+    };
+    const s = splits[goal] || splits.maintenance;
+    return {
+      protein: Math.round((calories * s.p) / 4),
+      carbs:   Math.round((calories * s.c) / 4),
+      fat:     Math.round((calories * s.f) / 9)
+    };
+  },
+  bmi(weight, height) {
+    const h = height / 100;
+    return (weight / (h * h)).toFixed(1);
+  },
+  bmiLabel(bmi) {
+    const b = parseFloat(bmi);
+    if (b < 18.5) return 'Underweight';
+    if (b < 25)   return 'Healthy';
+    if (b < 30)   return 'Overweight';
+    return 'Obese';
+  },
+  waterTarget(weight) { return Math.round(weight * 0.033 * 10) / 10; } // litres
+};
+
+// ═══════════════════════════════════════════════════════════════
+// MEAL DATABASE
+// ═══════════════════════════════════════════════════════════════
+const MEALS = {
+  breakfast: [
+    {
+      id:'b1', name:'Scrambled Eggs & Avocado Toast',
+      cal:490, protein:27, carbs:37, fat:28, prepTime:10,
+      goals:['build','maintenance','definition'],
+      ingredients:[
+        {item:'Large eggs',          amount:3,   unit:'whole', cat:'protein'},
+        {item:'Wholegrain bread',    amount:2,   unit:'slices',cat:'grains'},
+        {item:'Avocado',             amount:0.5, unit:'whole', cat:'vegetables'},
+        {item:'Butter',              amount:5,   unit:'g',     cat:'dairy'},
+        {item:'Salt & black pepper', amount:1,   unit:'pinch', cat:'pantry'}
+      ],
+      recipe:[
+        'Crack eggs into a bowl, season generously with salt and pepper, whisk until fully combined.',
+        'Melt butter in a non-stick pan over medium-low heat until just foaming.',
+        'Pour in eggs. Using a spatula, fold the eggs slowly from the edges inward every 20–30 seconds.',
+        'Remove from heat when eggs are just set but still slightly glossy — residual heat finishes them.',
+        'Meanwhile toast the bread until golden. Slice avocado and fan across toast.',
+        'Pile scrambled eggs on top. Season once more and serve immediately.'
+      ]
+    },
+    {
+      id:'b2', name:'Greek Yogurt Parfait with Granola',
+      cal:355, protein:24, carbs:56, fat:5, prepTime:5,
+      goals:['lose','maintenance'],
+      ingredients:[
+        {item:'Greek yogurt (0% fat)', amount:200, unit:'g',  cat:'dairy'},
+        {item:'Mixed berries',         amount:100, unit:'g',  cat:'vegetables'},
+        {item:'Granola',               amount:30,  unit:'g',  cat:'grains'},
+        {item:'Honey',                 amount:1,   unit:'tbsp',cat:'pantry'}
+      ],
+      recipe:[
+        'Spoon half the yogurt into a glass or bowl.',
+        'Add half the berries on top, then drizzle half the honey.',
+        'Repeat with remaining yogurt and berries.',
+        'Top with granola just before eating to keep it crunchy.',
+        'Drizzle remaining honey over the top and serve.'
+      ]
+    },
+    {
+      id:'b3', name:'Protein Oatmeal with Banana',
+      cal:555, protein:37, carbs:86, fat:8, prepTime:8,
+      goals:['build','maintenance'],
+      ingredients:[
+        {item:'Rolled oats',      amount:80,  unit:'g',  cat:'grains'},
+        {item:'Protein powder',   amount:30,  unit:'g',  cat:'protein'},
+        {item:'Banana',           amount:1,   unit:'medium', cat:'vegetables'},
+        {item:'Almond milk',      amount:250, unit:'ml', cat:'dairy'},
+        {item:'Cinnamon',         amount:0.5, unit:'tsp',cat:'pantry'}
+      ],
+      recipe:[
+        'Combine oats and almond milk in a small saucepan over medium heat.',
+        'Stir continuously for 4–5 minutes until oats are thick and creamy.',
+        'Remove from heat and stir in protein powder and cinnamon until fully dissolved.',
+        'Transfer to a bowl. Slice banana and arrange on top.',
+        'Optional: drizzle with a little honey or nut butter for extra flavour.'
+      ]
+    },
+    {
+      id:'b4', name:'Veggie & Feta Omelette',
+      cal:390, protein:30, carbs:9, fat:26, prepTime:12,
+      goals:['lose','definition'],
+      ingredients:[
+        {item:'Large eggs',       amount:4,   unit:'whole', cat:'protein'},
+        {item:'Spinach',          amount:60,  unit:'g',     cat:'vegetables'},
+        {item:'Red capsicum',     amount:0.5, unit:'whole', cat:'vegetables'},
+        {item:'Feta cheese',      amount:30,  unit:'g',     cat:'dairy'},
+        {item:'Olive oil',        amount:1,   unit:'tsp',   cat:'pantry'},
+        {item:'Salt & pepper',    amount:1,   unit:'pinch', cat:'pantry'}
+      ],
+      recipe:[
+        'Whisk eggs with a pinch of salt and pepper in a bowl.',
+        'Heat olive oil in a non-stick pan over medium heat.',
+        'Add diced capsicum and sauté for 2 minutes until slightly softened.',
+        'Add spinach and stir until wilted (30 seconds).',
+        'Pour in eggs. Let set on the bottom without stirring for 90 seconds.',
+        'Crumble feta over half the omelette. Fold in half and slide onto plate.'
+      ]
+    },
+    {
+      id:'b5', name:'Berry Smoothie Bowl',
+      cal:420, protein:31, carbs:48, fat:13, prepTime:8,
+      goals:['build','lose','definition'],
+      ingredients:[
+        {item:'Frozen banana',     amount:1,   unit:'medium',cat:'vegetables'},
+        {item:'Frozen berries',    amount:100, unit:'g',     cat:'vegetables'},
+        {item:'Protein powder',    amount:30,  unit:'g',     cat:'protein'},
+        {item:'Almond milk',       amount:100, unit:'ml',    cat:'dairy'},
+        {item:'Chia seeds',        amount:15,  unit:'g',     cat:'pantry'},
+        {item:'Coconut flakes',    amount:10,  unit:'g',     cat:'pantry'}
+      ],
+      recipe:[
+        'Add frozen banana, berries, protein powder, and almond milk to a blender.',
+        'Blend on high until thick and smooth — it should be much thicker than a regular smoothie.',
+        'Add a splash more almond milk only if needed to blend.',
+        'Pour into a bowl. The mixture should hold its shape.',
+        'Top with chia seeds and coconut flakes. Add fresh fruit if desired.',
+        'Eat immediately before it melts.'
+      ]
+    }
+  ],
+  lunch: [
+    {
+      id:'l1', name:'Chicken & Brown Rice Bowl',
+      cal:510, protein:56, carbs:48, fat:9, prepTime:20,
+      goals:['build','maintenance'],
+      ingredients:[
+        {item:'Chicken breast',  amount:150, unit:'g',  cat:'protein'},
+        {item:'Brown rice',      amount:80,  unit:'g (dry)', cat:'grains'},
+        {item:'Broccoli',        amount:150, unit:'g',  cat:'vegetables'},
+        {item:'Soy sauce',       amount:1,   unit:'tbsp',cat:'pantry'},
+        {item:'Sesame oil',      amount:1,   unit:'tsp', cat:'pantry'},
+        {item:'Garlic',          amount:2,   unit:'cloves',cat:'pantry'}
+      ],
+      recipe:[
+        'Cook brown rice according to packet instructions (usually 25–30 min).',
+        'Season chicken breast with salt, pepper, and minced garlic.',
+        'Heat a pan with a little olive oil over medium-high heat. Cook chicken 5–6 min each side until cooked through. Rest 3 min then slice.',
+        'Steam broccoli for 4 minutes until bright green and tender-crisp.',
+        'Combine soy sauce and sesame oil for the dressing.',
+        'Assemble bowl: rice base, sliced chicken, broccoli. Drizzle with dressing and serve.'
+      ]
+    },
+    {
+      id:'l2', name:'Tuna Salad Wholegrain Wrap',
+      cal:395, protein:51, carbs:35, fat:5, prepTime:8,
+      goals:['lose','definition'],
+      ingredients:[
+        {item:'Canned tuna in water', amount:185, unit:'g (drained)', cat:'protein'},
+        {item:'Wholegrain wrap',      amount:1,   unit:'large',cat:'grains'},
+        {item:'Greek yogurt',         amount:2,   unit:'tbsp', cat:'dairy'},
+        {item:'Mixed salad leaves',   amount:60,  unit:'g',    cat:'vegetables'},
+        {item:'Cherry tomatoes',      amount:6,   unit:'whole',cat:'vegetables'},
+        {item:'Cucumber',             amount:0.25,unit:'whole',cat:'vegetables'},
+        {item:'Lemon juice',          amount:1,   unit:'tsp',  cat:'pantry'}
+      ],
+      recipe:[
+        'Drain tuna thoroughly and flake into a bowl.',
+        'Mix with Greek yogurt (as a healthy mayo substitute) and a squeeze of lemon juice.',
+        'Season with salt and pepper. Add diced cucumber and halved cherry tomatoes.',
+        'Lay wrap flat. Place salad leaves down the centre.',
+        'Spoon tuna mix on top of leaves.',
+        'Fold in sides then roll tightly. Slice in half diagonally and serve.'
+      ]
+    },
+    {
+      id:'l3', name:'Grilled Salmon & Quinoa Salad',
+      cal:590, protein:40, carbs:28, fat:35, prepTime:18,
+      goals:['maintenance','definition'],
+      ingredients:[
+        {item:'Salmon fillet',     amount:150, unit:'g', cat:'protein'},
+        {item:'Quinoa',            amount:60,  unit:'g (dry)', cat:'grains'},
+        {item:'Baby spinach',      amount:60,  unit:'g', cat:'vegetables'},
+        {item:'Cherry tomatoes',   amount:8,   unit:'whole', cat:'vegetables'},
+        {item:'Cucumber',          amount:0.25,unit:'whole', cat:'vegetables'},
+        {item:'Olive oil',         amount:1,   unit:'tbsp', cat:'pantry'},
+        {item:'Lemon',             amount:0.5, unit:'whole', cat:'vegetables'}
+      ],
+      recipe:[
+        'Rinse quinoa and cook in 120ml water for 15 minutes. Fluff with fork and cool.',
+        'Season salmon with salt, pepper, and a squeeze of lemon.',
+        'Heat a pan on medium-high. Cook salmon 3–4 min each side until just cooked through.',
+        'Combine quinoa, spinach, halved tomatoes, and sliced cucumber in a bowl.',
+        'Dress with olive oil and lemon juice. Season to taste.',
+        'Flake salmon over the salad and serve warm.'
+      ]
+    },
+    {
+      id:'l4', name:'Turkey Stir-Fry with Noodles',
+      cal:450, protein:44, carbs:50, fat:9, prepTime:15,
+      goals:['build','maintenance'],
+      ingredients:[
+        {item:'Lean turkey mince',  amount:150, unit:'g', cat:'protein'},
+        {item:'Egg noodles',        amount:80,  unit:'g (dry)', cat:'grains'},
+        {item:'Mixed stir-fry veg', amount:200, unit:'g', cat:'vegetables'},
+        {item:'Soy sauce',          amount:2,   unit:'tbsp', cat:'pantry'},
+        {item:'Oyster sauce',       amount:1,   unit:'tbsp', cat:'pantry'},
+        {item:'Garlic & ginger',    amount:1,   unit:'tsp each', cat:'pantry'},
+        {item:'Sesame oil',         amount:1,   unit:'tsp', cat:'pantry'}
+      ],
+      recipe:[
+        'Cook noodles per packet instructions. Drain and set aside.',
+        'Heat a wok or large pan on high. Add a little oil.',
+        'Brown turkey mince, breaking up lumps, until cooked through (5 min).',
+        'Add garlic and ginger. Stir-fry 1 minute until fragrant.',
+        'Add vegetables and stir-fry on high heat for 3–4 minutes.',
+        'Add noodles, soy sauce, oyster sauce, and sesame oil. Toss well and serve hot.'
+      ]
+    },
+    {
+      id:'l5', name:'Red Lentil Soup with Bread',
+      cal:390, protein:25, carbs:71, fat:3, prepTime:25,
+      goals:['lose','maintenance'],
+      ingredients:[
+        {item:'Red lentils',      amount:100, unit:'g (dry)', cat:'protein'},
+        {item:'Wholegrain bread', amount:1,   unit:'slice', cat:'grains'},
+        {item:'Onion',            amount:1,   unit:'medium', cat:'vegetables'},
+        {item:'Carrot',           amount:1,   unit:'medium', cat:'vegetables'},
+        {item:'Canned tomatoes',  amount:200, unit:'g', cat:'pantry'},
+        {item:'Cumin & paprika',  amount:1,   unit:'tsp each', cat:'pantry'},
+        {item:'Vegetable stock',  amount:600, unit:'ml', cat:'pantry'}
+      ],
+      recipe:[
+        'Dice onion and carrot. Heat a little oil in a pot over medium heat.',
+        'Cook onion 3–4 min until soft. Add carrot and cook 2 more minutes.',
+        'Add cumin and paprika. Stir for 30 seconds until fragrant.',
+        'Add rinsed lentils, canned tomatoes, and stock. Bring to a boil.',
+        'Reduce heat, cover, and simmer 20 minutes until lentils are very soft.',
+        'Season with salt and pepper. Serve with toasted bread. Optionally blend for a smoother texture.'
+      ]
+    },
+    {
+      id:'l6', name:'Chicken Caesar Salad',
+      cal:475, protein:57, carbs:19, fat:17, prepTime:15,
+      goals:['lose','definition'],
+      ingredients:[
+        {item:'Chicken breast',   amount:150, unit:'g', cat:'protein'},
+        {item:'Cos lettuce',      amount:120, unit:'g', cat:'vegetables'},
+        {item:'Cherry tomatoes',  amount:6,   unit:'whole', cat:'vegetables'},
+        {item:'Parmesan cheese',  amount:20,  unit:'g', cat:'dairy'},
+        {item:'Croutons',         amount:20,  unit:'g', cat:'grains'},
+        {item:'Light Caesar dressing', amount:2, unit:'tbsp', cat:'pantry'}
+      ],
+      recipe:[
+        'Season chicken with salt and pepper. Grill or pan-fry 5–6 min each side until cooked through.',
+        'Rest chicken 3 min then slice diagonally.',
+        'Tear cos lettuce into a large bowl. Add halved cherry tomatoes.',
+        'Drizzle with Caesar dressing and toss to coat.',
+        'Top with sliced chicken, croutons, and shaved parmesan.',
+        'Grind black pepper over the top and serve immediately.'
+      ]
+    }
+  ],
+  dinner: [
+    {
+      id:'d1', name:'Grilled Chicken, Sweet Potato & Broccoli',
+      cal:590, protein:56, carbs:56, fat:12, prepTime:30,
+      goals:['build','lose','definition'],
+      ingredients:[
+        {item:'Chicken breast',   amount:180, unit:'g', cat:'protein'},
+        {item:'Sweet potato',     amount:200, unit:'g', cat:'vegetables'},
+        {item:'Broccoli',         amount:200, unit:'g', cat:'vegetables'},
+        {item:'Olive oil',        amount:1,   unit:'tbsp', cat:'pantry'},
+        {item:'Garlic powder',    amount:0.5, unit:'tsp', cat:'pantry'},
+        {item:'Paprika',          amount:0.5, unit:'tsp', cat:'pantry'}
+      ],
+      recipe:[
+        'Preheat oven to 200°C. Peel sweet potato and cut into 2cm cubes.',
+        'Toss sweet potato in half the olive oil, garlic powder, paprika, salt and pepper. Roast 25 min until golden.',
+        'Season chicken with remaining olive oil, salt, pepper, and paprika.',
+        'Heat a grill pan over high heat. Grill chicken 5–6 min each side until charred and cooked through. Rest 5 min.',
+        'Steam broccoli 4 minutes until bright and tender-crisp.',
+        'Slice chicken. Plate with sweet potato and broccoli.'
+      ]
+    },
+    {
+      id:'d2', name:'Baked Salmon, Brown Rice & Asparagus',
+      cal:575, protein:49, carbs:42, fat:23, prepTime:25,
+      goals:['maintenance','definition','build'],
+      ingredients:[
+        {item:'Salmon fillet',    amount:180, unit:'g', cat:'protein'},
+        {item:'Brown rice',       amount:75,  unit:'g (dry)', cat:'grains'},
+        {item:'Asparagus',        amount:150, unit:'g', cat:'vegetables'},
+        {item:'Lemon',            amount:1,   unit:'whole', cat:'vegetables'},
+        {item:'Olive oil',        amount:1,   unit:'tbsp', cat:'pantry'},
+        {item:'Dill or herbs',    amount:1,   unit:'tbsp', cat:'pantry'}
+      ],
+      recipe:[
+        'Cook brown rice per packet instructions.',
+        'Preheat oven to 180°C. Place salmon on a lined tray.',
+        'Drizzle salmon with half the olive oil, top with lemon slices and herbs. Season well.',
+        'Bake 15–18 minutes until salmon flakes easily with a fork.',
+        'Toss asparagus with remaining olive oil and season. Roast alongside salmon last 10 minutes, or grill in a pan.',
+        'Plate rice, lay salmon on top, arrange asparagus beside. Squeeze fresh lemon over everything.'
+      ]
+    },
+    {
+      id:'d3', name:'Lean Beef Stir-Fry with Rice Noodles',
+      cal:520, protein:45, carbs:60, fat:11, prepTime:18,
+      goals:['build','maintenance'],
+      ingredients:[
+        {item:'Lean beef strips',   amount:150, unit:'g', cat:'protein'},
+        {item:'Rice noodles',       amount:80,  unit:'g (dry)', cat:'grains'},
+        {item:'Asian mixed veg',    amount:200, unit:'g', cat:'vegetables'},
+        {item:'Oyster sauce',       amount:2,   unit:'tbsp', cat:'pantry'},
+        {item:'Soy sauce',          amount:1,   unit:'tbsp', cat:'pantry'},
+        {item:'Garlic & ginger',    amount:1,   unit:'tsp each', cat:'pantry'},
+        {item:'Sesame oil',         amount:1,   unit:'tsp', cat:'pantry'}
+      ],
+      recipe:[
+        'Soak rice noodles in boiling water for 5 minutes. Drain and set aside.',
+        'Combine oyster sauce, soy sauce, and sesame oil in a small bowl.',
+        'Heat wok on very high heat. Add a little oil.',
+        'Sear beef strips in small batches (do not crowd) 1–2 min until browned. Remove and set aside.',
+        'Add garlic and ginger to wok. Add vegetables and stir-fry 3 min.',
+        'Return beef. Add noodles and sauce. Toss vigorously on high heat 1–2 min. Serve hot.'
+      ]
+    },
+    {
+      id:'d4', name:'Turkey Meatballs & Zucchini Noodles',
+      cal:480, protein:56, carbs:30, fat:17, prepTime:25,
+      goals:['lose','definition'],
+      ingredients:[
+        {item:'Lean turkey mince',  amount:200, unit:'g', cat:'protein'},
+        {item:'Zucchini',           amount:300, unit:'g', cat:'vegetables'},
+        {item:'Passata tomato sauce',amount:200,unit:'g', cat:'pantry'},
+        {item:'Parmesan cheese',    amount:20,  unit:'g', cat:'dairy'},
+        {item:'Egg',                amount:1,   unit:'whole', cat:'protein'},
+        {item:'Breadcrumbs',        amount:20,  unit:'g', cat:'grains'},
+        {item:'Italian herbs',      amount:1,   unit:'tsp', cat:'pantry'}
+      ],
+      recipe:[
+        'Combine turkey mince, egg, breadcrumbs, herbs, salt and pepper. Mix well and roll into 8–10 balls.',
+        'Heat oil in a large pan. Brown meatballs on all sides (5–6 min). They do not need to be cooked through yet.',
+        'Pour passata over meatballs. Reduce heat, cover, simmer 10 min until cooked through.',
+        'Use a spiraliser or vegetable peeler to make zucchini noodles. Season and toss in a hot pan 1–2 min (do not overcook).',
+        'Plate zucchini noodles, top with meatballs and sauce.',
+        'Grate parmesan over the top and serve immediately.'
+      ]
+    },
+    {
+      id:'d5', name:'Baked Cod, Quinoa & Roasted Veg',
+      cal:500, protein:46, carbs:37, fat:19, prepTime:30,
+      goals:['lose','definition','maintenance'],
+      ingredients:[
+        {item:'Cod fillet',         amount:180, unit:'g', cat:'protein'},
+        {item:'Quinoa',             amount:60,  unit:'g (dry)', cat:'grains'},
+        {item:'Capsicum',           amount:1,   unit:'medium', cat:'vegetables'},
+        {item:'Zucchini',           amount:1,   unit:'medium', cat:'vegetables'},
+        {item:'Red onion',          amount:0.5, unit:'whole', cat:'vegetables'},
+        {item:'Olive oil',          amount:1,   unit:'tbsp', cat:'pantry'},
+        {item:'Lemon & herbs',      amount:1,   unit:'tbsp', cat:'pantry'}
+      ],
+      recipe:[
+        'Preheat oven to 200°C. Dice capsicum, zucchini, and red onion.',
+        'Toss vegetables in half the olive oil, season well. Roast 20–25 min until caramelised.',
+        'Cook quinoa: rinse, add to pot with 120ml water, simmer 15 min covered. Fluff with fork.',
+        'Place cod on a lined tray. Drizzle with remaining olive oil, top with herbs and lemon zest. Season.',
+        'Bake cod 12–15 min until it flakes easily.',
+        'Combine quinoa with roasted veg. Plate together with cod on top. Squeeze fresh lemon.'
+      ]
+    },
+    {
+      id:'d6', name:'Chicken Curry with Brown Rice',
+      cal:605, protein:53, carbs:56, fat:20, prepTime:30,
+      goals:['build','maintenance'],
+      ingredients:[
+        {item:'Chicken breast',     amount:150, unit:'g', cat:'protein'},
+        {item:'Brown rice',         amount:75,  unit:'g (dry)', cat:'grains'},
+        {item:'Light coconut milk', amount:200, unit:'ml', cat:'dairy'},
+        {item:'Spinach',            amount:60,  unit:'g', cat:'vegetables'},
+        {item:'Canned tomatoes',    amount:200, unit:'g', cat:'pantry'},
+        {item:'Curry paste (mild)', amount:2,   unit:'tbsp', cat:'pantry'},
+        {item:'Onion & garlic',     amount:1,   unit:'each', cat:'pantry'}
+      ],
+      recipe:[
+        'Cook brown rice per packet instructions.',
+        'Dice chicken into 2cm pieces. Dice onion and mince garlic.',
+        'Heat oil in a pan over medium heat. Cook onion 3–4 min until soft.',
+        'Add curry paste and garlic. Cook 1–2 min until very fragrant.',
+        'Add chicken and stir to coat. Cook 3–4 min until sealed.',
+        'Add canned tomatoes and coconut milk. Simmer 15 min until sauce thickens and chicken is cooked through.',
+        'Stir in spinach until wilted. Serve over brown rice.'
+      ]
+    }
+  ],
+  snack: [
+    {
+      id:'s1', name:'Apple & Almond Butter',
+      cal:285, protein:7, carbs:32, fat:17, prepTime:2,
+      goals:['maintenance','definition'],
+      ingredients:[
+        {item:'Apple',          amount:1,  unit:'medium', cat:'vegetables'},
+        {item:'Almond butter',  amount:2,  unit:'tbsp',   cat:'pantry'}
+      ],
+      recipe:[
+        'Wash and core the apple. Slice into wedges.',
+        'Serve alongside almond butter for dipping.',
+        'Optionally sprinkle with a pinch of cinnamon.'
+      ]
+    },
+    {
+      id:'s2', name:'Protein Shake with Banana',
+      cal:375, protein:36, carbs:44, fat:7, prepTime:3,
+      goals:['build','maintenance'],
+      ingredients:[
+        {item:'Protein powder', amount:30,  unit:'g', cat:'protein'},
+        {item:'Milk (2%)',      amount:300, unit:'ml',cat:'dairy'},
+        {item:'Banana',        amount:1,   unit:'medium', cat:'vegetables'}
+      ],
+      recipe:[
+        'Add all ingredients to a blender.',
+        'Blend on high for 30–45 seconds until smooth.',
+        'Pour into a glass and consume immediately post-workout for best results.'
+      ]
+    },
+    {
+      id:'s3', name:'Cottage Cheese & Mixed Berries',
+      cal:185, protein:25, carbs:16, fat:2, prepTime:3,
+      goals:['lose','definition'],
+      ingredients:[
+        {item:'Low-fat cottage cheese', amount:200, unit:'g', cat:'dairy'},
+        {item:'Mixed berries',          amount:100, unit:'g', cat:'vegetables'}
+      ],
+      recipe:[
+        'Spoon cottage cheese into a bowl.',
+        'Top with fresh or thawed mixed berries.',
+        'Optional: drizzle with 1 tsp honey and a crack of black pepper.'
+      ]
+    },
+    {
+      id:'s4', name:'Hard-Boiled Eggs with Paprika',
+      cal:210, protein:18, carbs:1, fat:15, prepTime:12,
+      goals:['lose','definition','build'],
+      ingredients:[
+        {item:'Large eggs',  amount:3,   unit:'whole', cat:'protein'},
+        {item:'Paprika',     amount:0.5, unit:'tsp',   cat:'pantry'},
+        {item:'Salt',        amount:1,   unit:'pinch', cat:'pantry'}
+      ],
+      recipe:[
+        'Place eggs in a saucepan, cover with cold water by 3cm.',
+        'Bring to the boil over high heat. Once boiling, reduce heat and simmer exactly 9 minutes.',
+        'Transfer immediately to a bowl of ice water for 5 minutes (stops cooking, easy peeling).',
+        'Peel and halve. Dust with paprika and a pinch of salt.',
+        'Can be prepared in advance and refrigerated for up to 4 days.'
+      ]
+    },
+    {
+      id:'s5', name:'Mixed Nuts & Dried Fruit',
+      cal:275, protein:6, carbs:29, fat:16, prepTime:1,
+      goals:['build','maintenance'],
+      ingredients:[
+        {item:'Mixed nuts (raw)',   amount:30, unit:'g', cat:'pantry'},
+        {item:'Dried apricots',     amount:30, unit:'g', cat:'vegetables'}
+      ],
+      recipe:[
+        'Weigh out nuts and dried fruit.',
+        'Mix together and store in a small container for a portable snack.',
+        'Best consumed mid-morning or pre-workout for sustained energy.'
+      ]
+    },
+    {
+      id:'s6', name:'Rice Cakes with Hummus & Veg',
+      cal:245, protein:8, carbs:33, fat:9, prepTime:4,
+      goals:['lose','maintenance'],
+      ingredients:[
+        {item:'Rice cakes (plain)', amount:3,  unit:'whole', cat:'grains'},
+        {item:'Hummus',             amount:4,  unit:'tbsp',  cat:'protein'},
+        {item:'Cucumber slices',    amount:8,  unit:'slices',cat:'vegetables'},
+        {item:'Cherry tomatoes',    amount:4,  unit:'whole', cat:'vegetables'}
+      ],
+      recipe:[
+        'Spread hummus evenly over each rice cake.',
+        'Top with cucumber slices and halved cherry tomatoes.',
+        'Season with a crack of black pepper.',
+        'Optionally drizzle with a little extra virgin olive oil and paprika.'
+      ]
+    }
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════════
+// MEAL PLANNER
+// ═══════════════════════════════════════════════════════════════
+const PLAN = {
+  hash(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+    return Math.abs(h);
+  },
+  pickMeal(type, dayKey, slot, goal) {
+    const lib = MEALS[type];
+    const preferred = lib.filter(m => m.goals.includes(goal));
+    const pool = preferred.length >= 2 ? preferred : lib;
+    const idx = this.hash(dayKey + type + slot) % pool.length;
+    return pool[idx];
+  },
+  generateDay(dateStr, goal) {
+    return {
+      date: dateStr,
+      breakfast: this.pickMeal('breakfast', dateStr, '0', goal),
+      snack1:    this.pickMeal('snack',     dateStr, '1', goal),
+      lunch:     this.pickMeal('lunch',     dateStr, '2', goal),
+      snack2:    this.pickMeal('snack',     dateStr, '3', goal),
+      dinner:    this.pickMeal('dinner',    dateStr, '4', goal)
+    };
+  },
+  generateWeek(weekStart, goal) {
+    const days = [];
+    const d = new Date(weekStart);
+    for (let i = 0; i < 7; i++) {
+      days.push(this.generateDay(dateStr(d), goal));
+      d.setDate(d.getDate() + 1);
+    }
+    return days;
+  },
+  dayCalories(day) {
+    return day.breakfast.cal + day.snack1.cal + day.lunch.cal + day.snack2.cal + day.dinner.cal;
+  },
+  dayMacros(day) {
+    return {
+      protein: day.breakfast.protein + day.snack1.protein + day.lunch.protein + day.snack2.protein + day.dinner.protein,
+      carbs:   day.breakfast.carbs   + day.snack1.carbs   + day.lunch.carbs   + day.snack2.carbs   + day.dinner.carbs,
+      fat:     day.breakfast.fat     + day.snack1.fat     + day.lunch.fat     + day.snack2.fat     + day.dinner.fat
+    };
+  },
+  mealSlots(day) {
+    return [
+      { key:'breakfast', label:'Breakfast',     meal:day.breakfast, icon:'🌅' },
+      { key:'snack1',    label:'Morning Snack', meal:day.snack1,    icon:'🍎' },
+      { key:'lunch',     label:'Lunch',         meal:day.lunch,     icon:'☀️' },
+      { key:'snack2',    label:'Afternoon Snack',meal:day.snack2,   icon:'🥜' },
+      { key:'dinner',    label:'Dinner',        meal:day.dinner,    icon:'🌙' }
+    ];
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// DATE UTILITIES
+// ═══════════════════════════════════════════════════════════════
+function dateStr(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function todayStr() { return dateStr(new Date()); }
+function weekStart(d) {
+  const dt = new Date(d);
+  const day = dt.getDay();
+  const diff = dt.getDate() - day + (day === 0 ? -6 : 1);
+  dt.setDate(diff); dt.setHours(0,0,0,0);
+  return dt;
+}
+function weekKey(d) { return dateStr(weekStart(d)); }
+function fmtDate(str) {
+  if (!str) return '';
+  const d = new Date(str + 'T00:00');
+  return d.toLocaleDateString('en-AU', {day:'numeric',month:'short'});
+}
+function fmtDateFull(str) {
+  if (!str) return '';
+  const d = new Date(str + 'T00:00');
+  return d.toLocaleDateString('en-AU', {weekday:'long',day:'numeric',month:'long'});
+}
+function daysInMonth(y, m) { return new Date(y, m+1, 0).getDate(); }
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let S = {
+  profile:  null,
+  view:     'today',
+  logs:     {}, // date -> {completed:[], water:0, swaps:{}}
+  weights:  [], // [{date,weight,note}]
+  grocery:  {}, // weekKey -> {itemKey: checked bool}
+  viewDate: todayStr(),
+  viewMonth:{ y: new Date().getFullYear(), m: new Date().getMonth() },
+  setupPicks:{ gender:'male', goal:'lose' }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════════════════════
+function applyTheme(mode) {
+  document.body.classList.toggle('light', mode === 'light');
+  document.getElementById('theme-icon').textContent = mode === 'light' ? '🌙' : '☀️';
+  localStorage.setItem('dt-theme', mode);
+}
+function toggleTheme() {
+  applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════
+let _tt = null;
+function flash(msg, type='ok') {
+  if (_tt) clearTimeout(_tt);
+  const el = document.getElementById('toast');
+  el.textContent = (type === 'er' ? '⚠ ' : type === 'info' ? 'ℹ ' : '✓ ') + msg;
+  el.className = 'show ' + type;
+  _tt = setTimeout(() => { el.className = ''; }, type === 'er' ? 4000 : 2400);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function navigate(view) {
+  S.view = view;
+  ['today','week','month','progress','grocery','settings'].forEach(v => {
+    const btn = document.getElementById('nb-' + v);
+    if (btn) btn.classList.toggle('active', v === view);
+  });
+  renderView();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SETUP
+// ═══════════════════════════════════════════════════════════════
+function pick(field, btn) {
+  S.setupPicks[field] = btn.dataset.val;
+  btn.closest('.radio-group').querySelectorAll('.radio-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+async function submitSetup() {
+  const age    = parseInt(document.getElementById('s-age').value);
+  const height = parseFloat(document.getElementById('s-height').value);
+  const weight = parseFloat(document.getElementById('s-weight').value);
+  const tgtW   = parseFloat(document.getElementById('s-target-weight').value) || weight;
+  const act    = document.getElementById('s-activity').value;
+  const name   = document.getElementById('s-name').value.trim();
+  const err    = document.getElementById('setup-err');
+
+  if (!age || age < 16 || !height || height < 140 || !weight || weight < 40) {
+    err.textContent = 'Please fill in valid age, height, and weight.';
+    err.style.display = 'block'; return;
+  }
+  err.style.display = 'none';
+
+  const btn = document.getElementById('setup-btn');
+  btn.textContent = 'Setting up…'; btn.disabled = true;
+
+  const bmr  = CALC.bmr(S.setupPicks.gender, weight, height, age);
+  const tdee = CALC.tdee(bmr, act);
+  const cal  = CALC.goalCalories(tdee, S.setupPicks.goal);
+  const mac  = CALC.macros(cal, S.setupPicks.goal);
+
+  const profile = {
+    name, gender:S.setupPicks.gender, age, height, weight,
+    targetWeight:tgtW, goal:S.setupPicks.goal, activity:act,
+    bmr, tdee, calories:cal, macros:mac,
+    createdAt:new Date().toISOString(), favourites:[]
+  };
+
+  try {
+    await DB.set('profile', profile);
+    S.profile = profile;
+    document.getElementById('setup').classList.remove('active');
+    document.getElementById('app').classList.add('active');
+    updateHeader();
+    navigate('today');
+  } catch(e) {
+    btn.textContent = 'Start My Plan →'; btn.disabled = false;
+    err.textContent = 'Could not save — check Supabase table is created and internet is connected.';
+    err.style.display = 'block';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PROFILE DERIVED DATA
+// ═══════════════════════════════════════════════════════════════
+function updateHeader() {
+  const p = S.profile;
+  if (!p) return;
+  const goalLabels = {lose:'Weight Loss',build:'Muscle Building',definition:'Definition',maintenance:'Maintenance'};
+  document.getElementById('h-sub').textContent =
+    (p.name ? p.name + ' · ' : '') + goalLabels[p.goal] + ' · ' + p.calories + ' kcal/day';
+}
+
+function getLog(dateStr) {
+  return S.logs[dateStr] || { completed:[], water:0, swaps:{} };
+}
+async function saveLog(dateStr, log) {
+  S.logs[dateStr] = log;
+  await DB.set('log_' + dateStr, log);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TODAY VIEW
+// ═══════════════════════════════════════════════════════════════
+function renderToday() {
+  const p   = S.profile;
+  const dt  = S.viewDate;
+  const log = getLog(dt);
+  const day = PLAN.generateDay(dt, p.goal);
+
+  // Apply any swaps from log
+  const slots = PLAN.mealSlots(day);
+  slots.forEach(slot => {
+    if (log.swaps[slot.key]) {
+      const mType = slot.key.startsWith('snack') ? 'snack' : slot.key;
+      const swapped = MEALS[mType === 'snack1' || mType === 'snack2' ? 'snack' : mType]
+                       .find(m => m.id === log.swaps[slot.key]);
+      if (swapped) slot.meal = swapped;
+    }
+  });
+
+  const consumed = slots
+    .filter(s => log.completed.includes(s.key))
+    .reduce((acc, s) => ({
+      cal: acc.cal + s.meal.cal,
+      protein: acc.protein + s.meal.protein,
+      carbs: acc.carbs + s.meal.carbs,
+      fat: acc.fat + s.meal.fat
+    }), {cal:0,protein:0,carbs:0,fat:0});
+
+  const tgt = p.macros;
+  const tCal = p.calories;
+
+  const isToday = dt === todayStr();
+  const dLabel = isToday ? 'Today' : fmtDateFull(dt);
+
+  const waterTarget = Math.round(CALC.waterTarget(p.weight) / 0.25); // glasses of 250ml
+  const wGlasses = Math.min(log.water || 0, 12);
+  const waterLitres = ((log.water || 0) * 0.25).toFixed(1);
+
+  // Date navigation
+  const prev = new Date(dt + 'T00:00');
+  prev.setDate(prev.getDate() - 1);
+  const next = new Date(dt + 'T00:00');
+  next.setDate(next.getDate() + 1);
+  const nextStr = dateStr(next);
+  const prevStr = dateStr(prev);
+  const isFuture = nextStr > todayStr();
+
+  let html = `
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+    <button onclick="S.viewDate='${prevStr}';renderView()" style="background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:6px 12px;color:var(--t2);font-size:14px">‹</button>
+    <div style="text-align:center">
+      <div class="view-title">${isToday ? '📋 Today' : '📋 ' + fmtDate(dt)}</div>
+      <div style="font-size:11px;color:var(--t3)">${isToday ? fmtDateFull(dt) : ''}</div>
+    </div>
+    <button onclick="S.viewDate='${nextStr}';renderView()" style="background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:6px 12px;color:${isFuture?'var(--b2)':'var(--t2)'};font-size:14px" ${isFuture?'disabled':''}>›</button>
+  </div>`;
+
+  // Macro ring
+  const pPct  = Math.min(100, Math.round((consumed.protein / tgt.protein) * 100));
+  const cPct  = Math.min(100, Math.round((consumed.carbs   / tgt.carbs)   * 100));
+  const fPct  = Math.min(100, Math.round((consumed.fat     / tgt.fat)     * 100));
+  const calPct = Math.min(100, Math.round((consumed.cal / tCal) * 100));
+  const C = 2 * Math.PI * 38; // circumference for r=38
+  const C2 = 2 * Math.PI * 28;
+  const C3 = 2 * Math.PI * 18;
+
+  html += `
+  <div class="macro-ring-wrap" style="animation:slideup .3s ease">
+    <div style="position:relative;flex-shrink:0">
+      <svg class="ring-svg" width="100" height="100" viewBox="0 0 100 100">
+        <!-- Protein ring outer -->
+        <circle cx="50" cy="50" r="38" fill="none" stroke="var(--b2)" stroke-width="7"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#8B5CF6" stroke-width="7"
+          stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pPct/100)}" stroke-linecap="round" transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .6s ease"/>
+        <!-- Carb ring mid -->
+        <circle cx="50" cy="50" r="28" fill="none" stroke="var(--b2)" stroke-width="7"/>
+        <circle cx="50" cy="50" r="28" fill="none" stroke="#F59E0B" stroke-width="7"
+          stroke-dasharray="${C2}" stroke-dashoffset="${C2*(1-cPct/100)}" stroke-linecap="round" transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .6s ease"/>
+        <!-- Fat ring inner -->
+        <circle cx="50" cy="50" r="18" fill="none" stroke="var(--b2)" stroke-width="7"/>
+        <circle cx="50" cy="50" r="18" fill="none" stroke="#EF4444" stroke-width="7"
+          stroke-dasharray="${C3}" stroke-dashoffset="${C3*(1-fPct/100)}" stroke-linecap="round" transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .6s ease"/>
+        <text x="50" y="47" class="ring-center" style="font-size:14px;font-weight:800;fill:var(--t1);font-family:'DM Sans',sans-serif">${consumed.cal}</text>
+        <text x="50" y="59" class="ring-center" style="font-size:8px;fill:var(--t3);font-family:'DM Sans',sans-serif">of ${tCal}</text>
+      </svg>
+    </div>
+    <div class="macro-legends">
+      ${[
+        {label:'Protein', val:consumed.protein, tgt:tgt.protein, pct:pPct, color:'#8B5CF6'},
+        {label:'Carbs',   val:consumed.carbs,   tgt:tgt.carbs,   pct:cPct, color:'#F59E0B'},
+        {label:'Fat',     val:consumed.fat,      tgt:tgt.fat,     pct:fPct, color:'#EF4444'}
+      ].map(m => `
+        <div class="macro-row">
+          <div class="macro-label"><span class="macro-dot" style="background:${m.color}"></span>${m.label}</div>
+          <div class="macro-val">${m.val}g <span style="color:var(--t3);font-weight:400">/ ${m.tgt}g</span></div>
+        </div>
+        <div class="macro-bar"><div class="macro-bar-fill" style="width:${m.pct}%;background:${m.color}"></div></div>
+      `).join('')}
+      <div style="font-size:11px;color:${tCal-consumed.cal>0?'var(--ac)':'#EF4444'};font-weight:700;margin-top:6px;text-align:right">
+        ${tCal-consumed.cal>=0 ? (tCal-consumed.cal)+' kcal remaining' : Math.abs(tCal-consumed.cal)+' kcal over'}
+      </div>
+    </div>
+  </div>`;
+
+  // Water tracker
+  html += `
+  <div class="water-card">
+    <div class="water-header">
+      <div class="water-title">💧 Water Intake</div>
+      <div class="water-count">${waterLitres}L / ${CALC.waterTarget(p.weight)}L target</div>
+    </div>
+    <div class="water-cups">
+      ${Array.from({length:Math.max(waterTarget,8)},(_,i) => `
+        <button class="cup-btn ${i < wGlasses ? 'filled':''}" onclick="logWater(${i+1},'${dt}')" title="${((i+1)*250)}ml">💧</button>
+      `).join('')}
+    </div>
+  </div>`;
+
+  // Meals
+  const slotLabels = {breakfast:'Breakfast',snack1:'Morning Snack',lunch:'Lunch',snack2:'Afternoon Snack',dinner:'Dinner'};
+  const slotIcons  = {breakfast:'🌅',snack1:'🍎',lunch:'☀️',snack2:'🥜',dinner:'🌙'};
+
+  slots.forEach(slot => {
+    const done = log.completed.includes(slot.key);
+    const m = slot.meal;
+    const isFav = (p.favourites||[]).includes(m.id);
+    html += `
+    <div class="meal-section-title">${slotIcons[slot.key]} ${slotLabels[slot.key]}</div>
+    <div class="meal-card ${done?'done':''}" id="mc-${slot.key}">
+      <div class="meal-header" onclick="toggleMealDetail('${slot.key}')">
+        <div class="meal-check ${done?'checked':''}" onclick="event.stopPropagation();toggleMeal('${slot.key}','${dt}')">
+          ${done?'✓':''}
+        </div>
+        <div class="meal-info">
+          <div class="meal-name" style="${done?'text-decoration:line-through;color:var(--t3)':''}"> ${m.name}</div>
+          <div class="meal-macros">
+            <span class="meal-macro-item" style="color:#8B5CF6">●&thinsp;${m.protein}g P</span>
+            <span class="meal-macro-item" style="color:#F59E0B">●&thinsp;${m.carbs}g C</span>
+            <span class="meal-macro-item" style="color:#EF4444">●&thinsp;${m.fat}g F</span>
+          </div>
+        </div>
+        <div class="meal-cal">${m.cal} kcal</div>
+        <div class="meal-expand-btn">⌄</div>
+      </div>
+      <div class="meal-detail" id="md-${slot.key}">
+        <div class="detail-tabs">
+          <button class="dtab active" onclick="switchTab('${slot.key}','ingredients',this)">Ingredients</button>
+          <button class="dtab" onclick="switchTab('${slot.key}','recipe',this)">Recipe</button>
+        </div>
+        <span class="prep-badge">⏱ ${m.prepTime} min prep</span>
+        <div class="detail-panel active" id="dp-${slot.key}-ingredients">
+          <ul class="ingredient-list">
+            ${m.ingredients.map(ing => `
+              <li class="ingredient-item">
+                <span class="ing-name">${ing.item}</span>
+                <span class="ing-amount">${ing.amount} ${ing.unit}</span>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+        <div class="detail-panel" id="dp-${slot.key}-recipe">
+          <ol class="recipe-steps">
+            ${m.recipe.map(step => `<li class="recipe-step">${step}</li>`).join('')}
+          </ol>
+        </div>
+        <div class="meal-actions">
+          <button class="meal-action-btn ${isFav?'fav active':'fav'}" onclick="toggleFav('${m.id}')">
+            ${isFav?'★ Favourite':'☆ Favourite'}
+          </button>
+          <button class="meal-action-btn" onclick="openSwap('${slot.key}','${dt}')">🔄 Swap</button>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('view').innerHTML = html;
+}
+
+function toggleMealDetail(key) {
+  const el = document.getElementById('md-' + key);
+  const btn = el.previousElementSibling.querySelector('.meal-expand-btn');
+  const open = el.classList.toggle('open');
+  if (btn) btn.textContent = open ? '⌃' : '⌄';
+}
+
+function switchTab(slotKey, panel, btn) {
+  btn.closest('.detail-tabs').querySelectorAll('.dtab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const detail = document.getElementById('md-' + slotKey);
+  detail.querySelectorAll('.detail-panel').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById(`dp-${slotKey}-${panel}`);
+  if (target) target.classList.add('active');
+}
+
+async function toggleMeal(key, dt) {
+  const log = { ...getLog(dt) };
+  const idx = log.completed.indexOf(key);
+  if (idx >= 0) log.completed.splice(idx, 1);
+  else log.completed.push(key);
+  await saveLog(dt, log);
+  renderView();
+}
+
+async function logWater(glasses, dt) {
+  const log = { ...getLog(dt) };
+  log.water = (log.water || 0) === glasses ? glasses - 1 : glasses;
+  await saveLog(dt, log);
+  renderView();
+}
+
+async function toggleFav(mealId) {
+  const p = S.profile;
+  const favs = [...(p.favourites || [])];
+  const idx = favs.indexOf(mealId);
+  if (idx >= 0) favs.splice(idx, 1); else favs.push(mealId);
+  p.favourites = favs;
+  await DB.set('profile', p);
+  flash(idx >= 0 ? 'Removed from favourites' : 'Added to favourites', 'info');
+  renderView();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SWAP
+// ═══════════════════════════════════════════════════════════════
+let _swapSlot = null, _swapDate = null;
+
+function openSwap(slotKey, dt) {
+  _swapSlot = slotKey; _swapDate = dt;
+  const mealType = slotKey.startsWith('snack') ? 'snack' : slotKey;
+  const pool = MEALS[mealType === 'snack1' || mealType === 'snack2' ? 'snack' : mealType];
+  const log = getLog(dt);
+  const day = PLAN.generateDay(dt, S.profile.goal);
+  const currentId = log.swaps[slotKey] || day[slotKey]?.id;
+  const html = pool.map(m => `
+    <div class="swap-option ${m.id === currentId ? 'active':''}" onclick="doSwap('${m.id}')">
+      <div style="flex:1">
+        <div class="swap-option-name">${m.name} ${m.id === currentId ? '✓':''}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">
+          <span style="color:#8B5CF6">${m.protein}g P</span> &nbsp;
+          <span style="color:#F59E0B">${m.carbs}g C</span> &nbsp;
+          <span style="color:#EF4444">${m.fat}g F</span>
+        </div>
+      </div>
+      <div class="swap-option-cal">${m.cal} kcal</div>
+    </div>
+  `).join('');
+  document.getElementById('swap-options').innerHTML = html;
+  document.getElementById('swap-modal').classList.add('open');
+}
+
+async function doSwap(mealId) {
+  const log = { ...getLog(_swapDate) };
+  if (!log.swaps) log.swaps = {};
+  log.swaps[_swapSlot] = mealId;
+  await saveLog(_swapDate, log);
+  closeSwap();
+  flash('Meal swapped', 'ok');
+  renderView();
+}
+
+function closeSwap() { document.getElementById('swap-modal').classList.remove('open'); }
+
+// ═══════════════════════════════════════════════════════════════
+// WEEK VIEW
+// ═══════════════════════════════════════════════════════════════
+function renderWeek() {
+  const p  = S.profile;
+  const ws = weekStart(new Date());
+  const days = PLAN.generateWeek(dateStr(ws), p.goal);
+  const today = todayStr();
+
+  let dayCards = '<div class="week-grid">';
+  const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  days.forEach((day, i) => {
+    const log  = getLog(day.date);
+    const done = log.completed.length;
+    const isToday = day.date === today;
+    const pct = Math.round((done / 5) * 100);
+    const col = pct === 100 ? 'var(--ac)' : pct >= 60 ? 'var(--carb)' : 'var(--t3)';
+    dayCards += `
+    <div class="week-day-card ${isToday?'today':''} ${pct===100?'complete':''}"
+         onclick="S.viewDate='${day.date}';navigate('today')">
+      <div class="wday-name">${dayNames[i]}</div>
+      <div class="wday-num" style="color:${isToday?'var(--ac)':'var(--t1)'}">${parseInt(day.date.slice(8))}</div>
+      <div class="wday-pct" style="color:${col}">${done}/5</div>
+      <div class="wday-dot" style="background:${col}"></div>
+    </div>`;
+  });
+  dayCards += '</div>';
+
+  const slots = ['breakfast','snack1','lunch','snack2','dinner'];
+  const slotNames = {breakfast:'Breakfast',snack1:'Snack 1',lunch:'Lunch',snack2:'Snack 2',dinner:'Dinner'};
+
+  let table = '<div class="week-meal-table">';
+  table += '<div class="wmt-header"><div class="wmt-cell">Meal</div>' +
+    dayNames.map(d => `<div class="wmt-cell">${d}</div>`).join('') + '</div>';
+
+  slots.forEach(slot => {
+    table += `<div class="wmt-row"><div class="wmt-label">${slotNames[slot]}</div>`;
+    days.forEach(day => {
+      const log = getLog(day.date);
+      const done = log.completed.includes(slot);
+      table += `<div class="wmt-item"><span class="wmt-check ${done?'ok':''}">${done?'✓':''}</span></div>`;
+    });
+    table += '</div>';
+  });
+  table += '</div>';
+
+  const weekCal = days.reduce((s,day) => {
+    const log = getLog(day.date);
+    return s + PLAN.mealSlots(day)
+      .filter(sl => log.completed.includes(sl.key))
+      .reduce((a,sl) => a + sl.meal.cal, 0);
+  }, 0);
+  const completedMeals = days.reduce((s,day) => s + getLog(day.date).completed.length, 0);
+  const perfectDays = days.filter(day => getLog(day.date).completed.length === 5).length;
+
+  document.getElementById('view').innerHTML = `
+    <div class="view-title">📅 This Week</div>
+    <div class="view-sub">Tap any day to view its meal plan</div>
+    ${dayCards}
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+      <div class="mstat"><div class="mstat-val">${completedMeals}</div><div class="mstat-lbl">Meals Done</div></div>
+      <div class="mstat"><div class="mstat-val">${perfectDays}</div><div class="mstat-lbl">Perfect Days</div></div>
+      <div class="mstat"><div class="mstat-val">${weekCal}</div><div class="mstat-lbl">kcal Eaten</div></div>
+    </div>
+    ${table}`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MONTH VIEW
+// ═══════════════════════════════════════════════════════════════
+function renderMonth() {
+  const { y, m } = S.viewMonth;
+  const today = todayStr();
+  const firstDay = new Date(y, m, 1);
+  const startDow = (firstDay.getDay() + 6) % 7; // Mon=0
+  const totalDays = daysInMonth(y, m);
+  const monthName = firstDay.toLocaleDateString('en-AU', {month:'long',year:'numeric'});
+
+  // Streak calc
+  let streak = 0;
+  const d = new Date();
+  while (true) {
+    const ds = dateStr(d);
+    if (getLog(ds).completed.length === 5) { streak++; d.setDate(d.getDate()-1); }
+    else break;
+    if (streak > 365) break;
+  }
+
+  // Calendar
+  let cal = '<div class="cal-grid-header">';
+  ['M','T','W','T','F','S','S'].forEach(n => { cal += `<div class="cal-dow">${n}</div>`; });
+  cal += '</div><div class="cal-grid">';
+  let cells = startDow;
+  for (let i = 0; i < startDow; i++) cal += '<div></div>';
+  for (let d = 1; d <= totalDays; d++) {
+    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const log = getLog(ds);
+    const done = log.completed.length;
+    const isFuture = ds > today;
+    let cls = 'cal-day';
+    if (ds === today) cls += ' today-cal';
+    if (!isFuture && done === 5) cls += ' done-full';
+    else if (!isFuture && done > 0) cls += ' done-partial';
+    const dotCol = isFuture ? 'var(--b2)' : done === 5 ? 'var(--ac)' : done > 0 ? 'var(--carb)' : 'var(--b2)';
+    cal += `<div class="${cls}" onclick="S.viewDate='${ds}';navigate('today')">
+      <div class="cal-day-num">${d}</div>
+      <div class="cal-day-dot" style="background:${dotCol}"></div>
+    </div>`;
+    cells++;
+  }
+  cal += '</div>';
+
+  const completedDays = Array.from({length:totalDays},(_,i) => {
+    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`;
+    return ds <= today ? getLog(ds).completed.length : -1;
+  });
+  const doneCount = completedDays.filter(x => x === 5).length;
+  const partCount = completedDays.filter(x => x > 0 && x < 5).length;
+  const pastDays = completedDays.filter(x => x >= 0).length;
+  const adherence = pastDays > 0 ? Math.round((doneCount / pastDays) * 100) : 0;
+
+  const prevM = m === 0 ? {y:y-1,m:11} : {y,m:m-1};
+  const nextM = m === 11 ? {y:y+1,m:0} : {y,m:m+1};
+
+  document.getElementById('view').innerHTML = `
+    <div class="streak-banner">
+      <div class="streak-flame">🔥</div>
+      <div class="streak-info">
+        <div class="streak-num">${streak}</div>
+        <div class="streak-label">day streak — ${streak === 0 ? 'Complete today to start!' : 'Keep it up!'}</div>
+      </div>
+    </div>
+    <div class="month-header">
+      <button class="month-nav-btn" onclick="S.viewMonth={y:${prevM.y},m:${prevM.m}};renderView()">‹</button>
+      <div class="view-title">${monthName}</div>
+      <button class="month-nav-btn" onclick="S.viewMonth={y:${nextM.y},m:${nextM.m}};renderView()">›</button>
+    </div>
+    ${cal}
+    <div class="month-stats">
+      <div class="mstat"><div class="mstat-val">${doneCount}</div><div class="mstat-lbl">Perfect Days</div></div>
+      <div class="mstat"><div class="mstat-val">${adherence}%</div><div class="mstat-lbl">Adherence</div></div>
+      <div class="mstat"><div class="mstat-val">${partCount}</div><div class="mstat-lbl">Partial Days</div></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;font-size:12px;color:var(--t3)">
+      <span>🟩 Perfect day</span>
+      <span>🟨 Partial</span>
+      <span>⬜ Missed/future</span>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PROGRESS VIEW
+// ═══════════════════════════════════════════════════════════════
+function renderProgress() {
+  const p = S.profile;
+  const bmi = CALC.bmi(p.weight, p.height);
+  const bmiLbl = CALC.bmiLabel(bmi);
+  const goalLabels = {lose:'Lose Weight',build:'Build Muscle',definition:'Definition',maintenance:'Maintain'};
+
+  // Weight chart
+  const wEntries = S.weights.slice(-12);
+  let chartHtml = '';
+  if (wEntries.length >= 2) {
+    const vals = wEntries.map(e => e.weight);
+    const minW = Math.min(...vals) - 1;
+    const maxW = Math.max(...vals) + 1;
+    const W = 280, H = 100;
+    const xs = wEntries.map((_,i) => 10 + (i / (wEntries.length-1)) * (W-20));
+    const ys = vals.map(v => H - 10 - ((v - minW) / (maxW - minW)) * (H-20));
+    const path = xs.map((x,i) => `${i===0?'M':'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
+    const area = `${path} L${xs[xs.length-1].toFixed(1)},${H} L${xs[0].toFixed(1)},${H} Z`;
+    chartHtml = `
+    <div class="weight-chart-wrap">
+      <div class="chart-title">⚖️ Weight Trend (kg)</div>
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:120px;overflow:visible">
+        <defs>
+          <linearGradient id="wgrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--ac)" stop-opacity=".25"/>
+            <stop offset="100%" stop-color="var(--ac)" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="${area}" fill="url(#wgrad)"/>
+        <path d="${path}" fill="none" stroke="var(--ac)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        ${xs.map((x,i) => `<circle cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="3" fill="var(--ac)"/>`).join('')}
+        <text x="0" y="${H}" font-size="9" fill="var(--t3)" font-family="'DM Sans',sans-serif">${minW.toFixed(1)}</text>
+        <text x="0" y="10" font-size="9" fill="var(--t3)" font-family="'DM Sans',sans-serif">${maxW.toFixed(1)}</text>
+      </svg>
+    </div>`;
+  } else {
+    chartHtml = `<div class="weight-chart-wrap"><div class="chart-title">⚖️ Weight Trend</div>
+      <div style="text-align:center;color:var(--t3);padding:20px;font-size:13px">Log at least 2 weigh-ins to see your trend chart</div></div>`;
+  }
+
+  // Weight log list
+  const wList = S.weights.slice(-10).reverse().map((e,i,arr) => {
+    const prev = arr[i+1];
+    let delta = '';
+    if (prev) {
+      const diff = e.weight - prev.weight;
+      const col = diff > 0 ? 'pos' : 'neg';
+      delta = `<span class="wlog-delta ${col}">${diff > 0 ? '+':''}${diff.toFixed(1)} kg</span>`;
+    }
+    return `<div class="wlog-entry">
+      <div><div class="wlog-date">${fmtDate(e.date)}</div>${e.note?`<div style="font-size:11px;color:var(--t3)">${e.note}</div>`:''}</div>
+      <div style="display:flex;align-items:center;gap:8px"><div class="wlog-weight">${e.weight} kg</div>${delta}</div>
+    </div>`;
+  }).join('');
+
+  const change = S.weights.length >= 2
+    ? (S.weights[S.weights.length-1].weight - S.weights[0].weight).toFixed(1)
+    : null;
+
+  document.getElementById('view').innerHTML = `
+    <div class="view-title">📈 Progress</div>
+    <div class="view-sub">${p.name ? p.name + ' · ' : ''}${goalLabels[p.goal]}</div>
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="cal-num">${p.weight}<span style="font-size:16px;color:var(--t3)"> kg</span></div>
+        <div class="stat-card-lbl">Current Weight</div>
+        <div class="stat-card-sub">Target: ${p.targetWeight} kg</div>
+      </div>
+      <div class="stat-card">
+        <div class="cal-num">${bmi}</div>
+        <div class="stat-card-lbl">BMI</div>
+        <div class="stat-card-sub" style="color:${bmiLbl==='Healthy'?'var(--ac)':'var(--carb)'}">${bmiLbl}</div>
+      </div>
+      <div class="stat-card">
+        <div class="cal-num">${p.calories}</div>
+        <div class="stat-card-lbl">Daily Target</div>
+        <div class="stat-card-sub">kcal/day</div>
+      </div>
+      <div class="stat-card">
+        <div class="cal-num">${change !== null ? (change > 0 ? '+':'')+change : '—'}</div>
+        <div class="stat-card-lbl">Total Change</div>
+        <div class="stat-card-sub" style="color:${change===null?'var(--t3)':parseFloat(change)<0?'var(--ac)':'var(--fat)'}">${change!==null?'kg since start':'Log more weigh-ins'}</div>
+      </div>
+    </div>
+    ${chartHtml}
+    <button class="add-weight-btn" onclick="openWeightModal()">+ Log Today's Weight</button>
+    ${wList ? `<div class="chart-title" style="margin-bottom:10px">Recent Weigh-ins</div>${wList}` : ''}`;
+}
+
+function openWeightModal() {
+  document.getElementById('wm-weight').value = '';
+  document.getElementById('wm-note').value = '';
+  document.getElementById('weight-modal').classList.add('open');
+  setTimeout(() => document.getElementById('wm-weight').focus(), 200);
+}
+function closeWeightModal() { document.getElementById('weight-modal').classList.remove('open'); }
+
+async function saveWeight() {
+  const w = parseFloat(document.getElementById('wm-weight').value);
+  const note = document.getElementById('wm-note').value.trim();
+  if (!w || w < 30 || w > 300) { flash('Enter a valid weight', 'er'); return; }
+  const entry = { date: todayStr(), weight: w, note };
+  S.weights.push(entry);
+  S.weights.sort((a,b) => a.date.localeCompare(b.date));
+  await DB.set('weights', S.weights);
+  // Update current weight in profile
+  S.profile.weight = w;
+  const bmr  = CALC.bmr(S.profile.gender, w, S.profile.height, S.profile.age);
+  const tdee = CALC.tdee(bmr, S.profile.activity);
+  S.profile.calories = CALC.goalCalories(tdee, S.profile.goal);
+  S.profile.macros   = CALC.macros(S.profile.calories, S.profile.goal);
+  await DB.set('profile', S.profile);
+  updateHeader();
+  closeWeightModal();
+  flash('Weight logged ✓');
+  renderView();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GROCERY VIEW
+// ═══════════════════════════════════════════════════════════════
+function renderGrocery() {
+  const p  = S.profile;
+  const ws = weekStart(new Date());
+  const wk = dateStr(ws);
+  const days = PLAN.generateWeek(wk, p.goal);
+  const checked = S.grocery[wk] || {};
+
+  // Aggregate ingredients
+  const agg = {};
+  days.forEach(day => {
+    PLAN.mealSlots(day).forEach(slot => {
+      slot.meal.ingredients.forEach(ing => {
+        const key = ing.item.toLowerCase().replace(/[^a-z0-9]/g,'_');
+        if (agg[key]) {
+          if (ing.unit === agg[key].unit) agg[key].amount += ing.amount;
+        } else {
+          agg[key] = { key, item:ing.item, amount:ing.amount, unit:ing.unit, cat:ing.cat };
+        }
+      });
+    });
+  });
+
+  const cats = {
+    protein:    { label:'🥩 Proteins',          items:[] },
+    vegetables: { label:'🥦 Vegetables & Fruit', items:[] },
+    grains:     { label:'🌾 Grains & Carbs',      items:[] },
+    dairy:      { label:'🥛 Dairy & Alternatives',items:[] },
+    pantry:     { label:'🫙 Pantry & Spices',     items:[] }
+  };
+
+  Object.values(agg).forEach(ing => {
+    if (cats[ing.cat]) cats[ing.cat].items.push(ing);
+  });
+
+  const total = Object.values(agg).length;
+  const checkedCount = Object.values(checked).filter(Boolean).length;
+
+  let html = `
+    <div class="view-title">🛒 Grocery List</div>
+    <div class="grocery-header">
+      <div class="view-sub" style="margin:0">Week of ${fmtDate(wk)} · ${checkedCount}/${total} ticked</div>
+      <button class="grocery-clear-btn" onclick="clearGrocery('${wk}')">Clear all</button>
+    </div>`;
+
+  if (checkedCount === total && total > 0) {
+    html += `<div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:var(--radius);padding:12px 16px;margin:12px 0;color:var(--ac);font-weight:600;font-size:13px">✓ All items collected!</div>`;
+  }
+
+  Object.values(cats).forEach(cat => {
+    if (!cat.items.length) return;
+    html += `<div class="grocery-cat">
+      <div class="grocery-cat-title">${cat.label}</div>`;
+    cat.items.forEach(ing => {
+      const isChecked = !!checked[ing.key];
+      const amt = Number.isInteger(ing.amount) ? ing.amount : parseFloat(ing.amount.toFixed(1));
+      html += `
+      <div class="grocery-item ${isChecked?'checked':''}" onclick="toggleGrocery('${wk}','${ing.key}')">
+        <div class="gi-check ${isChecked?'on':''}">✓</div>
+        <div class="gi-name">${ing.item}</div>
+        <div class="gi-amount">${amt} ${ing.unit}</div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  document.getElementById('view').innerHTML = html;
+}
+
+async function toggleGrocery(wk, key) {
+  if (!S.grocery[wk]) S.grocery[wk] = {};
+  S.grocery[wk][key] = !S.grocery[wk][key];
+  await DB.set('grocery_' + wk, S.grocery[wk]);
+  renderView();
+}
+async function clearGrocery(wk) {
+  S.grocery[wk] = {};
+  await DB.set('grocery_' + wk, {});
+  renderView();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SETTINGS VIEW
+// ═══════════════════════════════════════════════════════════════
+function renderSettings() {
+  const p = S.profile;
+  const goalLabels = {lose:'Lose Weight',build:'Build Muscle',definition:'Definition',maintenance:'Maintenance'};
+  const actLabels  = {'1.2':'Sedentary','1.375':'Lightly Active','1.55':'Moderately Active','1.725':'Very Active','1.9':'Extremely Active'};
+
+  document.getElementById('view').innerHTML = `
+    <div class="view-title">⚙️ Settings</div>
+    <div class="view-sub">Your profile &amp; plan details</div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Profile</div>
+      ${[
+        {label:'Name', val: p.name||'Not set'},
+        {label:'Gender', val: p.gender.charAt(0).toUpperCase()+p.gender.slice(1)},
+        {label:'Age', val: p.age + ' years'},
+        {label:'Height', val: p.height + ' cm'},
+        {label:'Current Weight', val: p.weight + ' kg'},
+        {label:'Target Weight', val: p.targetWeight + ' kg'}
+      ].map(r => `
+        <div class="settings-row">
+          <span class="settings-label">${r.label}</span>
+          <span class="settings-val">${r.val}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Plan</div>
+      ${[
+        {label:'Goal', val: goalLabels[p.goal]},
+        {label:'Activity Level', val: actLabels[p.activity]},
+        {label:'Daily Calories', val: p.calories + ' kcal'},
+        {label:'Protein Target', val: p.macros.protein + 'g'},
+        {label:'Carbs Target', val: p.macros.carbs + 'g'},
+        {label:'Fat Target', val: p.macros.fat + 'g'},
+        {label:'Water Target', val: CALC.waterTarget(p.weight) + 'L / day'}
+      ].map(r => `
+        <div class="settings-row">
+          <span class="settings-label">${r.label}</span>
+          <span class="settings-val">${r.val}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Danger Zone</div>
+      <button class="btn-danger" style="width:100%" onclick="resetProfile()">Reset Profile & Start Over</button>
+    </div>`;
+}
+
+async function resetProfile() {
+  if (!confirm('This will delete your profile and all progress. Are you sure?')) return;
+  try {
+    await DB.set('profile', null);
+    S.profile = null;
+    S.logs = {}; S.weights = []; S.grocery = {};
+    document.getElementById('app').classList.remove('active');
+    document.getElementById('setup').classList.add('active');
+  } catch(e) { flash('Could not reset', 'er'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ROUTER
+// ═══════════════════════════════════════════════════════════════
+function renderView() {
+  switch(S.view) {
+    case 'today':    renderToday();    break;
+    case 'week':     renderWeek();     break;
+    case 'month':    renderMonth();    break;
+    case 'progress': renderProgress(); break;
+    case 'grocery':  renderGrocery();  break;
+    case 'settings': renderSettings(); break;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════════
+async function init() {
+  // Apply saved theme
+  applyTheme(localStorage.getItem('dt-theme') || 'dark');
+
+  // Close modals on escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeSwap(); closeWeightModal();
+    }
+  });
+
+  try {
+    // Load profile
+    const profile = await DB.get('profile');
+    if (!profile) {
+      document.getElementById('setup').classList.add('active');
+      return;
+    }
+    S.profile = profile;
+
+    // Load logs for current week + previous week
+    const ws = weekStart(new Date());
+    const prevWs = new Date(ws); prevWs.setDate(prevWs.getDate()-7);
+    const nextWs = new Date(ws); nextWs.setDate(nextWs.getDate()+7);
+
+    // Load all log entries
+    const logRows = await DB.getAll('log_');
+    logRows.forEach(row => {
+      const dt = row.id.replace('log_', '');
+      S.logs[dt] = row.data;
+    });
+
+    // Load weights
+    const wData = await DB.get('weights');
+    S.weights = Array.isArray(wData) ? wData : [];
+
+    // Load grocery
+    const grocRows = await DB.getAll('grocery_');
+    grocRows.forEach(row => {
+      const wk = row.id.replace('grocery_', '');
+      S.grocery[wk] = row.data;
+    });
+
+    document.getElementById('app').classList.add('active');
+    updateHeader();
+    navigate('today');
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('setup').classList.add('active');
+    const err = document.getElementById('setup-err');
+    err.textContent = 'Could not connect to database. Make sure you have internet access and the diet_data table is created in Supabase.';
+    err.style.display = 'block';
+  }
+}
+
+init();
+</script>
+</body>
+</html>

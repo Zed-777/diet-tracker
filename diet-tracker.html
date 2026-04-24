@@ -1600,6 +1600,57 @@ const LANG = {
     protein: 'Protein',
     carbs: 'Carbs',
     fat: 'Fat',
+    removedFavourite: '✓ Removed from favourites',
+    addedFavourite: '★ Added to favourites',
+    failedToSaveMeal: 'Failed to save meal progress',
+    failedToSaveWater: 'Failed to save water intake',
+    failedToSaveFavourite: 'Failed to save favourite',
+    profileUpdated: '✓ Profile updated',
+    
+    // Modal titles & buttons
+    closeSettings: 'Close',
+    
+    // Streak & Stats
+    dayStreak: 'day streak —',
+    completeToday: 'Complete today to start!',
+    keepItUp: 'Keep it up!',
+    perfectDays: 'Perfect Days',
+    adherence: 'Adherence',
+    partialDays: 'Partial Days',
+    perfectDay: '🟩 Perfect day',
+    partialDay: '🟨 Partial',
+    missedFuture: '⬜ Missed/future',
+    
+    // Weight chart
+    weightTrend: '⚖️ Weight Trend (kg)',
+    lastEntries: 'Last 4 Weights',
+    lastWeights: 'Last 4 Weights',
+    
+    // Month calendar header
+    dayAbbrs: 'MTWTFSS',
+    
+    // Goal labels (full)
+    loseWeightFull: 'Lose Weight',
+    buildMuscleFull: 'Build Muscle',
+    definitionFull: 'Definition',
+    maintainFull: 'Maintain',
+    
+    // Grocery list
+    noMealsLogged: 'No meals logged',
+    generatedFromMeals: 'Generated from your meal plan',
+    
+    // Favorite actions
+    unfavourite: '☆ Favourite',
+    favourited: '★ Favourite',
+    
+    // Meal counts
+    mealsDone: 'Meals Done',
+    kcalEaten: 'kcal Eaten',
+    
+    // View helpers  
+    todayLabel: 'Today',
+    snackLabel1: 'Snack 1',
+    snackLabel2: 'Snack 2',
     
     // Weekly View
     weeklyTitle: '📅 This Week',
@@ -1748,6 +1799,53 @@ const LANG = {
     snack1: 'Refrigerio 1',
     snack2: 'Refrigerio 2',
     meal: 'Comida',
+    removedFavourite: '✓ Eliminado de favoritos',
+    addedFavourite: '★ Agregado a favoritos',
+    failedToSaveMeal: 'Error al guardar progreso de comida',
+    failedToSaveWater: 'Error al guardar ingesta de agua',
+    failedToSaveFavourite: 'Error al guardar favorito',
+    profileUpdated: '✓ Perfil actualizado',
+    
+    // Streak & Stats
+    dayStreak: 'racha de días —',
+    completeToday: '¡Completa hoy para comenzar!',
+    keepItUp: '¡Sigue adelante!',
+    perfectDays: 'Días Perfectos',
+    adherence: 'Adherencia',
+    partialDays: 'Días Parciales',
+    perfectDay: '🟩 Día perfecto',
+    partialDay: '🟨 Parcial',
+    missedFuture: '⬜ Perdido/futuro',
+    
+    // Weight chart
+    weightTrend: '⚖️ Tendencia de Peso (kg)',
+    lastEntries: 'Últimas 4 Pesos',
+    
+    // Month calendar header
+    dayAbbrs: 'LMMJVSD',
+    
+    // Goal labels (full)
+    loseWeightFull: 'Perder Peso',
+    buildMuscleFull: 'Aumentar Músculo',
+    definitionFull: 'Definición',
+    maintainFull: 'Mantener',
+    
+    // Grocery list
+    noMealsLogged: 'Sin comidas registradas',
+    generatedFromMeals: 'Generado desde tu plan de comidas',
+    
+    // Favorite actions
+    unfavourite: '☆ Favorito',
+    favourited: '★ Favorito',
+    
+    // Meal counts
+    mealsDone: 'Comidas Completadas',
+    kcalEaten: 'kcal Consumido',
+    
+    // View helpers  
+    todayLabel: 'Hoy',
+    snackLabel1: 'Refrigerio 1',
+    snackLabel2: 'Refrigerio 2',
     
     // Monthly View
     monthlyTitle: '📆 Este Mes',
@@ -2098,7 +2196,7 @@ function renderToday() {
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
     <button onclick="S.viewDate='${prevStr}';renderView()" style="background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:6px 12px;color:var(--t2);font-size:14px">‹</button>
     <div style="text-align:center">
-      <div class="view-title">${isToday ? '📋 Today' : '📋 ' + fmtDate(dt)}</div>
+      <div class="view-title">${isToday ? '📋 ' + T('dailyTitle').slice(2) : '📋 ' + fmtDate(dt)}</div>
       <div style="font-size:11px;color:var(--t3)">${isToday ? fmtDateFull(dt) : ''}</div>
     </div>
     <button onclick="S.viewDate='${nextStr}';renderView()" style="background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:6px 12px;color:${isFuture?'var(--b2)':'var(--t2)'};font-size:14px" ${isFuture?'disabled':''}>›</button>
@@ -2130,14 +2228,14 @@ function renderToday() {
         <circle cx="50" cy="50" r="18" fill="none" stroke="#EF4444" stroke-width="7"
           stroke-dasharray="${C3}" stroke-dashoffset="${C3*(1-fPct/100)}" stroke-linecap="round" transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .6s ease"/>
         <text x="50" y="47" class="ring-center" style="font-size:14px;font-weight:800;fill:var(--t1);font-family:'DM Sans',sans-serif">${consumed.cal}</text>
-        <text x="50" y="59" class="ring-center" style="font-size:8px;fill:var(--t3);font-family:'DM Sans',sans-serif">of ${tCal}</text>
+        <text x="50" y="59" class="ring-center" style="font-size:8px;fill:var(--t3);font-family:'DM Sans',sans-serif">${T('ok')} ${tCal}</text>
       </svg>
     </div>
     <div class="macro-legends">
       ${[
-        {label:'Protein', val:consumed.protein, tgt:tgt.protein, pct:pPct, color:'#8B5CF6'},
-        {label:'Carbs',   val:consumed.carbs,   tgt:tgt.carbs,   pct:cPct, color:'#F59E0B'},
-        {label:'Fat',     val:consumed.fat,      tgt:tgt.fat,     pct:fPct, color:'#EF4444'}
+        {label:T('protein'), val:consumed.protein, tgt:tgt.protein, pct:pPct, color:'#8B5CF6'},
+        {label:T('carbs'),   val:consumed.carbs,   tgt:tgt.carbs,   pct:cPct, color:'#F59E0B'},
+        {label:T('fat'),     val:consumed.fat,      tgt:tgt.fat,     pct:fPct, color:'#EF4444'}
       ].map(m => `
         <div class="macro-row">
           <div class="macro-label"><span class="macro-dot" style="background:${m.color}"></span>${m.label}</div>
@@ -2146,7 +2244,7 @@ function renderToday() {
         <div class="macro-bar"><div class="macro-bar-fill" style="width:${m.pct}%;background:${m.color}"></div></div>
       `).join('')}
       <div style="font-size:11px;color:${tCal-consumed.cal>0?'var(--ac)':'#EF4444'};font-weight:700;margin-top:6px;text-align:right">
-        ${tCal-consumed.cal>=0 ? (tCal-consumed.cal)+' kcal remaining' : Math.abs(tCal-consumed.cal)+' kcal over'}
+        ${tCal-consumed.cal>=0 ? T('kcalRemaining').replace('{{kcal}}', tCal-consumed.cal) : T('kcalOver').replace('{{kcal}}', Math.abs(tCal-consumed.cal))}
       </div>
     </div>
   </div>`;
@@ -2155,8 +2253,8 @@ function renderToday() {
   html += `
   <div class="water-card">
     <div class="water-header">
-      <div class="water-title">💧 Water Intake</div>
-      <div class="water-count">${waterLitres}L / ${CALC.waterTarget(p.weight)}L target</div>
+      <div class="water-title">${T('waterIntake')}</div>
+      <div class="water-count">${waterLitres}L / ${CALC.waterTarget(p.weight)}L ${T('ok')}</div>
     </div>
     <div class="water-cups">
       ${Array.from({length:Math.max(waterTarget,8)},(_,i) => `
@@ -2166,7 +2264,7 @@ function renderToday() {
   </div>`;
 
   // Meals
-  const slotLabels = {breakfast:'Breakfast',snack1:'Morning Snack',lunch:'Lunch',snack2:'Afternoon Snack',dinner:'Dinner'};
+  const slotLabels = {breakfast:T('breakfast'),snack1:T('morningSnack'),lunch:T('lunch'),snack2:T('afternoonSnack'),dinner:T('dinner')};
   const slotIcons  = {breakfast:'🌅',snack1:'🍎',lunch:'☀️',snack2:'🥜',dinner:'🌙'};
 
   slots.forEach(slot => {
@@ -2193,8 +2291,8 @@ function renderToday() {
       </div>
       <div class="meal-detail" id="md-${slot.key}">
         <div class="detail-tabs">
-          <button class="dtab active" onclick="switchTab('${slot.key}','ingredients',this)">Ingredients</button>
-          <button class="dtab" onclick="switchTab('${slot.key}','recipe',this)">Recipe</button>
+          <button class="dtab active" onclick="switchTab('${slot.key}','ingredients',this)">${T('ingredients')}</button>
+          <button class="dtab" onclick="switchTab('${slot.key}','recipe',this)">${T('recipe')}</button>
         </div>
         <span class="prep-badge">⏱ ${m.prepTime} min prep</span>
         <div class="detail-panel active" id="dp-${slot.key}-ingredients">
@@ -2214,9 +2312,9 @@ function renderToday() {
         </div>
         <div class="meal-actions">
           <button class="meal-action-btn ${isFav?'fav active':'fav'}" onclick="toggleFav('${m.id}')">
-            ${isFav?'★ Favourite':'☆ Favourite'}
+            ${isFav ? T('isFavourite') : T('favourite')}
           </button>
-          <button class="meal-action-btn" onclick="openSwap('${slot.key}','${dt}')">🔄 Swap</button>
+          <button class="meal-action-btn" onclick="openSwap('${slot.key}','${dt}')">${T('swap')}</button>
         </div>
       </div>
     </div>`;
@@ -2251,7 +2349,7 @@ async function toggleMeal(key, dt) {
     renderView();
   } catch(e) {
     console.error('Error toggling meal:', e);
-    flash('Failed to save meal progress', 'er');
+    flash(T('failedToSaveMeal'), 'er');
   }
 }
 
@@ -2263,7 +2361,7 @@ async function logWater(glasses, dt) {
     renderView();
   } catch(e) {
     console.error('Error logging water:', e);
-    flash('Failed to save water intake', 'er');
+    flash(T('failedToSaveWater'), 'er');
   }
 }
 
@@ -2275,7 +2373,7 @@ async function toggleFav(mealId) {
     if (idx >= 0) favs.splice(idx, 1); else favs.push(mealId);
     p.favourites = favs;
     await DB.set('profile', p);
-    flash(idx >= 0 ? '✓ Removed from favourites' : '★ Added to favourites', 'ok');
+    flash(idx >= 0 ? T('removedFavourite') : T('addedFavourite'), 'ok');
     renderView();
   } catch(e) {
     console.error('Error toggling favourite:', e);
@@ -2334,7 +2432,7 @@ function renderWeek() {
   const today = todayStr();
 
   let dayCards = '<div class="week-grid">';
-  const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const dayNames = [T('mon'),T('tue'),T('wed'),T('thu'),T('fri'),T('sat'),T('sun')];
   days.forEach((day, i) => {
     const log  = getLog(day.date);
     const done = log.completed.length;
@@ -2353,10 +2451,10 @@ function renderWeek() {
   dayCards += '</div>';
 
   const slots = ['breakfast','snack1','lunch','snack2','dinner'];
-  const slotNames = {breakfast:'Breakfast',snack1:'Snack 1',lunch:'Lunch',snack2:'Snack 2',dinner:'Dinner'};
+  const slotNames = {breakfast:T('breakfast'),snack1:T('snack1'),lunch:T('lunch'),snack2:T('snack2'),dinner:T('dinner')};
 
   let table = '<div class="week-meal-table">';
-  table += '<div class="wmt-header"><div class="wmt-cell">Meal</div>' +
+  table += '<div class="wmt-header"><div class="wmt-cell">${T('meal')}</div>' +
     dayNames.map(d => `<div class="wmt-cell">${d}</div>`).join('') + '</div>';
 
   slots.forEach(slot => {
@@ -2380,8 +2478,8 @@ function renderWeek() {
   const perfectDays = days.filter(day => getLog(day.date).completed.length === 5).length;
 
   document.getElementById('view').innerHTML = `
-    <div class="view-title">📅 This Week</div>
-    <div class="view-sub">Tap any day to view its meal plan</div>
+    <div class="view-title">📅 ${T('weeklyTitle').slice(3)}</div>
+    <div class="view-sub">${T('tapDayToView')}</div>
     ${dayCards}
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
       <div class="mstat"><div class="mstat-val">${completedMeals}</div><div class="mstat-lbl">Meals Done</div></div>
@@ -2414,7 +2512,7 @@ function renderMonth() {
 
   // Calendar
   let cal = '<div class="cal-grid-header">';
-  ['M','T','W','T','F','S','S'].forEach(n => { cal += `<div class="cal-dow">${n}</div>`; });
+  ['M','T','W','T','F','S','S'].forEach((n, i) => { const dayLabels = T('mon|tue|wed|thu|fri|sat|sun').split('|'); cal += `<div class="cal-dow">${dayLabels[i] || n}</div>`; });
   cal += '</div><div class="cal-grid">';
   let cells = startDow;
   for (let i = 0; i < startDow; i++) cal += '<div></div>';
@@ -2453,24 +2551,24 @@ function renderMonth() {
       <div class="streak-flame">🔥</div>
       <div class="streak-info">
         <div class="streak-num">${streak}</div>
-        <div class="streak-label">day streak — ${streak === 0 ? 'Complete today to start!' : 'Keep it up!'}</div>
+        <div class="streak-label">${streak} ${T('dayStreak')} ${streak === 0 ? T('completeToday') : T('keepItUp')}</div>
       </div>
     </div>
     <div class="month-header">
       <button class="month-nav-btn" onclick="S.viewMonth={y:${prevM.y},m:${prevM.m}};renderView()">‹</button>
-      <div class="view-title">${monthName}</div>
+    <div class="view-title">${monthName}</div>
       <button class="month-nav-btn" onclick="S.viewMonth={y:${nextM.y},m:${nextM.m}};renderView()">›</button>
     </div>
     ${cal}
     <div class="month-stats">
-      <div class="mstat"><div class="mstat-val">${doneCount}</div><div class="mstat-lbl">Perfect Days</div></div>
-      <div class="mstat"><div class="mstat-val">${adherence}%</div><div class="mstat-lbl">Adherence</div></div>
-      <div class="mstat"><div class="mstat-val">${partCount}</div><div class="mstat-lbl">Partial Days</div></div>
+      <div class="mstat"><div class="mstat-val">${doneCount}</div><div class="mstat-lbl">${T('perfectDays')}</div></div>
+      <div class="mstat"><div class="mstat-val">${adherence}%</div><div class="mstat-lbl">${T('adherence')}</div></div>
+      <div class="mstat"><div class="mstat-val">${partCount}</div><div class="mstat-lbl">${T('partialDays')}</div></div>
     </div>
     <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;font-size:12px;color:var(--t3)">
-      <span>🟩 Perfect day</span>
-      <span>🟨 Partial</span>
-      <span>⬜ Missed/future</span>
+      <span>${T('perfectDay')}</span>
+      <span>${T('partialDay')}</span>
+      <span>${T('missedFuture')}</span>
     </div>`;
 }
 
@@ -2481,7 +2579,7 @@ function renderProgress() {
   const p = S.profile;
   const bmi = CALC.bmi(p.weight, p.height);
   const bmiLbl = CALC.bmiLabel(bmi);
-  const goalLabels = {lose:'Lose Weight',build:'Build Muscle',definition:'Definition',maintenance:'Maintain'};
+  const goalLabels = {lose:T('loseWeightFull'),build:T('buildMuscleFull'),definition:T('definitionFull'),maintenance:T('maintainFull')};
 
   // Weight chart
   const wEntries = S.weights.slice(-12);

@@ -454,6 +454,20 @@ const DB = {
     });
     if (!r.ok) throw new Error(r.status);
   },
+  async delete(id) {
+    const r = await fetch(`${DTABLE}?id=eq.${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: DH
+    });
+    if (!r.ok) throw new Error(r.status);
+  },
+  async deleteAll(prefix) {
+    const r = await fetch(`${DTABLE}?id=like.${encodeURIComponent(prefix + '*')}`, {
+      method: 'DELETE',
+      headers: DH
+    });
+    if (!r.ok) throw new Error(r.status);
+  },
   async getAll(prefix) {
     const r = await fetch(`${DTABLE}?id=like.${encodeURIComponent(prefix + '*')}&select=id,data&order=created_at.desc`, { headers: DH });
     if (!r.ok) throw new Error(r.status);
@@ -1859,7 +1873,10 @@ function renderSettings() {
 async function resetProfile() {
   if (!confirm('This will delete your profile and all progress. Are you sure?')) return;
   try {
-    await DB.set('profile', null);
+    await DB.delete('profile');
+    await DB.delete('weights');
+    await DB.deleteAll('log_');
+    await DB.deleteAll('grocery_');
     S.profile = null;
     S.logs = {}; S.weights = []; S.grocery = {};
     document.getElementById('app').classList.remove('active');

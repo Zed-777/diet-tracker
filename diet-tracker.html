@@ -1708,16 +1708,37 @@ const LANG = {
     
     // Settings
     settingsTitle: '⚙️ Settings',
-    profile: 'Your Profile',
-    editSettings: 'Edit Settings',
-    closeSettings: 'Close',
-    saveChanges: 'Save Changes',
-    logWeight: 'Log Weight',
-    weight: 'Weight (kg)',
-    note: 'Note (optional)',
-    logEntry: 'Log Entry',
-    resetProfile: 'Reset Profile',
-    resetConfirm: 'This will delete all your data. Are you sure?',
+    settingsSub: 'Your profile & plan details',
+    editButton: '✏️ Edit',
+    profileSection: 'Profile',
+    planSection: 'Plan',
+    dangerZone: 'Danger Zone',
+    resetButton: 'Reset Profile & Start Over',
+    resetConfirmMsg: 'This will delete your profile and all progress. Are you sure?',
+    
+    // Settings field labels
+    name: 'Name',
+    gender: 'Gender',
+    age: 'Age',
+    height: 'Height',
+    currentWeight: 'Current Weight',
+    targetWeight: 'Target Weight',
+    goal: 'Goal',
+    activityLevel: 'Activity Level',
+    dailyCalories: 'Daily Calories',
+    proteinTarget: 'Protein Target',
+    carbsTarget: 'Carbs Target',
+    fatTarget: 'Fat Target',
+    waterTarget: 'Water Target',
+    
+    // Activity levels
+    sedentary: 'Sedentary',
+    lightlyActive: 'Lightly Active',
+    moderatelyActive: 'Moderately Active',
+    veryActive: 'Very Active',
+    extremelyActive: 'Extremely Active',
+    yearsOld: 'years',
+    perDay: 'per day',
     
     // Modals
     swapMeal: '🔄 Swap Meal',
@@ -1910,16 +1931,37 @@ const LANG = {
     
     // Settings
     settingsTitle: '⚙️ Configuración',
-    profile: 'Tu Perfil',
-    editSettings: 'Editar Configuración',
-    closeSettings: 'Cerrar',
-    saveChanges: 'Guardar Cambios',
-    logWeight: 'Registrar Peso',
-    weight: 'Peso (kg)',
-    note: 'Nota (opcional)',
-    logEntry: 'Entrada de Registro',
-    resetProfile: 'Restablecer Perfil',
-    resetConfirm: 'Esto eliminará todos tus datos. ¿Estás seguro?',
+    settingsSub: 'Detalles de tu perfil y plan',
+    editButton: '✏️ Editar',
+    profileSection: 'Perfil',
+    planSection: 'Plan',
+    dangerZone: 'Zona de Riesgo',
+    resetButton: 'Restablecer Perfil y Comenzar de Nuevo',
+    resetConfirmMsg: 'Esto eliminará tu perfil y todo el progreso. ¿Estás seguro?',
+    
+    // Settings field labels
+    name: 'Nombre',
+    gender: 'Género',
+    age: 'Edad',
+    height: 'Altura',
+    currentWeight: 'Peso Actual',
+    targetWeight: 'Peso Objetivo',
+    goal: 'Objetivo',
+    activityLevel: 'Nivel de Actividad',
+    dailyCalories: 'Calorías Diarias',
+    proteinTarget: 'Objetivo de Proteína',
+    carbsTarget: 'Objetivo de Carbohidratos',
+    fatTarget: 'Objetivo de Grasas',
+    waterTarget: 'Objetivo de Agua',
+    
+    // Activity levels
+    sedentary: 'Sedentario',
+    lightlyActive: 'Ligeramente Activo',
+    moderatelyActive: 'Moderadamente Activo',
+    veryActive: 'Muy Activo',
+    extremelyActive: 'Extremadamente Activo',
+    yearsOld: 'años',
+    perDay: 'por día',
     
     // Modals
     swapMeal: '🔄 Cambiar Comida',
@@ -2996,27 +3038,27 @@ async function clearGrocery(storageKey) {
 // ═══════════════════════════════════════════════════════════════
 function renderSettings() {
   const p = S.profile;
-  const goalLabels = {lose:'Lose Weight',build:'Build Muscle',definition:'Definition',maintenance:'Maintenance'};
-  const actLabels  = {'1.2':'Sedentary','1.375':'Lightly Active','1.55':'Moderately Active','1.725':'Very Active','1.9':'Extremely Active'};
+  const goalLabels = {lose:T('loseWeightFull'),build:T('buildMuscleFull'),definition:T('definitionFull'),maintenance:T('maintainFull')};
+  const actLabels  = {'1.2':T('sedentary'),'1.375':T('lightlyActive'),'1.55':T('moderatelyActive'),'1.725':T('veryActive'),'1.9':T('extremelyActive')};
 
   document.getElementById('view').innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:16px">
       <div>
-        <div class="view-title">⚙️ Settings</div>
-        <div class="view-sub">Your profile &amp; plan details</div>
+        <div class="view-title">${T('settingsTitle')}</div>
+        <div class="view-sub">${T('settingsSub')}</div>
       </div>
-      <button class="btn-ghost" style="flex-shrink:0" onclick="openSettingsModal()">✏️ Edit</button>
+      <button class="btn-ghost" style="flex-shrink:0" onclick="openSettingsModal()">${T('editButton')}</button>
     </div>
 
     <div class="settings-section">
-      <div class="settings-section-title">Profile</div>
+      <div class="settings-section-title">${T('profileSection')}</div>
       ${[
-        {label:'Name', val: p.name||'Not set'},
-        {label:'Gender', val: p.gender.charAt(0).toUpperCase()+p.gender.slice(1)},
-        {label:'Age', val: p.age + ' years'},
-        {label:'Height', val: p.height + ' cm'},
-        {label:'Current Weight', val: p.weight + ' kg'},
-        {label:'Target Weight', val: p.targetWeight + ' kg'}
+        {label:T('name'), val: p.name||'Not set'},
+        {label:T('gender'), val: p.gender.charAt(0).toUpperCase()+p.gender.slice(1)},
+        {label:T('age'), val: p.age + ' ' + T('yearsOld')},
+        {label:T('height'), val: p.height + ' cm'},
+        {label:T('currentWeight'), val: p.weight + ' kg'},
+        {label:T('targetWeight'), val: p.targetWeight + ' kg'}
       ].map(r => `
         <div class="settings-row">
           <span class="settings-label">${r.label}</span>
@@ -3026,15 +3068,15 @@ function renderSettings() {
     </div>
 
     <div class="settings-section">
-      <div class="settings-section-title">Plan</div>
+      <div class="settings-section-title">${T('planSection')}</div>
       ${[
-        {label:'Goal', val: goalLabels[p.goal]},
-        {label:'Activity Level', val: actLabels[p.activity]},
-        {label:'Daily Calories', val: p.calories + ' kcal'},
-        {label:'Protein Target', val: p.macros.protein + 'g'},
-        {label:'Carbs Target', val: p.macros.carbs + 'g'},
-        {label:'Fat Target', val: p.macros.fat + 'g'},
-        {label:'Water Target', val: CALC.waterTarget(p.weight) + 'L / day'}
+        {label:T('goal'), val: goalLabels[p.goal]},
+        {label:T('activityLevel'), val: actLabels[p.activity]},
+        {label:T('dailyCalories'), val: p.calories + ' kcal'},
+        {label:T('proteinTarget'), val: p.macros.protein + 'g'},
+        {label:T('carbsTarget'), val: p.macros.carbs + 'g'},
+        {label:T('fatTarget'), val: p.macros.fat + 'g'},
+        {label:T('waterTarget'), val: CALC.waterTarget(p.weight) + 'L / ' + T('perDay')}
       ].map(r => `
         <div class="settings-row">
           <span class="settings-label">${r.label}</span>
@@ -3044,13 +3086,13 @@ function renderSettings() {
     </div>
 
     <div class="settings-section">
-      <div class="settings-section-title">Danger Zone</div>
-      <button class="btn-danger" style="width:100%" onclick="resetProfile()">Reset Profile & Start Over</button>
+      <div class="settings-section-title">${T('dangerZone')}</div>
+      <button class="btn-danger" style="width:100%" onclick="resetProfile()">${T('resetButton')}</button>
     </div>`;
 }
 
 async function resetProfile() {
-  if (!confirm('This will delete your profile and all progress. Are you sure?')) return;
+  if (!confirm(T('resetConfirmMsg'))) return;
   try {
     await DB.delete('profile');
     await DB.delete('weights');

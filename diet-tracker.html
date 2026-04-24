@@ -1671,11 +1671,21 @@ const LANG = {
     
     // Progress
     progressTitle: '📈 Progress',
+    currentWeight: 'Current Weight',
+    targetWeight: 'Target',
+    bmi: 'BMI',
+    dailyTarget: 'Daily Target',
+    kcalPerDay: 'kcal/day',
+    totalChange: 'Total Change',
+    kgSinceStart: 'kg since start',
+    logMoreWeighins: 'Log more weigh-ins',
     weeklyAvg: 'Weekly Avg',
     avgAdherence: 'Avg Adherence',
     streak: 'Current Streak',
     days: 'days',
-    lastWeights: 'Last 4 Weights',
+    weightTrendChart: '⚖️ Weight Trend (kg)',
+    logTodaysWeight: '+ Log Today\'s Weight',
+    recentWeighins: 'Recent Weigh-ins',
     
     // Grocery
     groceryTitle: '🛒 Grocery List',
@@ -1852,11 +1862,21 @@ const LANG = {
     
     // Progress
     progressTitle: '📈 Progreso',
+    currentWeight: 'Peso Actual',
+    targetWeight: 'Objetivo',
+    bmi: 'IMC',
+    dailyTarget: 'Objetivo Diario',
+    kcalPerDay: 'kcal/día',
+    totalChange: 'Cambio Total',
+    kgSinceStart: 'kg desde el inicio',
+    logMoreWeighins: 'Registra más pesajes',
     weeklyAvg: 'Promedio Semanal',
     avgAdherence: 'Adherencia Promedio',
     streak: 'Racha Actual',
     days: 'días',
-    lastWeights: 'Últimas 4 Pesos',
+    weightTrendChart: '⚖️ Tendencia de Peso (kg)',
+    logTodaysWeight: '+ Registrar Peso de Hoy',
+    recentWeighins: 'Pesajes Recientes',
     
     // Grocery
     groceryTitle: '🛒 Lista de Compras',
@@ -2454,7 +2474,7 @@ function renderWeek() {
   const slotNames = {breakfast:T('breakfast'),snack1:T('snack1'),lunch:T('lunch'),snack2:T('snack2'),dinner:T('dinner')};
 
   let table = '<div class="week-meal-table">';
-  table += '<div class="wmt-header"><div class="wmt-cell">${T('meal')}</div>' +
+  table += `<div class="wmt-header"><div class="wmt-cell">${T('meal')}</div>` +
     dayNames.map(d => `<div class="wmt-cell">${d}</div>`).join('') + '</div>';
 
   slots.forEach(slot => {
@@ -2482,9 +2502,9 @@ function renderWeek() {
     <div class="view-sub">${T('tapDayToView')}</div>
     ${dayCards}
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-      <div class="mstat"><div class="mstat-val">${completedMeals}</div><div class="mstat-lbl">Meals Done</div></div>
-      <div class="mstat"><div class="mstat-val">${perfectDays}</div><div class="mstat-lbl">Perfect Days</div></div>
-      <div class="mstat"><div class="mstat-val">${weekCal}</div><div class="mstat-lbl">kcal Eaten</div></div>
+      <div class="mstat"><div class="mstat-val">${completedMeals}</div><div class="mstat-lbl">${T('mealsDone')}</div></div>
+      <div class="mstat"><div class="mstat-val">${perfectDays}</div><div class="mstat-lbl">${T('perfectDays')}</div></div>
+      <div class="mstat"><div class="mstat-val">${weekCal}</div><div class="mstat-lbl">${T('kcalEaten')}</div></div>
     </div>
     ${table}`;
 }
@@ -2498,7 +2518,8 @@ function renderMonth() {
   const firstDay = new Date(y, m, 1);
   const startDow = (firstDay.getDay() + 6) % 7; // Mon=0
   const totalDays = daysInMonth(y, m);
-  const monthName = firstDay.toLocaleDateString('en-AU', {month:'long',year:'numeric'});
+  const locale = (S.language === 'es') ? 'es-ES' : 'en-AU';
+  const monthName = firstDay.toLocaleDateString(locale, {month:'long',year:'numeric'});
 
   // Streak calc
   let streak = 0;
@@ -2512,7 +2533,8 @@ function renderMonth() {
 
   // Calendar
   let cal = '<div class="cal-grid-header">';
-  ['M','T','W','T','F','S','S'].forEach((n, i) => { const dayLabels = T('mon|tue|wed|thu|fri|sat|sun').split('|'); cal += `<div class="cal-dow">${dayLabels[i] || n}</div>`; });
+  const monthDayLabels = [T('mon'), T('tue'), T('wed'), T('thu'), T('fri'), T('sat'), T('sun')];
+  monthDayLabels.forEach((label, i) => { cal += `<div class="cal-dow">${label}</div>`; });
   cal += '</div><div class="cal-grid">';
   let cells = startDow;
   for (let i = 0; i < startDow; i++) cal += '<div></div>';
@@ -2595,7 +2617,7 @@ function renderProgress() {
     const area = `${path} L${xs[xs.length-1].toFixed(1)},${H} L${xs[0].toFixed(1)},${H} Z`;
     chartHtml = `
     <div class="weight-chart-wrap">
-      <div class="chart-title">⚖️ Weight Trend (kg)</div>
+      <div class="chart-title">${T('weightTrendChart')}</div>
       <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:120px;overflow:visible">
         <defs>
           <linearGradient id="wgrad" x1="0" y1="0" x2="0" y2="1">
@@ -2635,33 +2657,33 @@ function renderProgress() {
     : null;
 
   document.getElementById('view').innerHTML = `
-    <div class="view-title">📈 Progress</div>
+    <div class="view-title">📈 ${T('progressTitle').slice(3)}</div>
     <div class="view-sub">${p.name ? p.name + ' · ' : ''}${goalLabels[p.goal]}</div>
     <div class="stat-cards">
       <div class="stat-card">
         <div class="cal-num">${p.weight}<span style="font-size:16px;color:var(--t3)"> kg</span></div>
-        <div class="stat-card-lbl">Current Weight</div>
-        <div class="stat-card-sub">Target: ${p.targetWeight} kg</div>
+        <div class="stat-card-lbl">${T('currentWeight')}</div>
+        <div class="stat-card-sub">${T('targetWeight')}: ${p.targetWeight} kg</div>
       </div>
       <div class="stat-card">
         <div class="cal-num">${bmi}</div>
-        <div class="stat-card-lbl">BMI</div>
+        <div class="stat-card-lbl">${T('bmi')}</div>
         <div class="stat-card-sub" style="color:${bmiLbl==='Healthy'?'var(--ac)':'var(--carb)'}">${bmiLbl}</div>
       </div>
       <div class="stat-card">
         <div class="cal-num">${p.calories}</div>
-        <div class="stat-card-lbl">Daily Target</div>
-        <div class="stat-card-sub">kcal/day</div>
+        <div class="stat-card-lbl">${T('dailyTarget')}</div>
+        <div class="stat-card-sub">${T('kcalPerDay')}</div>
       </div>
       <div class="stat-card">
         <div class="cal-num">${change !== null ? (change > 0 ? '+':'')+change : '—'}</div>
-        <div class="stat-card-lbl">Total Change</div>
-        <div class="stat-card-sub" style="color:${change===null?'var(--t3)':parseFloat(change)<0?'var(--ac)':'var(--fat)'}">${change!==null?'kg since start':'Log more weigh-ins'}</div>
+        <div class="stat-card-lbl">${T('totalChange')}</div>
+        <div class="stat-card-sub" style="color:${change===null?'var(--t3)':parseFloat(change)<0?'var(--ac)':'var(--fat)'}">${change!==null?T('kgSinceStart'):T('logMoreWeighins')}</div>
       </div>
     </div>
     ${chartHtml}
-    <button class="add-weight-btn" onclick="openWeightModal()">+ Log Today's Weight</button>
-    ${wList ? `<div class="chart-title" style="margin-bottom:10px">Recent Weigh-ins</div>${wList}` : ''}`;
+    <button class="add-weight-btn" onclick="openWeightModal()">${T('logTodaysWeight')}</button>
+    ${wList ? `<div class="chart-title" style="margin-bottom:10px">${T('recentWeighins')}</div>${wList}` : ''}`;
 }
 
 function openWeightModal() {

@@ -1152,6 +1152,7 @@ let S = {
   grocery:  {}, // weekKey -> {itemKey: checked bool}
   viewDate: todayStr(),
   viewMonth:{ y: new Date().getFullYear(), m: new Date().getMonth() },
+  groceryMode: 'week', // 'day', 'week', or 'month'
   setupPicks:{ gender:'male', goal:'lose' }
 };
 
@@ -1930,25 +1931,64 @@ async function saveSettingsChanges() {
 // ═══════════════════════════════════════════════════════════════
 // GROCERY VIEW
 // ═══════════════════════════════════════════════════════════════
-function renderGrocery() {
-  const p  = S.profile;
-  const ws = weekStart(new Date());
-  const wk = dateStr(ws);
-  const days = PLAN.generateWeek(wk, p.goal);
-  const checked = S.grocery[wk] || {};
+function getGroceryDates() {
+  if (S.groceryMode === 'day') {
+    return [S.viewDate];
+  } else if (S.groceryMode === 'week') {
+    const ws = weekStart(new Date());
+    const dates = [];
+    const d = new Date(ws);
+    for (let i = 0; i < 7; i++) {
+      dates.push(dateStr(d));
+      d.setDate(d.getDate() + 1);
+    }
+    return dates;
+  } else { // month
+    const m = S.viewMonth.m;
+    const y = S.viewMonth.y;
+    const dates = [];
+    for (let i = 1; i <= daysInMonth(y, m); i++) {
+      const dt = new Date(y, m, i);
+      dates.push(dateStr(dt));
+    }
+    return dates;
+  }
+}
 
-  // Aggregate ingredients
+function getMealForSlot(day, slotKey, goal) {
+  const log = getLog(day);
+  if (log.swaps && log.swaps[slotKey]) {
+    const mealType = slotKey.startsWith('snack') ? 'snack' : slotKey;
+    const mealLib = MEALS[mealType === 'snack1' || mealType === 'snack2' ? 'snack' : mealType];
+    return mealLib.find(m => m.id === log.swaps[slotKey]) || PLAN.generateDay(day, goal)[slotKey];
+  }
+  return PLAN.generateDay(day, goal)[slotKey];
+}
+
+function renderGrocery() {
+  const p = S.profile;
+  const dates = getGroceryDates();
+  const storageKey = S.groceryMode === 'day' ? S.viewDate : 
+                     S.groceryMode === 'week' ? dateStr(weekStart(new Date())) :
+                     `month_${S.viewMonth.y}_${S.viewMonth.m}`;
+  const checked = S.grocery[storageKey] || {};
+
+  // Aggregate ingredients from actual meals (accounting for swaps)
   const agg = {};
-  days.forEach(day => {
-    PLAN.mealSlots(day).forEach(slot => {
-      slot.meal.ingredients.forEach(ing => {
-        const key = ing.item.toLowerCase().replace(/[^a-z0-9]/g,'_');
-        if (agg[key]) {
-          if (ing.unit === agg[key].unit) agg[key].amount += ing.amount;
-        } else {
-          agg[key] = { key, item:ing.item, amount:ing.amount, unit:ing.unit, cat:ing.cat };
-        }
-      });
+  dates.forEach(dt => {
+    const slots = ['breakfast', 'snack1', 'lunch', 'snack2', 'dinner'];
+    slots.forEach(slotKey => {
+      const meal = getMealForSlot(dt, slotKey, p.goal);
+      if (meal && meal.ingredients) {
+        meal.ingredients.forEach(ing => {
+          const key = ing.item.toLowerCase().replace(/[^a-z0-9]/g,'_');
+          if (agg[key]) {
+            if (ing.unit === agg[key].unit) agg[key].amount += ing.amount;
+          } else {
+            agg[key] = { key, item:ing.item, amount:ing.amount, unit:ing.unit, cat:ing.cat };
+          }
+        });
+      }
     });
   });
 
@@ -1967,52 +2007,77 @@ function renderGrocery() {
   const total = Object.values(agg).length;
   const checkedCount = Object.values(checked).filter(Boolean).length;
 
+  // Mode labels
+  const modeLabels = {
+    day: `Day of ${fmtDateFull(S.viewDate)}`,
+    week: `Week of ${fmtDate(dateStr(weekStart(new Date())))}`,
+    month: `${new Date(S.viewMonth.y, S.viewMonth.m).toLocaleDateString('en-AU', {month:'long', year:'numeric'})}`
+  };
+
   let html = `
-    <div class="view-title">🛒 Grocery List</div>
-    <div class="grocery-header">
-      <div class="view-sub" style="margin:0">Week of ${fmtDate(wk)} · ${checkedCount}/${total} ticked</div>
-      <button class="grocery-clear-btn" onclick="clearGrocery('${wk}')">Clear all</button>
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:16px">
+      <div>
+        <div class="view-title">🛒 Grocery List</div>
+        <div class="view-sub">${modeLabels[S.groceryMode]} · ${checkedCount}/${total} ticked</div>
+      </div>
+      <button class="grocery-clear-btn" onclick="clearGrocery('${storageKey}')" style="margin-top:2px">Clear all</button>
+    </div>
+
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <button class="radio-btn ${S.groceryMode==='day'?'sel':''}" style="flex:1;padding:8px" onclick="setGroceryMode('day')">📅 Day</button>
+      <button class="radio-btn ${S.groceryMode==='week'?'sel':''}" style="flex:1;padding:8px" onclick="setGroceryMode('week')">📆 Week</button>
+      <button class="radio-btn ${S.groceryMode==='month'?'sel':''}" style="flex:1;padding:8px" onclick="setGroceryMode('month')">📊 Month</button>
     </div>`;
 
   if (checkedCount === total && total > 0) {
     html += `<div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:var(--radius);padding:12px 16px;margin:12px 0;color:var(--ac);font-weight:600;font-size:13px">✓ All items collected!</div>`;
   }
 
-  Object.values(cats).forEach(cat => {
-    if (!cat.items.length) return;
-    html += `<div class="grocery-cat">
-      <div class="grocery-cat-title">${cat.label}</div>`;
-    cat.items.forEach(ing => {
-      const isChecked = !!checked[ing.key];
-      const amt = Number.isInteger(ing.amount) ? ing.amount : parseFloat(ing.amount.toFixed(1));
-      html += `
-      <div class="grocery-item ${isChecked?'checked':''}" onclick="toggleGrocery('${wk}','${ing.key}')">
-        <div class="gi-check ${isChecked?'on':''}">✓</div>
-        <div class="gi-name">${ing.item}</div>
-        <div class="gi-amount">${amt} ${ing.unit}</div>
-      </div>`;
+  if (total === 0) {
+    html += `<div class="empty-state" style="padding:40px 20px"><div class="empty-icon">🍗</div><div class="empty-title">No meals planned</div></div>`;
+  } else {
+    Object.values(cats).forEach(cat => {
+      if (!cat.items.length) return;
+      html += `<div class="grocery-cat">
+        <div class="grocery-cat-title">${cat.label}</div>`;
+      cat.items.forEach(ing => {
+        const isChecked = !!checked[ing.key];
+        const amt = Number.isInteger(ing.amount) ? ing.amount : parseFloat(ing.amount.toFixed(1));
+        html += `
+        <div class="grocery-item ${isChecked?'checked':''}" onclick="toggleGrocery('${storageKey}','${ing.key}')">
+          <div class="gi-check ${isChecked?'on':''}">✓</div>
+          <div class="gi-name">${ing.item}</div>
+          <div class="gi-amount">${amt} ${ing.unit}</div>
+        </div>`;
+      });
+      html += '</div>';
     });
-    html += '</div>';
-  });
+  }
 
   document.getElementById('view').innerHTML = html;
 }
 
-async function toggleGrocery(wk, key) {
+function setGroceryMode(mode) {
+  S.groceryMode = mode;
+  renderView();
+}
+
+async function toggleGrocery(storageKey, key) {
   try {
-    if (!S.grocery[wk]) S.grocery[wk] = {};
-    S.grocery[wk][key] = !S.grocery[wk][key];
-    await DB.set('grocery_' + wk, S.grocery[wk]);
+    if (!S.grocery[storageKey]) S.grocery[storageKey] = {};
+    S.grocery[storageKey][key] = !S.grocery[storageKey][key];
+    await DB.set('grocery_' + storageKey, S.grocery[storageKey]);
     renderView();
   } catch(e) {
     console.error('Error updating grocery:', e);
     flash('Failed to save grocery list', 'er');
   }
 }
-async function clearGrocery(wk) {
+
+async function clearGrocery(storageKey) {
   try {
-    S.grocery[wk] = {};
-    await DB.set('grocery_' + wk, {});
+    S.grocery[storageKey] = {};
+    await DB.set('grocery_' + storageKey, {});
     flash('✓ Grocery list cleared', 'ok');
     renderView();
   } catch(e) {

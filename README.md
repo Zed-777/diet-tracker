@@ -38,7 +38,7 @@ create policy "Allow public access" on diet_data
   for all using (true) with check (true);
 ```
 
-4. Get your project credentials from **Settings → API**:
+1. Get your project credentials from **Settings → API**:
    - Project URL
    - Anon Public Key
 
@@ -52,6 +52,7 @@ const SB_KEY = 'your-supabase-anon-key';
 ```
 
 > ⚠️ **Security Note:** These credentials are exposed in client-side code. For production:
+>
 > - Implement Supabase Auth + user-specific RLS policies
 > - Restrict the anon role to minimal permissions
 > - Never share this repo publicly with exposed credentials
@@ -59,6 +60,7 @@ const SB_KEY = 'your-supabase-anon-key';
 ### 3. Deploy on Netlify
 
 #### Option A: Connect GitHub repo
+
 1. Push this repo to GitHub
 2. Go to [netlify.com](https://netlify.com) and click **"New site from Git"**
 3. Select your GitHub repo (`Zed-777/diet-tracker`)
@@ -66,6 +68,7 @@ const SB_KEY = 'your-supabase-anon-key';
 5. Deploy ✓
 
 #### Option B: Deploy directly
+
 ```bash
 npm install -g netlify-cli
 netlify deploy --prod --dir=.
@@ -89,12 +92,14 @@ diet-tracker/
 ## Architecture
 
 ### Frontend
+
 - **Single-page app** (SPA) in `diet-tracker.html`
 - Pure HTML/CSS/JavaScript — no build step required
 - Responsive design, mobile-first UI
 - Three built-in themes
 
 ### Backend
+
 - **Supabase PostgreSQL** for data persistence
 - REST API endpoints via `SB_URL`
 - Table: `diet_data` with JSON blob storage
@@ -105,6 +110,7 @@ diet-tracker/
   - `grocery_YYYY-MM-DD` — shopping checklist
 
 ### Persistence
+
 - Auto-saves on every action (meals, water, weight, grocery)
 - Loads all data on app startup
 - localStorage for theme preference only
@@ -114,19 +120,24 @@ diet-tracker/
 ## Customization
 
 ### Change Default Theme
+
 Edit the `init()` function:
+
 ```javascript
 applyTheme(localStorage.getItem('dt-theme') || 'pink');  // or 'dark', 'light'
 ```
 
 ### Modify Meal Database
+
 Edit the `MEALS` object in `diet-tracker.html` to add/remove meals. Each meal needs:
+
 - `id`, `name`, `cal`, `protein`, `carbs`, `fat`, `prepTime`
 - `goals` — array of applicable goals: `['lose','build','definition','maintenance']`
 - `ingredients` — list with `item`, `amount`, `unit`, `cat` (category)
 - `recipe` — array of step strings
 
 ### Adjust Macro Splits
+
 Edit the `CALC.macros()` function to change protein/carb/fat ratios per goal.
 
 ---
@@ -134,20 +145,24 @@ Edit the `CALC.macros()` function to change protein/carb/fat ratios per goal.
 ## Troubleshooting
 
 ### "Page not found" on Netlify
+
 - Ensure `netlify.toml` contains the SPA redirect rule
 - Clear browser cache and refresh
 
 ### "No repositories found" in Netlify
+
 - Reconnect GitHub auth in Netlify: User → Applications → GitHub → Reconnect
 - Make sure the repo is public or Netlify has access
 
 ### Supabase connection errors
+
 - Check internet connection
 - Verify `SB_URL` and `SB_KEY` are correct
 - Confirm `diet_data` table exists and RLS policy allows access
 - Check browser console for detailed error messages
 
 ### Theme changes don't persist
+
 - Clear browser localStorage for the app domain
 - Or check browser privacy/tracking settings
 
@@ -162,6 +177,7 @@ Edit the `CALC.macros()` function to change protein/carb/fat ratios per goal.
    - Use JWT tokens and user-scoped RLS policies
 
 2. **Enable Row-Level Security (RLS)**
+
    ```sql
    create policy "Users can only read/write their own data" on diet_data
      for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
@@ -185,16 +201,21 @@ Edit the `CALC.macros()` function to change protein/carb/fat ratios per goal.
 ## Development
 
 ### Local testing
+
 Simply open `diet-tracker.html` in a browser. No server required.
 
 ### Separating files (future)
+
 To improve maintainability:
+
 - Move CSS to `styles.css`
 - Move JS to `app.js`
 - Update `diet-tracker.html` to import them
 
 ### Contributing
+
 Pull requests welcome! Areas for improvement:
+
 - Better error handling and user feedback
 - Offline-first with service workers
 - Export meal plan as PDF
@@ -211,7 +232,7 @@ MIT — Feel free to fork, modify, and deploy.
 ## Support
 
 For issues or questions:
+
 1. Check the **Troubleshooting** section above
 2. Verify Supabase setup (SQL, RLS, credentials)
 3. Open an issue on GitHub
-

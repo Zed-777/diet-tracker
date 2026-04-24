@@ -382,7 +382,10 @@ create policy "allow all" on diet_data
         <div id="h-sub" style="font-size:11px;color:var(--t3);margin-top:1px"></div>
       </div>
       <div class="hbtns">
-        <button class="theme-btn" onclick="toggleTheme()"><span id="theme-icon">☀️</span></button>
+        <button class="theme-btn" onclick="toggleTheme()" title="Theme: Ctrl+T"><span id="theme-icon">☀️</span></button>
+        <button class="theme-btn" onclick="toggleLanguage()" title="Language: Ctrl+L" style="min-width:50px">
+          <span id="lang-text">EN</span>
+        </button>
       </div>
     </div>
   </div>
@@ -391,12 +394,12 @@ create policy "allow all" on diet_data
 
   <div id="nav">
     <div class="nav-inner">
-      <button class="nav-btn active" id="nb-today" onclick="navigate('today')"><span class="nav-icon">🏠</span>Today</button>
-      <button class="nav-btn" id="nb-week" onclick="navigate('week')"><span class="nav-icon">📅</span>Week</button>
-      <button class="nav-btn" id="nb-month" onclick="navigate('month')"><span class="nav-icon">📆</span>Month</button>
-      <button class="nav-btn" id="nb-progress" onclick="navigate('progress')"><span class="nav-icon">📈</span>Progress</button>
-      <button class="nav-btn" id="nb-grocery" onclick="navigate('grocery')"><span class="nav-icon">🛒</span>Grocery</button>
-      <button class="nav-btn" id="nb-settings" onclick="navigate('settings')"><span class="nav-icon">⚙️</span>Settings</button>
+      <button class="nav-btn active" id="nb-today" onclick="navigate('today')"><span class="nav-icon">🏠</span><span class="nav-label">Today</span></button>
+      <button class="nav-btn" id="nb-week" onclick="navigate('week')"><span class="nav-icon">📅</span><span class="nav-label">Week</span></button>
+      <button class="nav-btn" id="nb-month" onclick="navigate('month')"><span class="nav-icon">📆</span><span class="nav-label">Month</span></button>
+      <button class="nav-btn" id="nb-progress" onclick="navigate('progress')"><span class="nav-icon">📈</span><span class="nav-label">Progress</span></button>
+      <button class="nav-btn" id="nb-grocery" onclick="navigate('grocery')"><span class="nav-icon">🛒</span><span class="nav-label">Grocery</span></button>
+      <button class="nav-btn" id="nb-settings" onclick="navigate('settings')"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></button>
     </div>
   </div>
 </div>
@@ -1521,6 +1524,286 @@ function fmtDateFull(str) {
 function daysInMonth(y, m) { return new Date(y, m+1, 0).getDate(); }
 
 // ═══════════════════════════════════════════════════════════════
+// TRANSLATIONS
+// ═══════════════════════════════════════════════════════════════
+const LANG = {
+  en: {
+    // Header & Navigation
+    appTitle: 'DIET TRACKER',
+    today: 'Today',
+    week: 'Week',
+    month: 'Month',
+    progress: 'Progress',
+    grocery: 'Grocery',
+    settings: 'Settings',
+    darkTheme: 'Dark theme',
+    lightTheme: 'Light theme',
+    pinkTheme: 'Pink theme',
+    language: 'Language',
+    
+    // Setup Screen
+    setupTitle: 'Diet Tracker Setup',
+    setupSub: 'Create your personalized meal plan',
+    step1: 'Create a new Supabase project',
+    step2: 'Run this SQL in Supabase SQL Editor:',
+    step3: 'Come back here and complete your profile below',
+    gender: 'Gender',
+    male: 'Male',
+    female: 'Female',
+    age: 'Age (years)',
+    height: 'Height (cm)',
+    currentWeight: 'Current Weight (kg)',
+    targetWeight: 'Target Weight (kg)',
+    goal: 'Goal',
+    loseWeight: 'Lose Weight',
+    buildMuscle: 'Build Muscle',
+    definition: 'Definition',
+    maintain: 'Maintain',
+    activityLevel: 'Activity Level',
+    sedentary: 'Sedentary — desk job, minimal exercise',
+    lightlyActive: 'Lightly Active — 1–3 workouts/week',
+    moderatelyActive: 'Moderately Active — 3–5 workouts/week',
+    veryActive: 'Very Active — 6–7 workouts/week',
+    extremelyActive: 'Extremely Active — physical job + training',
+    name: 'Name (optional)',
+    startPlan: 'Start My Plan →',
+    settingUp: 'Setting up…',
+    
+    // Validation Errors
+    invalidAge: 'Age must be 16-99',
+    invalidHeight: 'Height must be 140-220 cm',
+    invalidWeight: 'Weight must be 40-200 kg',
+    invalidTargetWeight: 'Target weight must be 40-200 kg',
+    fillValidFields: 'Please fill in valid age, height, and weight.',
+    networkError: '❌ Network error — check your internet connection and try again.',
+    accessDenied: '❌ Access denied — check your Supabase credentials in the code.',
+    tableNotFound: '❌ Table not found — verify diet_data table exists in Supabase.',
+    databaseError: '❌ Error saving profile — {{error}}. Check browser console for details.',
+    
+    // Daily View
+    dailyTitle: '📋 Today',
+    waterIntake: '💧 Water Intake',
+    waterTarget: 'L / {{target}}L target',
+    breakfast: 'Breakfast',
+    morningSnack: 'Morning Snack',
+    lunch: 'Lunch',
+    afternoonSnack: 'Afternoon Snack',
+    dinner: 'Dinner',
+    ingredients: 'Ingredients',
+    recipe: 'Recipe',
+    prepTime: '⏱ {{time}} min prep',
+    favourite: '☆ Favourite',
+    isFavourite: '★ Favourite',
+    swap: '🔄 Swap',
+    kcalRemaining: '{{kcal}} kcal remaining',
+    kcalOver: '{{kcal}} kcal over',
+    protein: 'Protein',
+    carbs: 'Carbs',
+    fat: 'Fat',
+    
+    // Weekly View
+    weeklyTitle: '📅 This Week',
+    tapDayToView: 'Tap any day to view its meal plan',
+    mon: 'Mon',
+    tue: 'Tue',
+    wed: 'Wed',
+    thu: 'Thu',
+    fri: 'Fri',
+    sat: 'Sat',
+    sun: 'Sun',
+    snack1: 'Snack 1',
+    snack2: 'Snack 2',
+    meal: 'Meal',
+    
+    // Monthly View
+    monthlyTitle: '📆 This Month',
+    
+    // Progress
+    progressTitle: '📈 Progress',
+    weeklyAvg: 'Weekly Avg',
+    avgAdherence: 'Avg Adherence',
+    streak: 'Current Streak',
+    days: 'days',
+    lastWeights: 'Last 4 Weights',
+    
+    // Grocery
+    groceryTitle: '🛒 Grocery List',
+    byDay: 'By Day',
+    byWeek: 'By Week',
+    byMonth: 'By Month',
+    generated: 'Generated from your meal plan',
+    noMeals: 'No meals logged',
+    
+    // Settings
+    settingsTitle: '⚙️ Settings',
+    profile: 'Your Profile',
+    editSettings: 'Edit Settings',
+    closeSettings: 'Close',
+    saveChanges: 'Save Changes',
+    logWeight: 'Log Weight',
+    weight: 'Weight (kg)',
+    note: 'Note (optional)',
+    logEntry: 'Log Entry',
+    resetProfile: 'Reset Profile',
+    resetConfirm: 'This will delete all your data. Are you sure?',
+    
+    // Modals
+    swapMeal: '🔄 Swap Meal',
+    weightLog: '⚖️ Log Weight',
+    close: '✕',
+    
+    // Status Messages
+    savingSuccess: '✓ Profile saved!',
+    savingFail: '✗ {{error}}',
+    failedToSave: '✗ Failed to save',
+    changesUnsaved: 'Changes unsaved',
+    
+    // Misc
+    ok: 'of'
+  },
+  es: {
+    // Header & Navigation
+    appTitle: 'RASTREADOR DE DIETA',
+    today: 'Hoy',
+    week: 'Semana',
+    month: 'Mes',
+    progress: 'Progreso',
+    grocery: 'Compras',
+    settings: 'Configuración',
+    darkTheme: 'Tema oscuro',
+    lightTheme: 'Tema claro',
+    pinkTheme: 'Tema rosa',
+    language: 'Idioma',
+    
+    // Setup Screen
+    setupTitle: 'Configuración del Rastreador de Dieta',
+    setupSub: 'Crea tu plan de comidas personalizado',
+    step1: 'Crea un nuevo proyecto de Supabase',
+    step2: 'Ejecuta este SQL en el Editor SQL de Supabase:',
+    step3: 'Vuelve aquí y completa tu perfil a continuación',
+    gender: 'Género',
+    male: 'Masculino',
+    female: 'Femenino',
+    age: 'Edad (años)',
+    height: 'Altura (cm)',
+    currentWeight: 'Peso Actual (kg)',
+    targetWeight: 'Peso Objetivo (kg)',
+    goal: 'Objetivo',
+    loseWeight: 'Perder Peso',
+    buildMuscle: 'Aumentar Músculo',
+    definition: 'Definición',
+    maintain: 'Mantener',
+    activityLevel: 'Nivel de Actividad',
+    sedentary: 'Sedentario — trabajo de escritorio, ejercicio mínimo',
+    lightlyActive: 'Ligeramente Activo — 1–3 entrenamientos/semana',
+    moderatelyActive: 'Moderadamente Activo — 3–5 entrenamientos/semana',
+    veryActive: 'Muy Activo — 6–7 entrenamientos/semana',
+    extremelyActive: 'Extremadamente Activo — trabajo físico + entrenamiento',
+    name: 'Nombre (opcional)',
+    startPlan: 'Inicia Mi Plan →',
+    settingUp: 'Configurando…',
+    
+    // Validation Errors
+    invalidAge: 'La edad debe estar entre 16-99',
+    invalidHeight: 'La altura debe estar entre 140-220 cm',
+    invalidWeight: 'El peso debe estar entre 40-200 kg',
+    invalidTargetWeight: 'El peso objetivo debe estar entre 40-200 kg',
+    fillValidFields: 'Por favor completa edad, altura y peso válidos.',
+    networkError: '❌ Error de red — verifica tu conexión a internet e intenta de nuevo.',
+    accessDenied: '❌ Acceso denegado — verifica tus credenciales de Supabase en el código.',
+    tableNotFound: '❌ Tabla no encontrada — verifica que la tabla diet_data exista en Supabase.',
+    databaseError: '❌ Error al guardar perfil — {{error}}. Consulta la consola del navegador.',
+    
+    // Daily View
+    dailyTitle: '📋 Hoy',
+    waterIntake: '💧 Consumo de Agua',
+    waterTarget: 'L / {{target}}L objetivo',
+    breakfast: 'Desayuno',
+    morningSnack: 'Refrigerio Matutino',
+    lunch: 'Almuerzo',
+    afternoonSnack: 'Refrigerio Tarde',
+    dinner: 'Cena',
+    ingredients: 'Ingredientes',
+    recipe: 'Receta',
+    prepTime: '⏱ {{time}} min de preparación',
+    favourite: '☆ Favorito',
+    isFavourite: '★ Favorito',
+    swap: '🔄 Cambiar',
+    kcalRemaining: '{{kcal}} kcal restante',
+    kcalOver: '{{kcal}} kcal exceso',
+    protein: 'Proteína',
+    carbs: 'Carbohidratos',
+    fat: 'Grasas',
+    
+    // Weekly View
+    weeklyTitle: '📅 Esta Semana',
+    tapDayToView: 'Toca cualquier día para ver su plan de comidas',
+    mon: 'Lun',
+    tue: 'Mar',
+    wed: 'Mié',
+    thu: 'Jue',
+    fri: 'Vie',
+    sat: 'Sáb',
+    sun: 'Dom',
+    snack1: 'Refrigerio 1',
+    snack2: 'Refrigerio 2',
+    meal: 'Comida',
+    
+    // Monthly View
+    monthlyTitle: '📆 Este Mes',
+    
+    // Progress
+    progressTitle: '📈 Progreso',
+    weeklyAvg: 'Promedio Semanal',
+    avgAdherence: 'Adherencia Promedio',
+    streak: 'Racha Actual',
+    days: 'días',
+    lastWeights: 'Últimas 4 Pesos',
+    
+    // Grocery
+    groceryTitle: '🛒 Lista de Compras',
+    byDay: 'Por Día',
+    byWeek: 'Por Semana',
+    byMonth: 'Por Mes',
+    generated: 'Generado desde tu plan de comidas',
+    noMeals: 'Sin comidas registradas',
+    
+    // Settings
+    settingsTitle: '⚙️ Configuración',
+    profile: 'Tu Perfil',
+    editSettings: 'Editar Configuración',
+    closeSettings: 'Cerrar',
+    saveChanges: 'Guardar Cambios',
+    logWeight: 'Registrar Peso',
+    weight: 'Peso (kg)',
+    note: 'Nota (opcional)',
+    logEntry: 'Entrada de Registro',
+    resetProfile: 'Restablecer Perfil',
+    resetConfirm: 'Esto eliminará todos tus datos. ¿Estás seguro?',
+    
+    // Modals
+    swapMeal: '🔄 Cambiar Comida',
+    weightLog: '⚖️ Registrar Peso',
+    close: '✕',
+    
+    // Status Messages
+    savingSuccess: '✓ ¡Perfil guardado!',
+    savingFail: '✗ {{error}}',
+    failedToSave: '✗ Error al guardar',
+    changesUnsaved: 'Cambios sin guardar',
+    
+    // Misc
+    ok: 'de'
+  }
+};
+
+// Translation helper function
+function T(key) {
+  const lang = S.language || 'en';
+  return LANG[lang]?.[key] || LANG.en[key] || key;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════════
 let S = {
@@ -1532,7 +1815,8 @@ let S = {
   viewDate: todayStr(),
   viewMonth:{ y: new Date().getFullYear(), m: new Date().getMonth() },
   groceryMode: 'week', // 'day', 'week', or 'month'
-  setupPicks:{ gender:'male', goal:'lose' }
+  setupPicks:{ gender:'male', goal:'lose' },
+  language: 'en' // 'en' or 'es'
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -1553,6 +1837,103 @@ function toggleTheme() {
   const current = document.body.classList.contains('pink') ? 'pink' : document.body.classList.contains('light') ? 'light' : 'dark';
   const next = current === 'dark' ? 'light' : current === 'light' ? 'pink' : 'dark';
   applyTheme(next);
+}
+
+function toggleLanguage() {
+  const current = S.language || 'en';
+  const next = current === 'en' ? 'es' : 'en';
+  S.language = next;
+  document.getElementById('lang-text').textContent = next.toUpperCase();
+  localStorage.setItem('dt-language', next);
+  
+  // Save to Supabase if logged in
+  if (S.profile && S.profile.id) {
+    const data = JSON.parse(localStorage.getItem('dt-data-' + S.profile.id) || '{}');
+    data.language = next;
+    localStorage.setItem('dt-data-' + S.profile.id, JSON.stringify(data));
+    DB.set(S.profile.id, data).catch(e => console.error('Language save failed:', e));
+  }
+  
+  renderView();
+}
+
+function updateNavLabels() {
+  const navMap = {
+    today: T('today'),
+    week: T('week'),
+    month: T('month'),
+    progress: T('progress'),
+    grocery: T('grocery'),
+    settings: T('settings')
+  };
+  Object.entries(navMap).forEach(([key, label]) => {
+    const el = document.getElementById('nb-' + key);
+    if (el) {
+      const labelEl = el.querySelector('.nav-label');
+      if (labelEl) labelEl.textContent = label;
+    }
+  });
+}
+
+function updateSetupLabels() {
+  // Update static labels in setup form
+  const setupLabels = {
+    'setupTitle': document.querySelector('.setup-logo'),
+    'setupSub': document.querySelector('.setup-sub'),
+  };
+  
+  if (setupLabels.setupTitle) {
+    setupLabels.setupTitle.textContent = '🥗 ' + T('appTitle');
+  }
+  if (setupLabels.setupSub) {
+    setupLabels.setupSub.textContent = T('setupSub');
+  }
+  
+  // Update field labels
+  const fieldLabels = Array.from(document.querySelectorAll('.field label')).map(el => el.textContent);
+  document.querySelectorAll('.field label').forEach((el, i) => {
+    const text = el.textContent.trim();
+    let newText = text;
+    
+    if (text.includes('Gender')) newText = T('gender');
+    if (text.includes('Age')) newText = T('age');
+    if (text.includes('Height')) newText = T('height');
+    if (text.includes('Current Weight')) newText = T('currentWeight');
+    if (text.includes('Target Weight')) newText = T('targetWeight');
+    if (text.includes('Goal')) newText = T('goal');
+    if (text.includes('Activity Level')) newText = T('activityLevel');
+    if (text.includes('Name')) newText = T('name');
+    
+    el.textContent = newText;
+  });
+  
+  // Update radio buttons and select options
+  document.querySelectorAll('.radio-btn').forEach(btn => {
+    const text = btn.textContent.trim();
+    if (text === 'Male') btn.textContent = T('male');
+    if (text === 'Female') btn.textContent = T('female');
+    if (text === 'Lose Weight') btn.textContent = T('loseWeight');
+    if (text === 'Build Muscle') btn.textContent = T('buildMuscle');
+    if (text === 'Definition') btn.textContent = T('definition');
+    if (text === 'Maintain') btn.textContent = T('maintain');
+  });
+  
+  // Update activity level options
+  const actSelect = document.getElementById('s-activity');
+  if (actSelect) {
+    const options = actSelect.querySelectorAll('option');
+    options[0].textContent = T('sedentary');
+    options[1].textContent = T('lightlyActive');
+    options[2].textContent = T('moderatelyActive');
+    options[3].textContent = T('veryActive');
+    options[4].textContent = T('extremelyActive');
+  }
+  
+  // Update button text
+  const setupBtn = document.getElementById('setup-btn');
+  if (setupBtn && !setupBtn.textContent.includes('Setting')) {
+    setupBtn.textContent = T('startPlan');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1576,6 +1957,7 @@ function navigate(view) {
     const btn = document.getElementById('nb-' + v);
     if (btn) btn.classList.toggle('active', v === view);
   });
+  updateNavLabels();
   renderView();
 }
 
@@ -1598,13 +1980,13 @@ async function submitSetup() {
   const err    = document.getElementById('setup-err');
 
   if (!age || age < 16 || !height || height < 140 || !weight || weight < 40) {
-    err.textContent = 'Please fill in valid age, height, and weight.';
+    err.textContent = T('fillValidFields');
     err.style.display = 'block'; return;
   }
   err.style.display = 'none';
 
   const btn = document.getElementById('setup-btn');
-  btn.textContent = 'Setting up…'; btn.disabled = true;
+  btn.textContent = T('settingUp'); btn.disabled = true;
 
   const bmr  = CALC.bmr(S.setupPicks.gender, weight, height, age);
   const tdee = CALC.tdee(bmr, act);
@@ -1615,7 +1997,8 @@ async function submitSetup() {
     name, gender:S.setupPicks.gender, age, height, weight,
     targetWeight:tgtW, goal:S.setupPicks.goal, activity:act,
     bmr, tdee, calories:cal, macros:mac,
-    createdAt:new Date().toISOString(), favourites:[]
+    createdAt:new Date().toISOString(), favourites:[],
+    language: S.language || 'en'
   };
 
   try {
@@ -1624,20 +2007,21 @@ async function submitSetup() {
     document.getElementById('setup').classList.remove('active');
     document.getElementById('app').classList.add('active');
     updateHeader();
+    updateNavLabels();
     navigate('today');
     flash('Profile created successfully! 🎉', 'ok');
   } catch(e) {
-    btn.textContent = 'Start My Plan →'; btn.disabled = false;
+    btn.textContent = T('startPlan'); btn.disabled = false;
     console.error('Setup error:', e);
     const isNetworkError = e.message.includes('Failed to fetch') || e.message.includes('Network');
     if (isNetworkError) {
-      err.textContent = '❌ Network error — check your internet connection and try again.';
+      err.textContent = T('networkError');
     } else if (e.status === 401 || e.status === 403) {
-      err.textContent = '❌ Access denied — check your Supabase credentials in the code.';
+      err.textContent = T('accessDenied');
     } else if (e.status === 404) {
-      err.textContent = '❌ Table not found — verify diet_data table exists in Supabase.';
+      err.textContent = T('tableNotFound');
     } else {
-      err.textContent = '❌ Error saving profile — ' + (e.message || 'unknown error') + '. Check browser console for details.';
+      err.textContent = T('databaseError').replace('{{error}}', e.message || 'unknown error');
     }
     err.style.display = 'block';
   }
@@ -2555,8 +2939,10 @@ function renderView() {
 // BOOT
 // ═══════════════════════════════════════════════════════════════
 async function init() {
-  // Apply saved theme
+  // Apply saved theme and language
   applyTheme(localStorage.getItem('dt-theme') || 'dark');
+  S.language = localStorage.getItem('dt-language') || 'en';
+  document.getElementById('lang-text').textContent = S.language.toUpperCase();
 
   // Close modals on escape
   document.addEventListener('keydown', e => {
@@ -2570,9 +2956,17 @@ async function init() {
     const profile = await DB.get('profile');
     if (!profile) {
       document.getElementById('setup').classList.add('active');
+      updateSetupLabels();
       return;
     }
     S.profile = profile;
+    
+    // Restore language from profile if saved
+    if (profile.language) {
+      S.language = profile.language;
+      document.getElementById('lang-text').textContent = S.language.toUpperCase();
+      localStorage.setItem('dt-language', S.language);
+    }
 
     // Load logs for current week + previous week
     const ws = weekStart(new Date());
@@ -2599,11 +2993,13 @@ async function init() {
 
     document.getElementById('app').classList.add('active');
     updateHeader();
+    updateNavLabels();
     navigate('today');
 
   } catch(e) {
     console.error('Boot error:', e);
     document.getElementById('setup').classList.add('active');
+    updateSetupLabels();
     const err = document.getElementById('setup-err');
     const isNetworkError = e.message.includes('Failed to fetch') || e.message.includes('Network');
     if (isNetworkError) {

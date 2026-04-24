@@ -5,15 +5,16 @@ A personalized diet and meal tracking application. Track daily meals, water inta
 ## Features
 
 - **Personalized profiles** with BMR, TDEE, and macro calculations
-- **AI-generated meal plans** for breakfast, lunch, dinner, and snacks
+- **42-recipe meal library** (10 breakfasts, 11 lunches, 10 dinners, 11 snacks) with goal-based selection
 - **Daily tracking** — mark completed meals, log water, track progress
 - **Weekly/monthly views** with adherence stats and streaks
 - **Weight logging** with trend visualization
-- **Grocery list** aggregated from weekly meals
+- **Grocery list** (day/week/month view) aggregated from meals and accounting for swaps
 - **Meal swapping** — replace meals while keeping nutrition targets
 - **Favourite meals** for quick access
 - **Three themes** — dark, light, and pink
 - **Responsive UI** — works on mobile and desktop
+- **Editable settings** — adjust profile and automatically recalculate macros
 
 ---
 
@@ -126,6 +127,23 @@ Edit the `init()` function:
 ```javascript
 applyTheme(localStorage.getItem('dt-theme') || 'pink');  // or 'dark', 'light'
 ```
+
+### Meal Library
+
+The app includes **42 diverse recipes** designed for real variety:
+
+- **10 Breakfasts**: eggs, oatmeal, yogurt, smoothies, pancakes, bagels, burritos, etc.
+- **11 Lunches**: chicken, fish, beef, vegetarian, soups, salads, stir-fries, pasta
+- **10 Dinners**: salmon, chicken, turkey, pork, cod, curries, seafood, roasted vegetables
+- **11 Snacks**: protein shakes, fruits, nuts, cheese, yogurt, jerky, hummus, energy balls
+
+Each meal is:
+- **Goal-tagged**: meals specify which goals they suit (`['lose','build','definition','maintenance']`)
+- **Nutritionally balanced**: accurate macros and calories
+- **Practical**: realistic prep times (2–30 minutes)
+- **Diverse**: different cuisines, proteins, cooking methods
+
+This provides ~8–9 weeks of rotation before any date repeats the same meals.
 
 ### Modify Meal Database
 

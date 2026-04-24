@@ -1692,8 +1692,19 @@ const LANG = {
     byDay: 'By Day',
     byWeek: 'By Week',
     byMonth: 'By Month',
+    clearAll: 'Clear all',
+    ticked: 'ticked',
+    allItemsCollected: '✓ All items collected!',
     generated: 'Generated from your meal plan',
     noMeals: 'No meals logged',
+    noMealsPlanned: 'No meals planned',
+    
+    // Grocery categories
+    proteins: '🥩 Proteins',
+    vegetables: '🥦 Vegetables & Fruit',
+    grains: '🌾 Grains & Carbs',
+    dairy: '🥛 Dairy & Alternatives',
+    pantry: '🫙 Pantry & Spices',
     
     // Settings
     settingsTitle: '⚙️ Settings',
@@ -1883,8 +1894,19 @@ const LANG = {
     byDay: 'Por Día',
     byWeek: 'Por Semana',
     byMonth: 'Por Mes',
+    clearAll: 'Limpiar todo',
+    ticked: 'marcado',
+    allItemsCollected: '✓ ¡Todos los artículos recolectados!',
     generated: 'Generado desde tu plan de comidas',
     noMeals: 'Sin comidas registradas',
+    noMealsPlanned: 'Sin comidas planeadas',
+    
+    // Grocery categories
+    proteins: '🥩 Proteínas',
+    vegetables: '🥦 Verduras y Frutas',
+    grains: '🌾 Granos y Carbohidratos',
+    dairy: '🥛 Lácteos y Alternativas',
+    pantry: '🫙 Despensa y Especias',
     
     // Settings
     settingsTitle: '⚙️ Configuración',
@@ -2876,11 +2898,11 @@ function renderGrocery() {
   });
 
   const cats = {
-    protein:    { label:'🥩 Proteins',          items:[] },
-    vegetables: { label:'🥦 Vegetables & Fruit', items:[] },
-    grains:     { label:'🌾 Grains & Carbs',      items:[] },
-    dairy:      { label:'🥛 Dairy & Alternatives',items:[] },
-    pantry:     { label:'🫙 Pantry & Spices',     items:[] }
+    protein:    { key:'proteins',  items:[] },
+    vegetables: { key:'vegetables', items:[] },
+    grains:     { key:'grains',     items:[] },
+    dairy:      { key:'dairy',      items:[] },
+    pantry:     { key:'pantry',     items:[] }
   };
 
   Object.values(agg).forEach(ing => {
@@ -2900,29 +2922,29 @@ function renderGrocery() {
   let html = `
     <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:16px">
       <div>
-        <div class="view-title">🛒 Grocery List</div>
-        <div class="view-sub">${modeLabels[S.groceryMode]} · ${checkedCount}/${total} ticked</div>
+        <div class="view-title">${T('groceryTitle')}</div>
+        <div class="view-sub">${modeLabels[S.groceryMode]} · ${checkedCount}/${total} ${T('ticked')}</div>
       </div>
-      <button class="grocery-clear-btn" onclick="clearGrocery('${storageKey}')" style="margin-top:2px">Clear all</button>
+      <button class="grocery-clear-btn" onclick="clearGrocery('${storageKey}')" style="margin-top:2px">${T('clearAll')}</button>
     </div>
 
     <div style="display:flex;gap:6px;margin-bottom:14px">
-      <button class="radio-btn ${S.groceryMode==='day'?'sel':''}" style="flex:1;padding:8px" onclick="setGroceryMode('day')">📅 Day</button>
-      <button class="radio-btn ${S.groceryMode==='week'?'sel':''}" style="flex:1;padding:8px" onclick="setGroceryMode('week')">📆 Week</button>
-      <button class="radio-btn ${S.groceryMode==='month'?'sel':''}" style="flex:1;padding:8px" onclick="setGroceryMode('month')">📊 Month</button>
+      <button class="radio-btn ${S.groceryMode==='day'?'sel':''}" style="flex:1;padding:8px" onclick="setGroceryMode('day')">📅 ${T('byDay')}</button>
+      <button class="radio-btn ${S.groceryMode==='week'?'sel':''}" style="flex:1;padding:8px" onclick="setGroceryMode('week')">📆 ${T('byWeek')}</button>
+      <button class="radio-btn ${S.groceryMode==='month'?'sel':''}" style="flex:1;padding:8px" onclick="setGroceryMode('month')">📊 ${T('byMonth')}</button>
     </div>`;
 
   if (checkedCount === total && total > 0) {
-    html += `<div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:var(--radius);padding:12px 16px;margin:12px 0;color:var(--ac);font-weight:600;font-size:13px">✓ All items collected!</div>`;
+    html += `<div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:var(--radius);padding:12px 16px;margin:12px 0;color:var(--ac);font-weight:600;font-size:13px">${T('allItemsCollected')}</div>`;
   }
 
   if (total === 0) {
-    html += `<div class="empty-state" style="padding:40px 20px"><div class="empty-icon">🍗</div><div class="empty-title">No meals planned</div></div>`;
+    html += `<div class="empty-state" style="padding:40px 20px"><div class="empty-icon">🍗</div><div class="empty-title">${T('noMealsPlanned')}</div></div>`;
   } else {
     Object.values(cats).forEach(cat => {
       if (!cat.items.length) return;
       html += `<div class="grocery-cat">
-        <div class="grocery-cat-title">${cat.label}</div>`;
+        <div class="grocery-cat-title">${T(cat.key)}</div>`;
       cat.items.forEach(ing => {
         const isChecked = !!checked[ing.key];
         const amt = Number.isInteger(ing.amount) ? ing.amount : parseFloat(ing.amount.toFixed(1));

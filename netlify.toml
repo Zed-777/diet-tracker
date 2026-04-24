@@ -2,5 +2,11 @@
   publish = "."
   command = ""
 
+# Rewrite root to diet-tracker.html (SPA routing)
+[[redirects]]
+  from = "/"
+  to = "/diet-tracker.html"
+  status = 200
+
 [context.production.environment]
   NODE_ENV = "production"

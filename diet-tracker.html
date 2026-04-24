@@ -1174,9 +1174,20 @@ async function submitSetup() {
     document.getElementById('app').classList.add('active');
     updateHeader();
     navigate('today');
+    flash('Profile created successfully! 🎉', 'ok');
   } catch(e) {
     btn.textContent = 'Start My Plan →'; btn.disabled = false;
-    err.textContent = 'Could not save — check Supabase table is created and internet is connected.';
+    console.error('Setup error:', e);
+    const isNetworkError = e.message.includes('Failed to fetch') || e.message.includes('Network');
+    if (isNetworkError) {
+      err.textContent = '❌ Network error — check your internet connection and try again.';
+    } else if (e.status === 401 || e.status === 403) {
+      err.textContent = '❌ Access denied — check your Supabase credentials in the code.';
+    } else if (e.status === 404) {
+      err.textContent = '❌ Table not found — verify diet_data table exists in Supabase.';
+    } else {
+      err.textContent = '❌ Error saving profile — ' + (e.message || 'unknown error') + '. Check browser console for details.';
+    }
     err.style.display = 'block';
   }
 }
@@ -1396,30 +1407,45 @@ function switchTab(slotKey, panel, btn) {
 }
 
 async function toggleMeal(key, dt) {
-  const log = { ...getLog(dt) };
-  const idx = log.completed.indexOf(key);
-  if (idx >= 0) log.completed.splice(idx, 1);
-  else log.completed.push(key);
-  await saveLog(dt, log);
-  renderView();
+  try {
+    const log = { ...getLog(dt) };
+    const idx = log.completed.indexOf(key);
+    if (idx >= 0) log.completed.splice(idx, 1);
+    else log.completed.push(key);
+    await saveLog(dt, log);
+    renderView();
+  } catch(e) {
+    console.error('Error toggling meal:', e);
+    flash('Failed to save meal progress', 'er');
+  }
 }
 
 async function logWater(glasses, dt) {
-  const log = { ...getLog(dt) };
-  log.water = (log.water || 0) === glasses ? glasses - 1 : glasses;
-  await saveLog(dt, log);
-  renderView();
+  try {
+    const log = { ...getLog(dt) };
+    log.water = (log.water || 0) === glasses ? glasses - 1 : glasses;
+    await saveLog(dt, log);
+    renderView();
+  } catch(e) {
+    console.error('Error logging water:', e);
+    flash('Failed to save water intake', 'er');
+  }
 }
 
 async function toggleFav(mealId) {
-  const p = S.profile;
-  const favs = [...(p.favourites || [])];
-  const idx = favs.indexOf(mealId);
-  if (idx >= 0) favs.splice(idx, 1); else favs.push(mealId);
-  p.favourites = favs;
-  await DB.set('profile', p);
-  flash(idx >= 0 ? 'Removed from favourites' : 'Added to favourites', 'info');
-  renderView();
+  try {
+    const p = S.profile;
+    const favs = [...(p.favourites || [])];
+    const idx = favs.indexOf(mealId);
+    if (idx >= 0) favs.splice(idx, 1); else favs.push(mealId);
+    p.favourites = favs;
+    await DB.set('profile', p);
+    flash(idx >= 0 ? '✓ Removed from favourites' : '★ Added to favourites', 'ok');
+    renderView();
+  } catch(e) {
+    console.error('Error toggling favourite:', e);
+    flash('Failed to save favourite', 'er');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1714,24 +1740,29 @@ function openWeightModal() {
 function closeWeightModal() { document.getElementById('weight-modal').classList.remove('open'); }
 
 async function saveWeight() {
-  const w = parseFloat(document.getElementById('wm-weight').value);
-  const note = document.getElementById('wm-note').value.trim();
-  if (!w || w < 30 || w > 300) { flash('Enter a valid weight', 'er'); return; }
-  const entry = { date: todayStr(), weight: w, note };
-  S.weights.push(entry);
-  S.weights.sort((a,b) => a.date.localeCompare(b.date));
-  await DB.set('weights', S.weights);
-  // Update current weight in profile
-  S.profile.weight = w;
-  const bmr  = CALC.bmr(S.profile.gender, w, S.profile.height, S.profile.age);
-  const tdee = CALC.tdee(bmr, S.profile.activity);
-  S.profile.calories = CALC.goalCalories(tdee, S.profile.goal);
-  S.profile.macros   = CALC.macros(S.profile.calories, S.profile.goal);
-  await DB.set('profile', S.profile);
-  updateHeader();
-  closeWeightModal();
-  flash('Weight logged ✓');
-  renderView();
+  try {
+    const w = parseFloat(document.getElementById('wm-weight').value);
+    const note = document.getElementById('wm-note').value.trim();
+    if (!w || w < 30 || w > 300) { flash('✗ Enter a valid weight (30-300 kg)', 'er'); return; }
+    const entry = { date: todayStr(), weight: w, note };
+    S.weights.push(entry);
+    S.weights.sort((a,b) => a.date.localeCompare(b.date));
+    await DB.set('weights', S.weights);
+    // Update current weight in profile
+    S.profile.weight = w;
+    const bmr  = CALC.bmr(S.profile.gender, w, S.profile.height, S.profile.age);
+    const tdee = CALC.tdee(bmr, S.profile.activity);
+    S.profile.calories = CALC.goalCalories(tdee, S.profile.goal);
+    S.profile.macros   = CALC.macros(S.profile.calories, S.profile.goal);
+    await DB.set('profile', S.profile);
+    updateHeader();
+    closeWeightModal();
+    flash('✓ Weight logged', 'ok');
+    renderView();
+  } catch(e) {
+    console.error('Error saving weight:', e);
+    flash('Failed to log weight — ' + (e.message || 'try again'), 'er');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1806,15 +1837,26 @@ function renderGrocery() {
 }
 
 async function toggleGrocery(wk, key) {
-  if (!S.grocery[wk]) S.grocery[wk] = {};
-  S.grocery[wk][key] = !S.grocery[wk][key];
-  await DB.set('grocery_' + wk, S.grocery[wk]);
-  renderView();
+  try {
+    if (!S.grocery[wk]) S.grocery[wk] = {};
+    S.grocery[wk][key] = !S.grocery[wk][key];
+    await DB.set('grocery_' + wk, S.grocery[wk]);
+    renderView();
+  } catch(e) {
+    console.error('Error updating grocery:', e);
+    flash('Failed to save grocery list', 'er');
+  }
 }
 async function clearGrocery(wk) {
-  S.grocery[wk] = {};
-  await DB.set('grocery_' + wk, {});
-  renderView();
+  try {
+    S.grocery[wk] = {};
+    await DB.set('grocery_' + wk, {});
+    flash('✓ Grocery list cleared', 'ok');
+    renderView();
+  } catch(e) {
+    console.error('Error clearing grocery:', e);
+    flash('Failed to clear grocery list', 'er');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1949,10 +1991,19 @@ async function init() {
     navigate('today');
 
   } catch(e) {
-    console.error(e);
+    console.error('Boot error:', e);
     document.getElementById('setup').classList.add('active');
     const err = document.getElementById('setup-err');
-    err.textContent = 'Could not connect to database. Make sure you have internet access and the diet_data table is created in Supabase.';
+    const isNetworkError = e.message.includes('Failed to fetch') || e.message.includes('Network');
+    if (isNetworkError) {
+      err.textContent = '❌ Cannot connect to Supabase — check your internet and credentials.';
+    } else if (e.status === 401 || e.status === 403) {
+      err.textContent = '❌ Access denied — verify your Supabase API key in the code.';
+    } else if (e.status === 404) {
+      err.textContent = '❌ Table not found — create diet_data table in Supabase SQL Editor (see setup instructions).';
+    } else {
+      err.textContent = '❌ Database error: ' + (e.message || 'Unknown error') + '. Check browser console.';
+    }
     err.style.display = 'block';
   }
 }

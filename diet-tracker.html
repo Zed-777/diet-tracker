@@ -427,6 +427,77 @@ create policy "allow all" on diet_data
 </div>
 </div>
 
+<!-- EDIT SETTINGS MODAL -->
+<div class="overlay" id="settings-modal" onclick="if(event.target===this)closeSettingsModal()">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title">✏️ Edit Profile</div>
+    <button class="sheet-close" onclick="closeSettingsModal()">✕</button>
+  </div>
+
+  <div id="settings-err" style="background:rgba(239,68,68,.1);border:1px solid #EF4444;border-radius:8px;color:#EF4444;padding:10px 12px;font-size:13px;margin-bottom:14px;display:none"></div>
+
+  <div class="field">
+    <label>Name (optional)</label>
+    <input type="text" id="es-name" placeholder="e.g. Alex" autocomplete="off">
+  </div>
+
+  <div class="field">
+    <label>Gender</label>
+    <div class="radio-group">
+      <button class="radio-btn" data-field="gender" data-val="male" onclick="esPick('gender',this)">Male</button>
+      <button class="radio-btn" data-field="gender" data-val="female" onclick="esPick('gender',this)">Female</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">
+    <div class="field">
+      <label>Age (years)</label>
+      <input type="number" id="es-age" min="16" max="99" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>Height (cm)</label>
+      <input type="number" id="es-height" min="140" max="220" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>Current Weight (kg)</label>
+      <input type="number" id="es-weight" min="40" max="200" step="0.1" inputmode="decimal">
+    </div>
+    <div class="field">
+      <label>Target Weight (kg)</label>
+      <input type="number" id="es-target-weight" min="40" max="200" step="0.1" inputmode="decimal">
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Goal</label>
+    <div class="radio-group">
+      <button class="radio-btn" data-field="goal" data-val="lose" onclick="esPick('goal',this)">Lose Weight</button>
+      <button class="radio-btn" data-field="goal" data-val="build" onclick="esPick('goal',this)">Build Muscle</button>
+      <button class="radio-btn" data-field="goal" data-val="definition" onclick="esPick('goal',this)">Definition</button>
+      <button class="radio-btn" data-field="goal" data-val="maintenance" onclick="esPick('goal',this)">Maintain</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Activity Level</label>
+    <select id="es-activity">
+      <option value="1.2">Sedentary — desk job, minimal exercise</option>
+      <option value="1.375">Lightly Active — 1–3 workouts/week</option>
+      <option value="1.55">Moderately Active — 3–5 workouts/week</option>
+      <option value="1.725">Very Active — 6–7 workouts/week</option>
+      <option value="1.9">Extremely Active — physical job + training</option>
+    </select>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-top:8px">
+    <button class="btn-ghost" onclick="closeSettingsModal()" style="flex:1">Cancel</button>
+    <button class="btn-primary" onclick="saveSettingsChanges()" style="flex:2">Save Changes</button>
+  </div>
+</div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -1765,6 +1836,97 @@ async function saveWeight() {
   }
 }
 
+function openSettingsModal() {
+  const p = S.profile;
+  document.getElementById('es-name').value = p.name || '';
+  document.querySelectorAll('[data-field="gender"]').forEach(btn => btn.classList.remove('sel'));
+  document.querySelector(`[data-field="gender"][data-val="${p.gender}"]`).classList.add('sel');
+  document.getElementById('es-age').value = p.age;
+  document.getElementById('es-height').value = p.height;
+  document.getElementById('es-weight').value = p.weight;
+  document.getElementById('es-target-weight').value = p.targetWeight;
+  document.querySelectorAll('[data-field="goal"]').forEach(btn => btn.classList.remove('sel'));
+  document.querySelector(`[data-field="goal"][data-val="${p.goal}"]`).classList.add('sel');
+  document.getElementById('es-activity').value = p.activity;
+  document.getElementById('settings-err').style.display = 'none';
+  document.getElementById('settings-modal').classList.add('open');
+}
+
+function closeSettingsModal() {
+  document.getElementById('settings-modal').classList.remove('open');
+}
+
+function esPick(field, elem) {
+  document.querySelectorAll(`[data-field="${field}"]`).forEach(e => e.classList.remove('sel'));
+  elem.classList.add('sel');
+}
+
+async function saveSettingsChanges() {
+  try {
+    const name = document.getElementById('es-name').value.trim();
+    const gender = document.querySelector('[data-field="gender"].sel').getAttribute('data-val');
+    const age = parseInt(document.getElementById('es-age').value);
+    const height = parseInt(document.getElementById('es-height').value);
+    const weight = parseFloat(document.getElementById('es-weight').value);
+    const targetWeight = parseFloat(document.getElementById('es-target-weight').value);
+    const goal = document.querySelector('[data-field="goal"].sel').getAttribute('data-val');
+    const activity = document.getElementById('es-activity').value;
+
+    // Validate
+    const err = document.getElementById('settings-err');
+    if (!age || age < 16 || age > 99) {
+      err.textContent = '✗ Age must be 16-99';
+      err.style.display = 'block';
+      return;
+    }
+    if (!height || height < 140 || height > 220) {
+      err.textContent = '✗ Height must be 140-220 cm';
+      err.style.display = 'block';
+      return;
+    }
+    if (!weight || weight < 40 || weight > 200) {
+      err.textContent = '✗ Weight must be 40-200 kg';
+      err.style.display = 'block';
+      return;
+    }
+    if (!targetWeight || targetWeight < 40 || targetWeight > 200) {
+      err.textContent = '✗ Target weight must be 40-200 kg';
+      err.style.display = 'block';
+      return;
+    }
+
+    // Update profile with recalculation
+    S.profile.name = name || null;
+    S.profile.gender = gender;
+    S.profile.age = age;
+    S.profile.height = height;
+    S.profile.weight = weight;
+    S.profile.targetWeight = targetWeight;
+    S.profile.goal = goal;
+    S.profile.activity = activity;
+
+    // Recalculate derived fields
+    const bmr = CALC.bmr(gender, weight, height, age);
+    const tdee = CALC.tdee(bmr, activity);
+    S.profile.calories = CALC.goalCalories(tdee, goal);
+    S.profile.macros = CALC.macros(S.profile.calories, goal);
+
+    // Save to Supabase
+    await DB.set('profile', S.profile);
+
+    // Update UI
+    updateHeader();
+    closeSettingsModal();
+    flash('✓ Profile updated', 'ok');
+    renderView();
+  } catch(e) {
+    console.error('Error saving settings:', e);
+    const err = document.getElementById('settings-err');
+    err.textContent = '✗ ' + (e.message || 'Failed to save');
+    err.style.display = 'block';
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // GROCERY VIEW
 // ═══════════════════════════════════════════════════════════════
@@ -1868,8 +2030,13 @@ function renderSettings() {
   const actLabels  = {'1.2':'Sedentary','1.375':'Lightly Active','1.55':'Moderately Active','1.725':'Very Active','1.9':'Extremely Active'};
 
   document.getElementById('view').innerHTML = `
-    <div class="view-title">⚙️ Settings</div>
-    <div class="view-sub">Your profile &amp; plan details</div>
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:16px">
+      <div>
+        <div class="view-title">⚙️ Settings</div>
+        <div class="view-sub">Your profile &amp; plan details</div>
+      </div>
+      <button class="btn-ghost" style="flex-shrink:0" onclick="openSettingsModal()">✏️ Edit</button>
+    </div>
 
     <div class="settings-section">
       <div class="settings-section-title">Profile</div>

@@ -1,0 +1,25 @@
+{
+  "name": "diet-tracker",
+  "version": "1.0.0",
+  "description": "Production-ready meal tracking application with Supabase backend",
+  "main": "diet-tracker.html",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler publish",
+    "build": "echo 'No build step required - single HTML file'",
+    "test": "echo 'Run tests here'"
+  },
+  "keywords": [
+    "diet",
+    "nutrition",
+    "meal-tracking",
+    "fitness",
+    "health"
+  ],
+  "author": "Zed-777",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

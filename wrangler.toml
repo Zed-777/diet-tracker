@@ -1,0 +1,17 @@
+name = "diet-tracker"
+type = "javascript"
+account_id = ""
+workers_dev = true
+route = ""
+zone_id = ""
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[env.production]
+name = "diet-tracker-prod"
+route = "https://yourdomain.com/*"
+zone_id = ""
+
+[[env.production.routes]]
+pattern = "yourdomain.com"
+zone_name = "yourdomain.com"

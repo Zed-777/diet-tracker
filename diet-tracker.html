@@ -3334,21 +3334,6 @@ async function submitSetup() {
     btn.disabled = false;
   }
 }
-    btn.textContent = T('startPlan'); btn.disabled = false;
-    console.error('Setup error:', e);
-    const isNetworkError = e.message.includes('Failed to fetch') || e.message.includes('Network');
-    if (isNetworkError) {
-      err.textContent = T('networkError');
-    } else if (e.status === 401 || e.status === 403) {
-      err.textContent = T('accessDenied');
-    } else if (e.status === 404) {
-      err.textContent = T('tableNotFound');
-    } else {
-      err.textContent = T('databaseError').replace('{{error}}', e.message || 'unknown error');
-    }
-    err.style.display = 'block';
-  }
-}
 
 // ═══════════════════════════════════════════════════════════════
 // PROFILE DERIVED DATA
@@ -4159,8 +4144,6 @@ async function saveWeight() {
   } catch(e) {
     console.error('Error saving weight:', e);
     flash(e.message || 'Failed to log weight', 'er');
-  }
-}
   }
 }
 

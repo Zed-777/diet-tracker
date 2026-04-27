@@ -639,847 +639,804 @@ const CALC = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// MEAL DATABASE
+// MEAL DATABASE - CONSOLIDATED (50 unique ingredients, 80% reuse)
 // ═══════════════════════════════════════════════════════════════
 const MEALS = {
   breakfast: [
     {
-      id:'b1', name:'Scrambled Eggs & Avocado Toast',
-      cal:490, protein:27, carbs:37, fat:28, prepTime:10,
-      goals:['build','maintenance','definition'],
+      id:'b1', name:'Scrambled Eggs with Spinach & Cherry Tomatoes',
+      cal:290, protein:28, carbs:8, fat:15, prepTime:8,
+      goals:["lose", "definition", "maintenance"],
       ingredients:[
-        {item:'Large eggs',          amount:3,   unit:'whole', cat:'protein'},
-        {item:'Wholegrain bread',    amount:2,   unit:'slices',cat:'grains'},
-        {item:'Avocado',             amount:0.5, unit:'whole', cat:'vegetables'},
-        {item:'Butter',              amount:5,   unit:'g',     cat:'dairy'},
-        {item:'Salt & black pepper', amount:1,   unit:'pinch', cat:'pantry'}
+        {item:'Large eggs',amount:4,unit:'whole',cat:'protein'},
+        {item:'Spinach',amount:80,unit:'g',cat:'vegetables'},
+        {item:'Cherry tomatoes',amount:100,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:1,unit:'tsp',cat:'pantry'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
       ],
       recipe:[
-        'Crack eggs into a bowl, season generously with salt and pepper, whisk until fully combined.',
-        'Melt butter in a non-stick pan over medium-low heat until just foaming.',
-        'Pour in eggs. Using a spatula, fold the eggs slowly from the edges inward every 20–30 seconds.',
-        'Remove from heat when eggs are just set but still slightly glossy — residual heat finishes them.',
-        'Meanwhile toast the bread until golden. Slice avocado and fan across toast.',
-        'Pile scrambled eggs on top. Season once more and serve immediately.'
-      ]
-    },
-    {
-      id:'b2', name:'Greek Yogurt Parfait with Granola',
-      cal:355, protein:24, carbs:56, fat:5, prepTime:5,
-      goals:['lose','maintenance'],
-      ingredients:[
-        {item:'Greek yogurt (0% fat)', amount:200, unit:'g',  cat:'dairy'},
-        {item:'Mixed berries',         amount:100, unit:'g',  cat:'vegetables'},
-        {item:'Granola',               amount:30,  unit:'g',  cat:'grains'},
-        {item:'Honey',                 amount:1,   unit:'tbsp',cat:'pantry'}
-      ],
-      recipe:[
-        'Spoon half the yogurt into a glass or bowl.',
-        'Add half the berries on top, then drizzle half the honey.',
-        'Repeat with remaining yogurt and berries.',
-        'Top with granola just before eating to keep it crunchy.',
-        'Drizzle remaining honey over the top and serve.'
-      ]
-    },
-    {
-      id:'b3', name:'Protein Oatmeal with Banana',
-      cal:555, protein:37, carbs:86, fat:8, prepTime:8,
-      goals:['build','maintenance'],
-      ingredients:[
-        {item:'Rolled oats',      amount:80,  unit:'g',  cat:'grains'},
-        {item:'Protein powder',   amount:30,  unit:'g',  cat:'protein'},
-        {item:'Banana',           amount:1,   unit:'medium', cat:'vegetables'},
-        {item:'Almond milk',      amount:250, unit:'ml', cat:'dairy'},
-        {item:'Cinnamon',         amount:0.5, unit:'tsp',cat:'pantry'}
-      ],
-      recipe:[
-        'Combine oats and almond milk in a small saucepan over medium heat.',
-        'Stir continuously for 4–5 minutes until oats are thick and creamy.',
-        'Remove from heat and stir in protein powder and cinnamon until fully dissolved.',
-        'Transfer to a bowl. Slice banana and arrange on top.',
-        'Optional: drizzle with a little honey or nut butter for extra flavour.'
-      ]
-    },
-    {
-      id:'b4', name:'Veggie & Feta Omelette',
-      cal:390, protein:30, carbs:9, fat:26, prepTime:12,
-      goals:['lose','definition'],
-      ingredients:[
-        {item:'Large eggs',       amount:4,   unit:'whole', cat:'protein'},
-        {item:'Spinach',          amount:60,  unit:'g',     cat:'vegetables'},
-        {item:'Red capsicum',     amount:0.5, unit:'whole', cat:'vegetables'},
-        {item:'Feta cheese',      amount:30,  unit:'g',     cat:'dairy'},
-        {item:'Olive oil',        amount:1,   unit:'tsp',   cat:'pantry'},
-        {item:'Salt & pepper',    amount:1,   unit:'pinch', cat:'pantry'}
-      ],
-      recipe:[
-        'Whisk eggs with a pinch of salt and pepper in a bowl.',
         'Heat olive oil in a non-stick pan over medium heat.',
-        'Add diced capsicum and sauté for 2 minutes until slightly softened.',
-        'Add spinach and stir until wilted (30 seconds).',
-        'Pour in eggs. Let set on the bottom without stirring for 90 seconds.',
-        'Crumble feta over half the omelette. Fold in half and slide onto plate.'
+        'Add spinach and cherry tomatoes. Sauté 2 minutes until tomatoes blister.',
+        'Whisk eggs with salt and pepper. Pour into pan.',
+        'Fold gently until eggs are just set (2-3 min). Serve immediately.',
       ]
     },
     {
-      id:'b5', name:'Berry Smoothie Bowl',
-      cal:420, protein:31, carbs:48, fat:13, prepTime:8,
-      goals:['build','lose','definition'],
+      id:'b2', name:'Greek Yogurt Parfait with Berries & Granola',
+      cal:345, protein:25, carbs:54, fat:4, prepTime:5,
+      goals:["lose", "maintenance", "definition"],
       ingredients:[
-        {item:'Frozen banana',     amount:1,   unit:'medium',cat:'vegetables'},
-        {item:'Frozen berries',    amount:100, unit:'g',     cat:'vegetables'},
-        {item:'Protein powder',    amount:30,  unit:'g',     cat:'protein'},
-        {item:'Almond milk',       amount:100, unit:'ml',    cat:'dairy'},
-        {item:'Chia seeds',        amount:15,  unit:'g',     cat:'pantry'},
-        {item:'Coconut flakes',    amount:10,  unit:'g',     cat:'pantry'}
+        {item:'Greek yogurt',amount:200,unit:'g',cat:'dairy'},
+        {item:'Frozen mixed berries',amount:100,unit:'g',cat:'vegetables'},
+        {item:'Granola',amount:30,unit:'g',cat:'grains'},
+        {item:'Honey',amount:1.5,unit:'tbsp',cat:'pantry'},
       ],
       recipe:[
-        'Add frozen banana, berries, protein powder, and almond milk to a blender.',
-        'Blend on high until thick and smooth — it should be much thicker than a regular smoothie.',
-        'Add a splash more almond milk only if needed to blend.',
-        'Pour into a bowl. The mixture should hold its shape.',
-        'Top with chia seeds and coconut flakes. Add fresh fruit if desired.',
-        'Eat immediately before it melts.'
+        'Spoon yogurt into a bowl. Top with half the berries.',
+        'Drizzle with half the honey. Add granola on top.',
+        'Add remaining berries and honey. Serve immediately.',
       ]
     },
     {
-      id:'b6', name:'Overnight Chia Pudding with Berries',
-      cal:315, protein:28, carbs:26, fat:12, prepTime:5,
-      goals:['lose','definition','maintenance'],
+      id:'b3', name:'Protein Oatmeal with Banana & Honey',
+      cal:520, protein:35, carbs:82, fat:8, prepTime:8,
+      goals:["build", "maintenance"],
       ingredients:[
-        {item:'Greek yogurt',      amount:150, unit:'g', cat:'dairy'},
-        {item:'Chia seeds',        amount:25,  unit:'g', cat:'pantry'},
-        {item:'Almond milk',       amount:150, unit:'ml',cat:'dairy'},
-        {item:'Protein powder',    amount:20,  unit:'g', cat:'protein'},
-        {item:'Mixed berries',     amount:80,  unit:'g', cat:'vegetables'},
-        {item:'Honey',             amount:1,   unit:'tsp',cat:'pantry'}
+        {item:'Rolled oats',amount:80,unit:'g',cat:'grains'},
+        {item:'Protein powder',amount:30,unit:'g',cat:'protein'},
+        {item:'Banana',amount:1,unit:'medium',cat:'vegetables'},
+        {item:'Almond milk',amount:250,unit:'ml',cat:'dairy'},
+        {item:'Honey',amount:1,unit:'tbsp',cat:'pantry'},
       ],
       recipe:[
-        'Mix Greek yogurt, chia seeds, almond milk, and protein powder in a jar or container.',
-        'Stir well to combine. Cover and refrigerate overnight (or at least 4 hours).',
-        'In the morning, stir again (add extra milk if too thick).',
-        'Top with fresh berries and a light drizzle of honey.',
-        'Eat directly from the jar for convenience, or transfer to a bowl.',
-        'Prepare 2–3 jars at once for grab-and-go breakfasts during the week.'
+        'Heat almond milk in a saucepan over medium heat.',
+        'Stir in oats and cook 4-5 minutes until creamy.',
+        'Remove from heat. Stir in protein powder until dissolved.',
+        'Top with banana slices and drizzle with honey. Serve warm.',
+      ]
+    },
+    {
+      id:'b4', name:'Veggie Omelette with Feta',
+      cal:380, protein:30, carbs:9, fat:24, prepTime:10,
+      goals:["lose", "definition", "maintenance"],
+      ingredients:[
+        {item:'Large eggs',amount:4,unit:'whole',cat:'protein'},
+        {item:'Spinach',amount:60,unit:'g',cat:'vegetables'},
+        {item:'Bell peppers',amount:0.5,unit:'whole',cat:'vegetables'},
+        {item:'Feta cheese',amount:30,unit:'g',cat:'dairy'},
+        {item:'Olive oil',amount:1,unit:'tsp',cat:'pantry'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
+      ],
+      recipe:[
+        'Whisk eggs with salt and pepper.',
+        'Heat olive oil in a non-stick pan over medium heat.',
+        'Sauté diced peppers and spinach for 2 minutes.',
+        'Pour in eggs. Let set 90 seconds, then fold in half with feta cheese on one side.',
+        'Slide onto plate and serve immediately.',
+      ]
+    },
+    {
+      id:'b5', name:'Berry Smoothie Bowl with Granola',
+      cal:410, protein:32, carbs:50, fat:10, prepTime:8,
+      goals:["build", "lose", "definition"],
+      ingredients:[
+        {item:'Frozen mixed berries',amount:120,unit:'g',cat:'vegetables'},
+        {item:'Protein powder',amount:30,unit:'g',cat:'protein'},
+        {item:'Almond milk',amount:80,unit:'ml',cat:'dairy'},
+        {item:'Greek yogurt',amount:100,unit:'g',cat:'dairy'},
+        {item:'Granola',amount:25,unit:'g',cat:'grains'},
+        {item:'Chia seeds',amount:10,unit:'g',cat:'pantry'},
+      ],
+      recipe:[
+        'Add frozen berries, protein powder, almond milk, and Greek yogurt to blender.',
+        'Blend until thick and smooth (not pourable).',
+        'Pour into bowl. Top with granola and chia seeds.',
+        'Eat immediately with a spoon before it melts.',
+      ]
+    },
+    {
+      id:'b6', name:'Cottage Cheese Bowl with Berries & Walnuts',
+      cal:310, protein:30, carbs:24, fat:12, prepTime:3,
+      goals:["lose", "definition", "maintenance"],
+      ingredients:[
+        {item:'Cottage cheese',amount:250,unit:'g',cat:'dairy'},
+        {item:'Frozen mixed berries',amount:80,unit:'g',cat:'vegetables'},
+        {item:'Walnuts',amount:15,unit:'g',cat:'pantry'},
+        {item:'Honey',amount:1,unit:'tsp',cat:'pantry'},
+      ],
+      recipe:[
+        'Spoon cottage cheese into a bowl.',
+        'Top with berries and crushed walnuts.',
+        'Drizzle with honey and serve chilled.',
       ]
     },
     {
       id:'b7', name:'Breakfast Burrito with Eggs & Turkey',
-      cal:510, protein:42, carbs:35, fat:22, prepTime:12,
-      goals:['build','maintenance','definition'],
+      cal:520, protein:42, carbs:38, fat:20, prepTime:12,
+      goals:["build", "maintenance"],
       ingredients:[
-        {item:'Large eggs',        amount:2,   unit:'whole', cat:'protein'},
-        {item:'Turkey sausage',    amount:80,  unit:'g', cat:'protein'},
-        {item:'Whole wheat tortilla', amount:1, unit:'large', cat:'grains'},
-        {item:'Cheddar cheese',    amount:25,  unit:'g', cat:'dairy'},
-        {item:'Capsicum',          amount:0.5, unit:'whole', cat:'vegetables'},
-        {item:'Avocado',           amount:0.25,unit:'whole', cat:'vegetables'},
-        {item:'Salsa',             amount:2,   unit:'tbsp', cat:'pantry'}
+        {item:'Large eggs',amount:3,unit:'whole',cat:'protein'},
+        {item:'Turkey mince',amount:80,unit:'g',cat:'protein'},
+        {item:'Whole wheat bread',amount:2,unit:'slices',cat:'grains'},
+        {item:'Cheddar cheese',amount:25,unit:'g',cat:'dairy'},
+        {item:'Cherry tomatoes',amount:50,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:1,unit:'tsp',cat:'pantry'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
       ],
       recipe:[
-        'Brown turkey sausage in a pan over medium heat, breaking into chunks (5 min). Set aside.',
-        'Dice capsicum and sauté in the same pan for 2 minutes.',
-        'Whisk eggs and add to pan. Scramble until just set (2–3 min).',
-        'Warm the tortilla briefly over a gas flame or in a dry pan.',
-        'Lay tortilla flat. Layer: sausage, eggs, capsicum, cheese, sliced avocado, salsa.',
-        'Roll tightly, tucking in the sides. Wrap in foil for easy eating or slice in half diagonally.'
+        'Brown turkey mince in a pan over medium heat (5 min). Set aside.',
+        'Lightly toast bread. Whisk and scramble eggs (2 min).',
+        'Layer: turkey, eggs, tomatoes, cheese on bread.',
+        'Roll up or fold in half. Serve warm.',
       ]
     },
     {
-      id:'b8', name:'Protein Pancakes with Almond Butter',
-      cal:485, protein:38, carbs:42, fat:16, prepTime:10,
-      goals:['build','maintenance'],
+      id:'b8', name:'Protein Pancakes with Peanut Butter',
+      cal:480, protein:38, carbs:40, fat:16, prepTime:10,
+      goals:["build", "maintenance", "definition"],
       ingredients:[
-        {item:'Egg whites',        amount:3,   unit:'whole', cat:'protein'},
-        {item:'Rolled oats',       amount:40,  unit:'g', cat:'grains'},
-        {item:'Protein powder',    amount:20,  unit:'g', cat:'protein'},
-        {item:'Banana',            amount:0.5, unit:'whole', cat:'vegetables'},
-        {item:'Almond butter',     amount:2,   unit:'tbsp', cat:'pantry'},
-        {item:'Cinnamon',          amount:0.5, unit:'tsp', cat:'pantry'}
+        {item:'Eggs',amount:3,unit:'whole',cat:'protein'},
+        {item:'Rolled oats',amount:40,unit:'g',cat:'grains'},
+        {item:'Protein powder',amount:20,unit:'g',cat:'protein'},
+        {item:'Banana',amount:0.5,unit:'whole',cat:'vegetables'},
+        {item:'Peanut butter',amount:2,unit:'tbsp',cat:'pantry'},
+        {item:'Honey',amount:1,unit:'tsp',cat:'pantry'},
       ],
       recipe:[
-        'Blend egg whites, oats, protein powder, banana, and cinnamon until smooth batter forms.',
-        'Heat a non-stick pan over medium heat. Lightly oil it.',
-        'Pour batter into small circles (they should be thick). Cook 2–3 min each side until golden.',
-        'Transfer to a plate. Spread almond butter over warm pancakes.',
-        'Optional: top with fresh berries or a drizzle of honey.',
-        'Eat immediately while warm for best texture.'
+        'Blend eggs, oats, protein powder, and banana into smooth batter.',
+        'Cook on non-stick pan: 2-3 min per side until golden.',
+        'Top with peanut butter and honey. Serve warm.',
       ]
     },
     {
-      id:'b9', name:'Smoked Salmon & Cream Cheese Bagel',
-      cal:445, protein:35, carbs:38, fat:18, prepTime:5,
-      goals:['maintenance','definition'],
+      id:'b9', name:'Pasta Carbonara Breakfast',
+      cal:510, protein:28, carbs:52, fat:22, prepTime:10,
+      goals:["build", "maintenance"],
       ingredients:[
-        {item:'Whole wheat bagel', amount:1, unit:'whole', cat:'grains'},
-        {item:'Cream cheese',      amount:30, unit:'g', cat:'dairy'},
-        {item:'Smoked salmon',     amount:60, unit:'g', cat:'protein'},
-        {item:'Cucumber',          amount:8,  unit:'slices', cat:'vegetables'},
-        {item:'Red onion',         amount:8,  unit:'slices', cat:'vegetables'},
-        {item:'Lemon juice',       amount:0.5,unit:'whole', cat:'vegetables'}
+        {item:'Whole wheat pasta',amount:100,unit:'g',cat:'grains'},
+        {item:'Eggs',amount:2,unit:'whole',cat:'protein'},
+        {item:'Parmesan cheese',amount:30,unit:'g',cat:'dairy'},
+        {item:'Onion',amount:30,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:1.5,unit:'tsp',cat:'pantry'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
       ],
       recipe:[
-        'Slice bagel in half and toast lightly until warm but not hard.',
-        'Spread cream cheese evenly on both halves.',
-        'Layer smoked salmon, cucumber slices, and red onion on each half.',
-        'Squeeze fresh lemon juice over the top.',
-        'Grind black pepper and serve immediately. Best eaten fresh.',
-        'This is a quick, elegant breakfast that feels indulgent but remains nutritionally balanced.'
+        'Cook pasta according to package directions. Drain and set aside.',
+        'Sauté diced onion in olive oil until soft (3 min).',
+        'Whisk eggs with parmesan. Add hot pasta to pan with onion.',
+        'Remove from heat and quickly stir in egg mixture to coat (creates creamy sauce).',
+        'Season with salt and pepper. Serve immediately.',
       ]
     },
     {
-      id:'b10', name:'Cottage Cheese & Fruit Bowl',
-      cal:325, protein:32, carbs:38, fat:4, prepTime:3,
-      goals:['lose','definition'],
+      id:'b10', name:'Rice Cakes with Almond Butter & Banana',
+      cal:350, protein:10, carbs:48, fat:14, prepTime:3,
+      goals:["maintenance", "lose"],
       ingredients:[
-        {item:'Cottage cheese (2%)', amount:250, unit:'g', cat:'dairy'},
-        {item:'Blueberries',        amount:80,  unit:'g', cat:'vegetables'},
-        {item:'Apple',              amount:1,   unit:'medium', cat:'vegetables'},
-        {item:'Walnuts',            amount:10,  unit:'g', cat:'pantry'},
-        {item:'Honey',              amount:1,   unit:'tsp', cat:'pantry'}
+        {item:'Rice cakes',amount:2,unit:'whole',cat:'grains'},
+        {item:'Almond butter',amount:2,unit:'tbsp',cat:'pantry'},
+        {item:'Banana',amount:1,unit:'medium',cat:'vegetables'},
+        {item:'Honey',amount:1,unit:'tsp',cat:'pantry'},
+        {item:'Cinnamon',amount:0.25,unit:'tsp',cat:'pantry'},
       ],
       recipe:[
-        'Spoon cottage cheese into a bowl.',
-        'Top with fresh blueberries and diced apple.',
-        'Scatter chopped walnuts over the top.',
-        'Drizzle with a small amount of honey.',
-        'Stir together or eat in layers. Serve chilled.',
-        'High protein, low fat, and fills you up for hours.'
+        'Spread almond butter on rice cakes.',
+        'Top with banana slices.',
+        'Drizzle with honey and sprinkle cinnamon.',
+        'Serve immediately.',
       ]
-    }
+    },
   ],
   lunch: [
     {
-      id:'l1', name:'Chicken & Brown Rice Bowl',
-      cal:510, protein:56, carbs:48, fat:9, prepTime:20,
-      goals:['build','maintenance'],
+      id:'l1', name:'Grilled Salmon with Brown Rice & Broccoli',
+      cal:580, protein:48, carbs:60, fat:15, prepTime:20,
+      goals:["build", "maintenance"],
       ingredients:[
-        {item:'Chicken breast',  amount:150, unit:'g',  cat:'protein'},
-        {item:'Brown rice',      amount:80,  unit:'g (dry)', cat:'grains'},
-        {item:'Broccoli',        amount:150, unit:'g',  cat:'vegetables'},
-        {item:'Soy sauce',       amount:1,   unit:'tbsp',cat:'pantry'},
-        {item:'Sesame oil',      amount:1,   unit:'tsp', cat:'pantry'},
-        {item:'Garlic',          amount:2,   unit:'cloves',cat:'pantry'}
+        {item:'Salmon fillet',amount:150,unit:'g',cat:'protein'},
+        {item:'Brown rice',amount:150,unit:'g cooked',cat:'grains'},
+        {item:'Broccoli',amount:150,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:1.5,unit:'tsp',cat:'pantry'},
+        {item:'Lemon',amount:0.5,unit:'whole',cat:'vegetables'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
       ],
       recipe:[
-        'Cook brown rice according to packet instructions (usually 25–30 min).',
-        'Season chicken breast with salt, pepper, and minced garlic.',
-        'Heat a pan with a little olive oil over medium-high heat. Cook chicken 5–6 min each side until cooked through. Rest 3 min then slice.',
-        'Steam broccoli for 4 minutes until bright green and tender-crisp.',
-        'Combine soy sauce and sesame oil for the dressing.',
-        'Assemble bowl: rice base, sliced chicken, broccoli. Drizzle with dressing and serve.'
+        'Season salmon with salt, pepper, and lemon juice.',
+        'Grill or pan-sear salmon 4 min per side until cooked through.',
+        'Steam broccoli 5-7 minutes until tender-crisp.',
+        'Drizzle salmon and broccoli with olive oil. Serve with brown rice.',
       ]
     },
     {
-      id:'l2', name:'Tuna Salad Wholegrain Wrap',
-      cal:395, protein:51, carbs:35, fat:5, prepTime:8,
-      goals:['lose','definition'],
+      id:'l2', name:'Chicken Brown Rice Bowl with Cherry Tomatoes',
+      cal:520, protein:52, carbs:54, fat:10, prepTime:20,
+      goals:["build", "maintenance", "lose"],
       ingredients:[
-        {item:'Canned tuna in water', amount:185, unit:'g (drained)', cat:'protein'},
-        {item:'Wholegrain wrap',      amount:1,   unit:'large',cat:'grains'},
-        {item:'Greek yogurt',         amount:2,   unit:'tbsp', cat:'dairy'},
-        {item:'Mixed salad leaves',   amount:60,  unit:'g',    cat:'vegetables'},
-        {item:'Cherry tomatoes',      amount:6,   unit:'whole',cat:'vegetables'},
-        {item:'Cucumber',             amount:0.25,unit:'whole',cat:'vegetables'},
-        {item:'Lemon juice',          amount:1,   unit:'tsp',  cat:'pantry'}
+        {item:'Chicken breast',amount:150,unit:'g',cat:'protein'},
+        {item:'Brown rice',amount:150,unit:'g cooked',cat:'grains'},
+        {item:'Cherry tomatoes',amount:120,unit:'g',cat:'vegetables'},
+        {item:'Onion',amount:40,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:1,unit:'tsp',cat:'pantry'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
       ],
       recipe:[
-        'Drain tuna thoroughly and flake into a bowl.',
-        'Mix with Greek yogurt (as a healthy mayo substitute) and a squeeze of lemon juice.',
-        'Season with salt and pepper. Add diced cucumber and halved cherry tomatoes.',
-        'Lay wrap flat. Place salad leaves down the centre.',
-        'Spoon tuna mix on top of leaves.',
-        'Fold in sides then roll tightly. Slice in half diagonally and serve.'
+        'Season and grill chicken 6-8 min per side until cooked (165°F).',
+        'Sauté diced onion and cherry tomatoes in olive oil (3 min).',
+        'Slice chicken. Serve with brown rice and tomato mixture on top.',
       ]
     },
     {
-      id:'l3', name:'Grilled Salmon & Quinoa Salad',
-      cal:590, protein:40, carbs:28, fat:35, prepTime:18,
-      goals:['maintenance','definition'],
+      id:'l3', name:'Turkey Meatballs with Brown Rice',
+      cal:420, protein:45, carbs:42, fat:12, prepTime:22,
+      goals:["lose", "definition", "maintenance"],
       ingredients:[
-        {item:'Salmon fillet',     amount:150, unit:'g', cat:'protein'},
-        {item:'Quinoa',            amount:60,  unit:'g (dry)', cat:'grains'},
-        {item:'Baby spinach',      amount:60,  unit:'g', cat:'vegetables'},
-        {item:'Cherry tomatoes',   amount:8,   unit:'whole', cat:'vegetables'},
-        {item:'Cucumber',          amount:0.25,unit:'whole', cat:'vegetables'},
-        {item:'Olive oil',         amount:1,   unit:'tbsp', cat:'pantry'},
-        {item:'Lemon',             amount:0.5, unit:'whole', cat:'vegetables'}
+        {item:'Turkey mince',amount:150,unit:'g',cat:'protein'},
+        {item:'Brown rice',amount:100,unit:'g cooked',cat:'grains'},
+        {item:'Broccoli',amount:120,unit:'g',cat:'vegetables'},
+        {item:'Onion',amount:30,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:1,unit:'tsp',cat:'pantry'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
       ],
       recipe:[
-        'Rinse quinoa and cook in 120ml water for 15 minutes. Fluff with fork and cool.',
-        'Season salmon with salt, pepper, and a squeeze of lemon.',
-        'Heat a pan on medium-high. Cook salmon 3–4 min each side until just cooked through.',
-        'Combine quinoa, spinach, halved tomatoes, and sliced cucumber in a bowl.',
-        'Dress with olive oil and lemon juice. Season to taste.',
-        'Flake salmon over the salad and serve warm.'
+        'Mix turkey with minced onion, salt, and pepper. Form 8-10 meatballs.',
+        'Bake at 200°C for 15 minutes until cooked through.',
+        'Steam broccoli 5 minutes. Serve with brown rice and meatballs.',
       ]
     },
     {
-      id:'l4', name:'Turkey Stir-Fry with Noodles',
-      cal:450, protein:44, carbs:50, fat:9, prepTime:15,
-      goals:['build','maintenance'],
+      id:'l4', name:'Whole Wheat Pasta with Chicken & Tomato Sauce',
+      cal:510, protein:48, carbs:56, fat:10, prepTime:20,
+      goals:["build", "maintenance"],
       ingredients:[
-        {item:'Lean turkey mince',  amount:150, unit:'g', cat:'protein'},
-        {item:'Egg noodles',        amount:80,  unit:'g (dry)', cat:'grains'},
-        {item:'Mixed stir-fry veg', amount:200, unit:'g', cat:'vegetables'},
-        {item:'Soy sauce',          amount:2,   unit:'tbsp', cat:'pantry'},
-        {item:'Oyster sauce',       amount:1,   unit:'tbsp', cat:'pantry'},
-        {item:'Garlic & ginger',    amount:1,   unit:'tsp each', cat:'pantry'},
-        {item:'Sesame oil',         amount:1,   unit:'tsp', cat:'pantry'}
+        {item:'Whole wheat pasta',amount:100,unit:'g dry',cat:'grains'},
+        {item:'Chicken breast',amount:120,unit:'g',cat:'protein'},
+        {item:'Passata tomato sauce',amount:150,unit:'ml',cat:'pantry'},
+        {item:'Onion',amount:40,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:1.5,unit:'tsp',cat:'pantry'},
+        {item:'Garlic',amount:2,unit:'cloves',cat:'pantry'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
       ],
       recipe:[
-        'Cook noodles per packet instructions. Drain and set aside.',
-        'Heat a wok or large pan on high. Add a little oil.',
-        'Brown turkey mince, breaking up lumps, until cooked through (5 min).',
-        'Add garlic and ginger. Stir-fry 1 minute until fragrant.',
-        'Add vegetables and stir-fry on high heat for 3–4 minutes.',
-        'Add noodles, soy sauce, oyster sauce, and sesame oil. Toss well and serve hot.'
+        'Cook pasta according to package directions. Drain.',
+        'Dice and pan-sear chicken until cooked (8 min). Set aside.',
+        'Sauté minced garlic and onion in olive oil (2 min).',
+        'Add passata sauce and simmer 5 minutes.',
+        'Mix in pasta and chicken. Toss well. Season with salt and pepper.',
       ]
     },
     {
-      id:'l5', name:'Red Lentil Soup with Bread',
-      cal:390, protein:25, carbs:71, fat:3, prepTime:25,
-      goals:['lose','maintenance'],
+      id:'l5', name:'Asian Chicken Stir-Fry with Brown Rice',
+      cal:540, protein:50, carbs:58, fat:12, prepTime:15,
+      goals:["build", "lose", "maintenance"],
       ingredients:[
-        {item:'Red lentils',      amount:100, unit:'g (dry)', cat:'protein'},
-        {item:'Wholegrain bread', amount:1,   unit:'slice', cat:'grains'},
-        {item:'Onion',            amount:1,   unit:'medium', cat:'vegetables'},
-        {item:'Carrot',           amount:1,   unit:'medium', cat:'vegetables'},
-        {item:'Canned tomatoes',  amount:200, unit:'g', cat:'pantry'},
-        {item:'Cumin & paprika',  amount:1,   unit:'tsp each', cat:'pantry'},
-        {item:'Vegetable stock',  amount:600, unit:'ml', cat:'pantry'}
+        {item:'Chicken breast',amount:140,unit:'g',cat:'protein'},
+        {item:'Brown rice',amount:150,unit:'g cooked',cat:'grains'},
+        {item:'Broccoli',amount:100,unit:'g',cat:'vegetables'},
+        {item:'Bell peppers',amount:100,unit:'g',cat:'vegetables'},
+        {item:'Onion',amount:40,unit:'g',cat:'vegetables'},
+        {item:'Soy sauce',amount:2,unit:'tbsp',cat:'pantry'},
+        {item:'Sesame oil',amount:1,unit:'tsp',cat:'pantry'},
+        {item:'Garlic',amount:2,unit:'cloves',cat:'pantry'},
+        {item:'Ginger',amount:5,unit:'g',cat:'pantry'},
       ],
       recipe:[
-        'Dice onion and carrot. Heat a little oil in a pot over medium heat.',
-        'Cook onion 3–4 min until soft. Add carrot and cook 2 more minutes.',
-        'Add cumin and paprika. Stir for 30 seconds until fragrant.',
-        'Add rinsed lentils, canned tomatoes, and stock. Bring to a boil.',
-        'Reduce heat, cover, and simmer 20 minutes until lentils are very soft.',
-        'Season with salt and pepper. Serve with toasted bread. Optionally blend for a smoother texture.'
+        'Dice chicken and vegetables.',
+        'Heat sesame oil in a wok or large pan over high heat.',
+        'Stir-fry chicken until mostly cooked (4 min). Remove and set aside.',
+        'Add vegetables and minced garlic/ginger. Stir-fry 3-4 minutes.',
+        'Return chicken, add soy sauce. Toss 1 minute.',
+        'Serve over brown rice.',
       ]
     },
     {
-      id:'l6', name:'Chicken Caesar Salad',
-      cal:475, protein:57, carbs:19, fat:17, prepTime:15,
-      goals:['lose','definition'],
+      id:'l6', name:'Canned Tuna Salad with Brown Rice',
+      cal:420, protein:42, carbs:48, fat:8, prepTime:8,
+      goals:["lose", "definition", "maintenance"],
       ingredients:[
-        {item:'Chicken breast',   amount:150, unit:'g', cat:'protein'},
-        {item:'Cos lettuce',      amount:120, unit:'g', cat:'vegetables'},
-        {item:'Cherry tomatoes',  amount:6,   unit:'whole', cat:'vegetables'},
-        {item:'Parmesan cheese',  amount:20,  unit:'g', cat:'dairy'},
-        {item:'Croutons',         amount:20,  unit:'g', cat:'grains'},
-        {item:'Light Caesar dressing', amount:2, unit:'tbsp', cat:'pantry'}
+        {item:'Canned tuna in water',amount:140,unit:'g drained',cat:'protein'},
+        {item:'Brown rice',amount:120,unit:'g cooked',cat:'grains'},
+        {item:'Cherry tomatoes',amount:100,unit:'g',cat:'vegetables'},
+        {item:'Cucumber',amount:100,unit:'g',cat:'vegetables'},
+        {item:'Mixed greens',amount:80,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:1,unit:'tbsp',cat:'pantry'},
+        {item:'Lemon juice',amount:1,unit:'tbsp',cat:'pantry'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
       ],
       recipe:[
-        'Season chicken with salt and pepper. Grill or pan-fry 5–6 min each side until cooked through.',
-        'Rest chicken 3 min then slice diagonally.',
-        'Tear cos lettuce into a large bowl. Add halved cherry tomatoes.',
-        'Drizzle with Caesar dressing and toss to coat.',
-        'Top with sliced chicken, croutons, and shaved parmesan.',
-        'Grind black pepper over the top and serve immediately.'
+        'Mix drained tuna with diced tomatoes and cucumber.',
+        'Dress with olive oil, lemon juice, salt, and pepper.',
+        'Serve tuna mixture over brown rice bed with mixed greens on side.',
       ]
     },
     {
-      id:'l7', name:'Lean Beef & Broccoli Rice Bowl',
-      cal:545, protein:52, carbs:55, fat:12, prepTime:20,
-      goals:['build','maintenance'],
+      id:'l7', name:'Salmon Pasta with Garlic & Olive Oil',
+      cal:530, protein:40, carbs:58, fat:14, prepTime:15,
+      goals:["build", "maintenance"],
       ingredients:[
-        {item:'Lean beef strips',   amount:150, unit:'g', cat:'protein'},
-        {item:'Brown rice',         amount:80,  unit:'g (dry)', cat:'grains'},
-        {item:'Broccoli',           amount:150, unit:'g', cat:'vegetables'},
-        {item:'Soy sauce',          amount:2,   unit:'tbsp', cat:'pantry'},
-        {item:'Garlic',             amount:2,   unit:'cloves', cat:'pantry'},
-        {item:'Sesame oil',         amount:1,   unit:'tsp', cat:'pantry'}
+        {item:'Whole wheat pasta',amount:100,unit:'g dry',cat:'grains'},
+        {item:'Salmon fillet',amount:120,unit:'g',cat:'protein'},
+        {item:'Cherry tomatoes',amount:80,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:2,unit:'tsp',cat:'pantry'},
+        {item:'Garlic',amount:3,unit:'cloves',cat:'pantry'},
+        {item:'Lemon',amount:0.5,unit:'whole',cat:'vegetables'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
       ],
       recipe:[
-        'Cook brown rice per packet instructions.',
-        'Heat oil in a pan over high heat. Sear beef strips in batches until browned (not crowded). Remove and set aside.',
-        'Add minced garlic to the pan. Cook 30 seconds until fragrant.',
-        'Add broccoli florets. Stir-fry on high heat for 3–4 minutes until bright green.',
-        'Return beef to pan. Add soy sauce and sesame oil. Toss to combine.',
-        'Serve over rice. Fresh, protein-packed, and ready in 20 minutes.'
+        'Cook pasta according to package directions. Drain.',
+        'Pan-sear salmon until cooked (4 min per side). Flake into chunks.',
+        'In same pan, sauté minced garlic in olive oil (1 min).',
+        'Add halved cherry tomatoes and cook 2 minutes.',
+        'Toss pasta with salmon mixture. Squeeze lemon juice over top.',
       ]
     },
     {
-      id:'l8', name:'Mediterranean Chickpea Salad',
-      cal:420, protein:14, carbs:62, fat:12, prepTime:8,
-      goals:['lose','maintenance'],
+      id:'l8', name:'Grilled Chicken Sandwich on Rice Cakes',
+      cal:380, protein:48, carbs:32, fat:10, prepTime:12,
+      goals:["lose", "definition", "maintenance"],
       ingredients:[
-        {item:'Canned chickpeas',  amount:200, unit:'g (drained)', cat:'protein'},
-        {item:'Mixed salad leaves',amount:100, unit:'g', cat:'vegetables'},
-        {item:'Cherry tomatoes',   amount:100, unit:'g', cat:'vegetables'},
-        {item:'Cucumber',          amount:0.5, unit:'whole', cat:'vegetables'},
-        {item:'Red onion',         amount:30,  unit:'g', cat:'vegetables'},
-        {item:'Feta cheese',       amount:40,  unit:'g', cat:'dairy'},
-        {item:'Olive oil & lemon', amount:2,   unit:'tbsp', cat:'pantry'}
+        {item:'Chicken breast',amount:140,unit:'g',cat:'protein'},
+        {item:'Rice cakes',amount:2,unit:'whole',cat:'grains'},
+        {item:'Cherry tomatoes',amount:50,unit:'g',cat:'vegetables'},
+        {item:'Cucumber',amount:50,unit:'g',cat:'vegetables'},
+        {item:'Mixed greens',amount:40,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:0.5,unit:'tbsp',cat:'pantry'},
+        {item:'Lemon',amount:0.25,unit:'whole',cat:'pantry'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
       ],
       recipe:[
-        'Rinse and drain chickpeas thoroughly.',
-        'Chop all vegetables and combine in a large bowl.',
-        'Add chickpeas and crumbled feta.',
-        'Dress with olive oil and lemon juice. Season with salt and pepper.',
-        'Toss gently to combine. Can be eaten immediately or prepared ahead.',
-        'Plant-based protein option that feels fresh and Mediterranean.'
+        'Grill seasoned chicken breast 6-8 minutes per side until cooked.',
+        'Slice thinly.',
+        'Layer rice cakes with greens, tomatoes, cucumber, and chicken.',
+        'Drizzle with olive oil and lemon. Serve immediately.',
       ]
     },
     {
-      id:'l9', name:'Grilled Cod with Roasted Vegetables & Couscous',
-      cal:480, protein:48, carbs:38, fat:14, prepTime:22,
-      goals:['lose','definition','maintenance'],
+      id:'l9', name:'Whole Wheat Pasta Primavera',
+      cal:420, protein:18, carbs:66, fat:10, prepTime:15,
+      goals:["lose", "maintenance"],
       ingredients:[
-        {item:'Cod fillet',        amount:150, unit:'g', cat:'protein'},
-        {item:'Couscous',          amount:60,  unit:'g (dry)', cat:'grains'},
-        {item:'Mixed veg (carrot, zucchini)', amount:200, unit:'g', cat:'vegetables'},
-        {item:'Olive oil',         amount:2,   unit:'tbsp', cat:'pantry'},
-        {item:'Lemon',             amount:1,   unit:'whole', cat:'vegetables'},
-        {item:'Herbs (dill/parsley)', amount:1, unit:'tbsp', cat:'pantry'}
+        {item:'Whole wheat pasta',amount:100,unit:'g dry',cat:'grains'},
+        {item:'Broccoli',amount:80,unit:'g',cat:'vegetables'},
+        {item:'Bell peppers',amount:80,unit:'g',cat:'vegetables'},
+        {item:'Cherry tomatoes',amount:80,unit:'g',cat:'vegetables'},
+        {item:'Zucchini',amount:80,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:1.5,unit:'tbsp',cat:'pantry'},
+        {item:'Garlic',amount:2,unit:'cloves',cat:'pantry'},
+        {item:'Parmesan cheese',amount:20,unit:'g',cat:'dairy'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
       ],
       recipe:[
-        'Cook couscous per packet instructions. Fluff with fork.',
-        'Cut vegetables into chunks. Toss with 1 tbsp olive oil, salt, pepper. Roast at 190°C for 15 min.',
-        'Brush cod with remaining olive oil. Season with salt, pepper, herbs.',
-        'Place on a grill pan or baking tray. Cook 10–12 min until opaque and flakes easily.',
-        'Squeeze lemon over the cod.',
-        'Plate couscous, arrange cod and roasted vegetables on top. Serve hot.'
+        'Cook pasta according to package directions. Drain.',
+        'In a large pan, sauté minced garlic in olive oil (1 min).',
+        'Add all chopped vegetables. Stir-fry 5-6 minutes until tender-crisp.',
+        'Toss pasta with vegetables. Top with parmesan. Season and serve.',
       ]
     },
     {
-      id:'l10', name:'Caprese Pasta with Turkey Meatballs',
-      cal:520, protein:50, carbs:52, fat:14, prepTime:25,
-      goals:['build','maintenance'],
+      id:'l10', name:'Whole Wheat Pasta with Tuna & Cherry Tomatoes',
+      cal:450, protein:38, carbs:54, fat:10, prepTime:12,
+      goals:["lose", "definition", "maintenance"],
       ingredients:[
-        {item:'Whole wheat pasta', amount:80,  unit:'g (dry)', cat:'grains'},
-        {item:'Turkey mince',      amount:150, unit:'g', cat:'protein'},
-        {item:'Cherry tomatoes',   amount:150, unit:'g', cat:'vegetables'},
-        {item:'Fresh mozzarella',  amount:50,  unit:'g', cat:'dairy'},
-        {item:'Basil',             amount:8,   unit:'leaves', cat:'pantry'},
-        {item:'Olive oil & garlic', amount:1,  unit:'tbsp', cat:'pantry'}
+        {item:'Whole wheat pasta',amount:100,unit:'g dry',cat:'grains'},
+        {item:'Canned tuna',amount:120,unit:'g',cat:'protein'},
+        {item:'Cherry tomatoes',amount:100,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:1.5,unit:'tbsp',cat:'pantry'},
+        {item:'Garlic',amount:2,unit:'cloves',cat:'pantry'},
+        {item:'Lemon',amount:0.5,unit:'whole',cat:'pantry'},
+        {item:'Parmesan cheese',amount:20,unit:'g',cat:'dairy'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
       ],
       recipe:[
-        'Cook pasta per packet instructions. Drain and set aside.',
-        'Mix turkey mince with salt, pepper, and Italian herbs. Form into 8 balls.',
-        'Heat olive oil in a pan over medium-high. Brown meatballs on all sides (8–10 min). Remove and set aside.',
-        'Add halved cherry tomatoes to the pan. Simmer 3–4 min until they soften.',
-        'Return meatballs to pan. Add cooked pasta and toss gently.',
-        'Top with fresh mozzarella and torn basil. Serve warm.'
+        'Cook pasta. Drain and set aside.',
+        'In a large pan, sauté minced garlic in olive oil (1 min).',
+        'Add halved cherry tomatoes. Cook 2 minutes.',
+        'Gently fold in drained tuna and cooked pasta.',
+        'Squeeze lemon juice over top. Toss gently. Top with parmesan.',
       ]
     },
     {
-      id:'l11', name:'Thai Shrimp & Vegetable Pad Thai',
-      cal:410, protein:38, carbs:40, fat:11, prepTime:15,
-      goals:['lose','maintenance'],
+      id:'l11', name:'Asian Chicken Bowl with Rice',
+      cal:480, protein:48, carbs:52, fat:10, prepTime:18,
+      goals:["build", "lose", "maintenance"],
       ingredients:[
-        {item:'Shrimp (medium)',   amount:150, unit:'g', cat:'protein'},
-        {item:'Rice noodles',      amount:70,  unit:'g (dry)', cat:'grains'},
-        {item:'Mixed Asian veg',   amount:150, unit:'g', cat:'vegetables'},
-        {item:'Pad Thai sauce',    amount:2,   unit:'tbsp', cat:'pantry'},
-        {item:'Peanuts',           amount:15,  unit:'g', cat:'pantry'},
-        {item:'Lime & cilantro',   amount:1,   unit:'each', cat:'vegetables'}
+        {item:'Chicken breast',amount:140,unit:'g',cat:'protein'},
+        {item:'Brown rice',amount:140,unit:'g cooked',cat:'grains'},
+        {item:'Broccoli',amount:120,unit:'g',cat:'vegetables'},
+        {item:'Soy sauce',amount:2,unit:'tbsp',cat:'pantry'},
+        {item:'Sesame oil',amount:0.5,unit:'tsp',cat:'pantry'},
+        {item:'Garlic',amount:2,unit:'cloves',cat:'pantry'},
+        {item:'Ginger',amount:5,unit:'g',cat:'pantry'},
       ],
       recipe:[
-        'Soak rice noodles in boiling water for 5 minutes. Drain.',
-        'Heat a wok or large pan on high. Add a little oil.',
-        'Add shrimp and cook 1–2 min each side until pink. Remove and set aside.',
-        'Add vegetables to wok. Stir-fry on high for 2 minutes.',
-        'Return shrimp. Add noodles and sauce. Toss vigorously 1 minute.',
-        'Plate and top with crushed peanuts, lime wedge, and fresh cilantro.'
+        'Dice chicken and steam broccoli.',
+        'Pan-sear diced chicken in sesame oil with minced garlic/ginger (5 min).',
+        'Add broccoli and soy sauce. Toss 2 minutes.',
+        'Serve over brown rice.',
       ]
-    }
-  ],
+    },
+  ]
+,
   dinner: [
     {
-      id:'d1', name:'Grilled Chicken, Sweet Potato & Broccoli',
-      cal:590, protein:56, carbs:56, fat:12, prepTime:30,
-      goals:['build','lose','definition'],
+      id:'d1', name:'Grilled Salmon with Brown Rice & Vegetables',
+      cal:620, protein:50, carbs:62, fat:16, prepTime:22,
+      goals:["build", "maintenance"],
       ingredients:[
-        {item:'Chicken breast',   amount:180, unit:'g', cat:'protein'},
-        {item:'Sweet potato',     amount:200, unit:'g', cat:'vegetables'},
-        {item:'Broccoli',         amount:200, unit:'g', cat:'vegetables'},
-        {item:'Olive oil',        amount:1,   unit:'tbsp', cat:'pantry'},
-        {item:'Garlic powder',    amount:0.5, unit:'tsp', cat:'pantry'},
-        {item:'Paprika',          amount:0.5, unit:'tsp', cat:'pantry'}
-      ],
-      recipe:[
-        'Preheat oven to 200°C. Peel sweet potato and cut into 2cm cubes.',
-        'Toss sweet potato in half the olive oil, garlic powder, paprika, salt and pepper. Roast 25 min until golden.',
-        'Season chicken with remaining olive oil, salt, pepper, and paprika.',
-        'Heat a grill pan over high heat. Grill chicken 5–6 min each side until charred and cooked through. Rest 5 min.',
-        'Steam broccoli 4 minutes until bright and tender-crisp.',
-        'Slice chicken. Plate with sweet potato and broccoli.'
-      ]
-    },
-    {
-      id:'d2', name:'Baked Salmon, Brown Rice & Asparagus',
-      cal:575, protein:49, carbs:42, fat:23, prepTime:25,
-      goals:['maintenance','definition','build'],
-      ingredients:[
-        {item:'Salmon fillet',    amount:180, unit:'g', cat:'protein'},
-        {item:'Brown rice',       amount:75,  unit:'g (dry)', cat:'grains'},
-        {item:'Asparagus',        amount:150, unit:'g', cat:'vegetables'},
-        {item:'Lemon',            amount:1,   unit:'whole', cat:'vegetables'},
-        {item:'Olive oil',        amount:1,   unit:'tbsp', cat:'pantry'},
-        {item:'Dill or herbs',    amount:1,   unit:'tbsp', cat:'pantry'}
-      ],
-      recipe:[
-        'Cook brown rice per packet instructions.',
-        'Preheat oven to 180°C. Place salmon on a lined tray.',
-        'Drizzle salmon with half the olive oil, top with lemon slices and herbs. Season well.',
-        'Bake 15–18 minutes until salmon flakes easily with a fork.',
-        'Toss asparagus with remaining olive oil and season. Roast alongside salmon last 10 minutes, or grill in a pan.',
-        'Plate rice, lay salmon on top, arrange asparagus beside. Squeeze fresh lemon over everything.'
-      ]
-    },
-    {
-      id:'d3', name:'Lean Beef Stir-Fry with Rice Noodles',
-      cal:520, protein:45, carbs:60, fat:11, prepTime:18,
-      goals:['build','maintenance'],
-      ingredients:[
-        {item:'Lean beef strips',   amount:150, unit:'g', cat:'protein'},
-        {item:'Rice noodles',       amount:80,  unit:'g (dry)', cat:'grains'},
-        {item:'Asian mixed veg',    amount:200, unit:'g', cat:'vegetables'},
-        {item:'Oyster sauce',       amount:2,   unit:'tbsp', cat:'pantry'},
-        {item:'Soy sauce',          amount:1,   unit:'tbsp', cat:'pantry'},
-        {item:'Garlic & ginger',    amount:1,   unit:'tsp each', cat:'pantry'},
-        {item:'Sesame oil',         amount:1,   unit:'tsp', cat:'pantry'}
-      ],
-      recipe:[
-        'Soak rice noodles in boiling water for 5 minutes. Drain and set aside.',
-        'Combine oyster sauce, soy sauce, and sesame oil in a small bowl.',
-        'Heat wok on very high heat. Add a little oil.',
-        'Sear beef strips in small batches (do not crowd) 1–2 min until browned. Remove and set aside.',
-        'Add garlic and ginger to wok. Add vegetables and stir-fry 3 min.',
-        'Return beef. Add noodles and sauce. Toss vigorously on high heat 1–2 min. Serve hot.'
-      ]
-    },
-    {
-      id:'d4', name:'Turkey Meatballs & Zucchini Noodles',
-      cal:480, protein:56, carbs:30, fat:17, prepTime:25,
-      goals:['lose','definition'],
-      ingredients:[
-        {item:'Lean turkey mince',  amount:200, unit:'g', cat:'protein'},
-        {item:'Zucchini',           amount:300, unit:'g', cat:'vegetables'},
-        {item:'Passata tomato sauce',amount:200,unit:'g', cat:'pantry'},
-        {item:'Parmesan cheese',    amount:20,  unit:'g', cat:'dairy'},
-        {item:'Egg',                amount:1,   unit:'whole', cat:'protein'},
-        {item:'Breadcrumbs',        amount:20,  unit:'g', cat:'grains'},
-        {item:'Italian herbs',      amount:1,   unit:'tsp', cat:'pantry'}
-      ],
-      recipe:[
-        'Combine turkey mince, egg, breadcrumbs, herbs, salt and pepper. Mix well and roll into 8–10 balls.',
-        'Heat oil in a large pan. Brown meatballs on all sides (5–6 min). They do not need to be cooked through yet.',
-        'Pour passata over meatballs. Reduce heat, cover, simmer 10 min until cooked through.',
-        'Use a spiraliser or vegetable peeler to make zucchini noodles. Season and toss in a hot pan 1–2 min (do not overcook).',
-        'Plate zucchini noodles, top with meatballs and sauce.',
-        'Grate parmesan over the top and serve immediately.'
-      ]
-    },
-    {
-      id:'d5', name:'Baked Cod, Quinoa & Roasted Veg',
-      cal:500, protein:46, carbs:37, fat:19, prepTime:30,
-      goals:['lose','definition','maintenance'],
-      ingredients:[
-        {item:'Cod fillet',         amount:180, unit:'g', cat:'protein'},
-        {item:'Quinoa',             amount:60,  unit:'g (dry)', cat:'grains'},
-        {item:'Capsicum',           amount:1,   unit:'medium', cat:'vegetables'},
-        {item:'Zucchini',           amount:1,   unit:'medium', cat:'vegetables'},
-        {item:'Red onion',          amount:0.5, unit:'whole', cat:'vegetables'},
-        {item:'Olive oil',          amount:1,   unit:'tbsp', cat:'pantry'},
-        {item:'Lemon & herbs',      amount:1,   unit:'tbsp', cat:'pantry'}
-      ],
-      recipe:[
-        'Preheat oven to 200°C. Dice capsicum, zucchini, and red onion.',
-        'Toss vegetables in half the olive oil, season well. Roast 20–25 min until caramelised.',
-        'Cook quinoa: rinse, add to pot with 120ml water, simmer 15 min covered. Fluff with fork.',
-        'Place cod on a lined tray. Drizzle with remaining olive oil, top with herbs and lemon zest. Season.',
-        'Bake cod 12–15 min until it flakes easily.',
-        'Combine quinoa with roasted veg. Plate together with cod on top. Squeeze fresh lemon.'
-      ]
-    },
-    {
-      id:'d6', name:'Chicken Curry with Brown Rice',
-      cal:605, protein:53, carbs:56, fat:20, prepTime:30,
-      goals:['build','maintenance'],
-      ingredients:[
-        {item:'Chicken breast',     amount:150, unit:'g', cat:'protein'},
-        {item:'Brown rice',         amount:75,  unit:'g (dry)', cat:'grains'},
-        {item:'Light coconut milk', amount:200, unit:'ml', cat:'dairy'},
-        {item:'Spinach',            amount:60,  unit:'g', cat:'vegetables'},
-        {item:'Canned tomatoes',    amount:200, unit:'g', cat:'pantry'},
-        {item:'Curry paste (mild)', amount:2,   unit:'tbsp', cat:'pantry'},
-        {item:'Onion & garlic',     amount:1,   unit:'each', cat:'pantry'}
-      ],
-      recipe:[
-        'Cook brown rice per packet instructions.',
-        'Dice chicken into 2cm pieces. Dice onion and mince garlic.',
-        'Heat oil in a pan over medium heat. Cook onion 3–4 min until soft.',
-        'Add curry paste and garlic. Cook 1–2 min until very fragrant.',
-        'Add chicken and stir to coat. Cook 3–4 min until sealed.',
-        'Add canned tomatoes and coconut milk. Simmer 15 min until sauce thickens and chicken is cooked through.',
-        'Stir in spinach until wilted. Serve over brown rice.'
-      ]
-    },
-    {
-      id:'d7', name:'Grilled Sea Bass with Lemon & Roasted Potatoes',
-      cal:520, protein:44, carbs:48, fat:15, prepTime:25,
-      goals:['maintenance','definition'],
-      ingredients:[
-        {item:'Sea bass fillet',   amount:180, unit:'g', cat:'protein'},
-        {item:'New potatoes',      amount:200, unit:'g', cat:'vegetables'},
-        {item:'Green beans',       amount:150, unit:'g', cat:'vegetables'},
-        {item:'Lemon',             amount:1,   unit:'whole', cat:'vegetables'},
-        {item:'Olive oil',         amount:2,   unit:'tbsp', cat:'pantry'},
-        {item:'Dill',              amount:1,   unit:'tbsp', cat:'pantry'}
-      ],
-      recipe:[
-        'Halve new potatoes. Toss in 1 tbsp olive oil, salt, pepper. Roast at 200°C for 20 min until golden.',
-        'Heat grill pan. Brush sea bass with remaining olive oil. Season with salt, pepper, dill.',
-        'Grill 3–4 min each side until skin is crispy and flesh flakes easily.',
-        'Steam green beans 4 minutes until tender-crisp.',
-        'Plate potatoes, green beans, and sea bass. Squeeze fresh lemon over everything.'
-      ]
-    },
-    {
-      id:'d8', name:'Vegetarian Black Bean & Tofu Stir-Fry',
-      cal:480, protein:32, carbs:52, fat:14, prepTime:15,
-      goals:['lose','maintenance'],
-      ingredients:[
-        {item:'Firm tofu',         amount:200, unit:'g', cat:'protein'},
-        {item:'Black beans (canned)', amount:150, unit:'g (drained)', cat:'protein'},
-        {item:'Brown rice',        amount:60,  unit:'g (dry)', cat:'grains'},
-        {item:'Mixed veg (peppers, onion, broccoli)', amount:200, unit:'g', cat:'vegetables'},
-        {item:'Soy sauce',         amount:2,   unit:'tbsp', cat:'pantry'},
-        {item:'Ginger & garlic',   amount:1,   unit:'tbsp each', cat:'pantry'},
-        {item:'Sesame oil',        amount:1,   unit:'tsp', cat:'pantry'}
-      ],
-      recipe:[
-        'Cook brown rice per packet instructions.',
-        'Cube tofu and press between paper towels to remove excess moisture.',
-        'Heat oil in a wok on high. Add ginger, garlic, cook 30 seconds until fragrant.',
-        'Add tofu cubes. Stir-fry 3–4 min until golden on edges.',
-        'Add vegetables and beans. Stir-fry 3–4 min on high heat.',
-        'Add soy sauce and sesame oil. Toss to coat. Serve over rice.'
-      ]
-    },
-    {
-      id:'d9', name:'Pork Tenderloin with Roasted Root Vegetables',
-      cal:550, protein:50, carbs:44, fat:18, prepTime:28,
-      goals:['build','maintenance'],
-      ingredients:[
-        {item:'Pork tenderloin',   amount:150, unit:'g', cat:'protein'},
-        {item:'Sweet potato',      amount:150, unit:'g', cat:'vegetables'},
-        {item:'Carrot',            amount:1,   unit:'medium', cat:'vegetables'},
-        {item:'Brussels sprouts',  amount:150, unit:'g', cat:'vegetables'},
-        {item:'Olive oil',         amount:1,   unit:'tbsp', cat:'pantry'},
-        {item:'Rosemary',          amount:1,   unit:'sprig', cat:'pantry'}
+        {item:'Salmon fillet',amount:160,unit:'g',cat:'protein'},
+        {item:'Brown rice',amount:160,unit:'g cooked',cat:'grains'},
+        {item:'Broccoli',amount:150,unit:'g',cat:'vegetables'},
+        {item:'Onion',amount:40,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:2,unit:'tsp',cat:'pantry'},
+        {item:'Lemon',amount:0.5,unit:'whole',cat:'vegetables'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
       ],
       recipe:[
         'Preheat oven to 200°C.',
-        'Cut sweet potato, carrot, and Brussels sprouts into chunks. Toss in half the olive oil, salt, pepper, rosemary.',
-        'Roast vegetables for 20–25 min, stirring halfway.',
-        'Season pork with salt, pepper. Brush with remaining olive oil.',
-        'Heat a pan over high heat. Sear pork 2–3 min each side until browned. Transfer to oven.',
-        'Bake pork 10–12 min until internal temp 63°C. Rest 3 min. Slice and serve with roasted vegetables.'
+        'Season salmon with salt, pepper, and lemon juice.',
+        'Bake salmon 12-15 minutes until cooked through.',
+        'Steam broccoli 5-7 minutes.',
+        'Sauté diced onion in olive oil. Serve with brown rice and vegetables.',
       ]
     },
     {
-      id:'d10', name:'Greek-Style Baked White Fish with Tomato & Feta',
-      cal:460, protein:42, carbs:30, fat:18, prepTime:25,
-      goals:['lose','definition'],
+      id:'d2', name:'Grilled Chicken with Sweet Potato & Broccoli',
+      cal:580, protein:52, carbs:64, fat:12, prepTime:25,
+      goals:["build", "maintenance", "lose"],
       ingredients:[
-        {item:'White fish fillet (haddock/cod)', amount:180, unit:'g', cat:'protein'},
-        {item:'Canned tomatoes',   amount:300, unit:'g', cat:'pantry'},
-        {item:'Olives (pitted)',   amount:30,  unit:'g', cat:'pantry'},
-        {item:'Feta cheese',       amount:60,  unit:'g', cat:'dairy'},
-        {item:'Spinach',           amount:60,  unit:'g', cat:'vegetables'},
-        {item:'Garlic & oregano',  amount:2,   unit:'cloves & 1 tsp', cat:'pantry'},
-        {item:'Olive oil',         amount:1,   unit:'tbsp', cat:'pantry'}
+        {item:'Chicken breast',amount:160,unit:'g',cat:'protein'},
+        {item:'Sweet potato',amount:200,unit:'g',cat:'vegetables'},
+        {item:'Broccoli',amount:140,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:1.5,unit:'tsp',cat:'pantry'},
+        {item:'Garlic',amount:2,unit:'cloves',cat:'pantry'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
       ],
       recipe:[
-        'Preheat oven to 190°C.',
-        'Heat olive oil in an oven-safe pan over medium heat. Add minced garlic.',
-        'Add canned tomatoes and oregano. Simmer 5 minutes.',
-        'Nestle fish fillet into the sauce. Top with olives and crumbled feta.',
-        'Bake 12–15 min until fish flakes easily.',
-        'Stir in spinach. Bake another 2 minutes until wilted. Serve in a shallow bowl with sauce.'
+        'Cut sweet potato into cubes. Roast at 200°C for 18 minutes.',
+        'Season and grill chicken 6-8 minutes per side.',
+        'Steam broccoli 5-7 minutes.',
+        'Toss roasted sweet potato with olive oil and minced garlic.',
+        'Plate chicken with roasted potato and steamed broccoli.',
       ]
-    }
-  ],
+    },
+    {
+      id:'d3', name:'Lean Beef Steak with Brown Rice',
+      cal:590, protein:54, carbs:58, fat:14, prepTime:20,
+      goals:["build", "maintenance"],
+      ingredients:[
+        {item:'Lean beef strips',amount:160,unit:'g',cat:'protein'},
+        {item:'Brown rice',amount:150,unit:'g cooked',cat:'grains'},
+        {item:'Bell peppers',amount:100,unit:'g',cat:'vegetables'},
+        {item:'Onion',amount:50,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:1.5,unit:'tsp',cat:'pantry'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
+      ],
+      recipe:[
+        'Season beef strips with salt and pepper.',
+        'Sear in hot pan 2-3 minutes per side until cooked to preference.',
+        'Remove beef. Sauté peppers and onion in same pan 5 minutes.',
+        'Return beef to pan and toss. Serve with brown rice.',
+      ]
+    },
+    {
+      id:'d4', name:'Turkey Meatballs with Zucchini Noodles',
+      cal:400, protein:50, carbs:18, fat:14, prepTime:25,
+      goals:["lose", "definition", "maintenance"],
+      ingredients:[
+        {item:'Turkey mince',amount:160,unit:'g',cat:'protein'},
+        {item:'Zucchini',amount:200,unit:'g',cat:'vegetables'},
+        {item:'Passata tomato sauce',amount:150,unit:'ml',cat:'pantry'},
+        {item:'Onion',amount:40,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:1.5,unit:'tbsp',cat:'pantry'},
+        {item:'Garlic',amount:2,unit:'cloves',cat:'pantry'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
+      ],
+      recipe:[
+        'Form turkey mince into 10-12 meatballs with minced onion.',
+        'Bake at 200°C for 15 minutes until cooked.',
+        'Spiralize zucchini or use a peeler to create noodles.',
+        'Sauté garlic in olive oil (1 min). Add passata and simmer 3 minutes.',
+        'Toss zucchini noodles gently with sauce and top with meatballs.',
+      ]
+    },
+    {
+      id:'d5', name:'Whole Wheat Pasta with Chicken Marinara',
+      cal:550, protein:50, carbs:62, fat:12, prepTime:20,
+      goals:["build", "maintenance"],
+      ingredients:[
+        {item:'Whole wheat pasta',amount:110,unit:'g dry',cat:'grains'},
+        {item:'Chicken breast',amount:140,unit:'g',cat:'protein'},
+        {item:'Passata tomato sauce',amount:180,unit:'ml',cat:'pantry'},
+        {item:'Onion',amount:50,unit:'g',cat:'vegetables'},
+        {item:'Garlic',amount:3,unit:'cloves',cat:'pantry'},
+        {item:'Olive oil',amount:1,unit:'tbsp',cat:'pantry'},
+        {item:'Parmesan cheese',amount:25,unit:'g',cat:'dairy'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
+      ],
+      recipe:[
+        'Cook pasta. Drain.',
+        'Dice and pan-sear chicken until cooked (8 min). Set aside.',
+        'Sauté minced garlic and diced onion in olive oil (2 min).',
+        'Add passata and simmer 5 minutes.',
+        'Mix in pasta and chicken. Top with parmesan and serve.',
+      ]
+    },
+    {
+      id:'d6', name:'Pan-Seared Salmon with Vegetables',
+      cal:520, protein:48, carbs:28, fat:20, prepTime:18,
+      goals:["build", "lose", "maintenance"],
+      ingredients:[
+        {item:'Salmon fillet',amount:160,unit:'g',cat:'protein'},
+        {item:'Bell peppers',amount:100,unit:'g',cat:'vegetables'},
+        {item:'Zucchini',amount:100,unit:'g',cat:'vegetables'},
+        {item:'Onion',amount:40,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:2,unit:'tsp',cat:'pantry'},
+        {item:'Lemon',amount:0.5,unit:'whole',cat:'pantry'},
+        {item:'Garlic',amount:2,unit:'cloves',cat:'pantry'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
+      ],
+      recipe:[
+        'Heat olive oil in large pan. Season salmon and pan-sear 4 min per side.',
+        'Remove salmon. Add diced vegetables and minced garlic to pan.',
+        'Sauté vegetables 5-6 minutes until tender.',
+        'Return salmon to pan. Squeeze lemon juice over top and serve.',
+      ]
+    },
+    {
+      id:'d7', name:'Asian Chicken with Brown Rice',
+      cal:560, protein:54, carbs:58, fat:12, prepTime:20,
+      goals:["build", "maintenance", "lose"],
+      ingredients:[
+        {item:'Chicken breast',amount:160,unit:'g',cat:'protein'},
+        {item:'Brown rice',amount:160,unit:'g cooked',cat:'grains'},
+        {item:'Bell peppers',amount:100,unit:'g',cat:'vegetables'},
+        {item:'Broccoli',amount:100,unit:'g',cat:'vegetables'},
+        {item:'Soy sauce',amount:2.5,unit:'tbsp',cat:'pantry'},
+        {item:'Sesame oil',amount:1,unit:'tsp',cat:'pantry'},
+        {item:'Garlic',amount:3,unit:'cloves',cat:'pantry'},
+        {item:'Ginger',amount:6,unit:'g',cat:'pantry'},
+      ],
+      recipe:[
+        'Dice chicken and stir-fry in sesame oil with minced garlic/ginger (5 min).',
+        'Add chopped vegetables. Stir-fry 4 minutes.',
+        'Add soy sauce and toss 1 minute.',
+        'Serve over brown rice.',
+      ]
+    },
+    {
+      id:'d8', name:'Lean Beef Stir-Fry with Brown Rice',
+      cal:550, protein:52, carbs:54, fat:14, prepTime:18,
+      goals:["build", "maintenance", "lose"],
+      ingredients:[
+        {item:'Lean beef strips',amount:160,unit:'g',cat:'protein'},
+        {item:'Brown rice',amount:140,unit:'g cooked',cat:'grains'},
+        {item:'Broccoli',amount:120,unit:'g',cat:'vegetables'},
+        {item:'Bell peppers',amount:80,unit:'g',cat:'vegetables'},
+        {item:'Onion',amount:40,unit:'g',cat:'vegetables'},
+        {item:'Soy sauce',amount:2,unit:'tbsp',cat:'pantry'},
+        {item:'Garlic',amount:2,unit:'cloves',cat:'pantry'},
+        {item:'Sesame oil',amount:0.5,unit:'tsp',cat:'pantry'},
+      ],
+      recipe:[
+        'Sear beef strips in sesame oil until cooked (3-4 min). Remove and set aside.',
+        'Stir-fry vegetables and minced garlic 5 minutes.',
+        'Return beef, add soy sauce, toss 1 minute.',
+        'Serve over brown rice.',
+      ]
+    },
+    {
+      id:'d9', name:'Ground Turkey with Sweet Potato & Vegetables',
+      cal:540, protein:50, carbs:60, fat:12, prepTime:22,
+      goals:["build", "maintenance"],
+      ingredients:[
+        {item:'Turkey mince',amount:160,unit:'g',cat:'protein'},
+        {item:'Sweet potato',amount:180,unit:'g',cat:'vegetables'},
+        {item:'Spinach',amount:100,unit:'g',cat:'vegetables'},
+        {item:'Onion',amount:50,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:1.5,unit:'tsp',cat:'pantry'},
+        {item:'Garlic',amount:2,unit:'cloves',cat:'pantry'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
+      ],
+      recipe:[
+        'Cube sweet potato and roast at 200°C for 15 minutes.',
+        'Brown turkey mince in a pan (5 min). Set aside.',
+        'Sauté minced garlic and diced onion (2 min).',
+        'Add spinach and cook 2 minutes until wilted.',
+        'Return turkey and roasted sweet potato. Mix and warm through.',
+      ]
+    },
+    {
+      id:'d10', name:'Whole Wheat Pasta with Tuna & Fresh Vegetables',
+      cal:480, protein:42, carbs:60, fat:10, prepTime:15,
+      goals:["lose", "definition", "maintenance"],
+      ingredients:[
+        {item:'Whole wheat pasta',amount:110,unit:'g dry',cat:'grains'},
+        {item:'Canned tuna',amount:140,unit:'g',cat:'protein'},
+        {item:'Cherry tomatoes',amount:100,unit:'g',cat:'vegetables'},
+        {item:'Spinach',amount:80,unit:'g',cat:'vegetables'},
+        {item:'Olive oil',amount:1.5,unit:'tbsp',cat:'pantry'},
+        {item:'Garlic',amount:2,unit:'cloves',cat:'pantry'},
+        {item:'Lemon',amount:0.5,unit:'whole',cat:'pantry'},
+        {item:'Salt & pepper',amount:1,unit:'pinch',cat:'pantry'},
+      ],
+      recipe:[
+        'Cook pasta. Drain.',
+        'In same pot, sauté minced garlic in olive oil (1 min).',
+        'Add spinach and cook until wilted (1 min).',
+        'Add halved cherry tomatoes and drained tuna. Warm through.',
+        'Toss with pasta. Squeeze lemon juice over top and serve.',
+      ]
+    },
+  ]
+,
   snack: [
     {
-      id:'s1', name:'Apple & Almond Butter',
-      cal:285, protein:7, carbs:32, fat:17, prepTime:2,
-      goals:['maintenance','definition'],
+      id:'s1', name:'Classic Protein Smoothie',
+      cal:220, protein:30, carbs:18, fat:3, prepTime:5,
+      goals:["lose", "build", "definition", "maintenance"],
       ingredients:[
-        {item:'Apple',          amount:1,  unit:'medium', cat:'vegetables'},
-        {item:'Almond butter',  amount:2,  unit:'tbsp',   cat:'pantry'}
+        {item:'Protein powder',amount:30,unit:'g',cat:'protein'},
+        {item:'Almond milk',amount:200,unit:'ml',cat:'dairy'},
+        {item:'Banana',amount:0.5,unit:'medium',cat:'vegetables'},
+        {item:'Honey',amount:1,unit:'tsp',cat:'pantry'},
       ],
       recipe:[
-        'Wash and core the apple. Slice into wedges.',
-        'Serve alongside almond butter for dipping.',
-        'Optionally sprinkle with a pinch of cinnamon.'
+        'Add all ingredients to blender.',
+        'Blend until smooth. Serve immediately or chill.',
       ]
     },
     {
-      id:'s2', name:'Protein Shake with Banana',
-      cal:375, protein:36, carbs:44, fat:7, prepTime:3,
-      goals:['build','maintenance'],
+      id:'s2', name:'Berry Protein Smoothie',
+      cal:240, protein:30, carbs:22, fat:3, prepTime:5,
+      goals:["lose", "build", "definition", "maintenance"],
       ingredients:[
-        {item:'Protein powder', amount:30,  unit:'g', cat:'protein'},
-        {item:'Milk (2%)',      amount:300, unit:'ml',cat:'dairy'},
-        {item:'Banana',        amount:1,   unit:'medium', cat:'vegetables'}
+        {item:'Protein powder',amount:30,unit:'g',cat:'protein'},
+        {item:'Frozen mixed berries',amount:100,unit:'g',cat:'vegetables'},
+        {item:'Almond milk',amount:200,unit:'ml',cat:'dairy'},
+        {item:'Honey',amount:1,unit:'tsp',cat:'pantry'},
       ],
       recipe:[
-        'Add all ingredients to a blender.',
-        'Blend on high for 30–45 seconds until smooth.',
-        'Pour into a glass and consume immediately post-workout for best results.'
+        'Combine frozen berries, protein powder, almond milk, and honey in blender.',
+        'Blend until smooth and thick. Serve immediately.',
       ]
     },
     {
-      id:'s3', name:'Cottage Cheese & Mixed Berries',
-      cal:185, protein:25, carbs:16, fat:2, prepTime:3,
-      goals:['lose','definition'],
+      id:'s3', name:'Peanut Butter Power Smoothie',
+      cal:310, protein:28, carbs:28, fat:10, prepTime:5,
+      goals:["build", "maintenance"],
       ingredients:[
-        {item:'Low-fat cottage cheese', amount:200, unit:'g', cat:'dairy'},
-        {item:'Mixed berries',          amount:100, unit:'g', cat:'vegetables'}
+        {item:'Protein powder',amount:25,unit:'g',cat:'protein'},
+        {item:'Peanut butter',amount:1.5,unit:'tbsp',cat:'pantry'},
+        {item:'Banana',amount:0.5,unit:'medium',cat:'vegetables'},
+        {item:'Almond milk',amount:200,unit:'ml',cat:'dairy'},
+        {item:'Honey',amount:0.5,unit:'tsp',cat:'pantry'},
       ],
       recipe:[
-        'Spoon cottage cheese into a bowl.',
-        'Top with fresh or thawed mixed berries.',
-        'Optional: drizzle with 1 tsp honey and a crack of black pepper.'
+        'Blend protein powder, peanut butter, banana, almond milk, and honey until smooth.',
+        'Add extra almond milk if too thick. Serve immediately.',
       ]
     },
     {
-      id:'s4', name:'Hard-Boiled Eggs with Paprika',
-      cal:210, protein:18, carbs:1, fat:15, prepTime:12,
-      goals:['lose','definition','build'],
+      id:'s4', name:'Greek Yogurt Berry Smoothie',
+      cal:260, protein:28, carbs:32, fat:4, prepTime:5,
+      goals:["lose", "definition", "maintenance"],
       ingredients:[
-        {item:'Large eggs',  amount:3,   unit:'whole', cat:'protein'},
-        {item:'Paprika',     amount:0.5, unit:'tsp',   cat:'pantry'},
-        {item:'Salt',        amount:1,   unit:'pinch', cat:'pantry'}
+        {item:'Greek yogurt',amount:150,unit:'g',cat:'dairy'},
+        {item:'Frozen mixed berries',amount:100,unit:'g',cat:'vegetables'},
+        {item:'Almond milk',amount:100,unit:'ml',cat:'dairy'},
+        {item:'Honey',amount:1,unit:'tsp',cat:'pantry'},
       ],
       recipe:[
-        'Place eggs in a saucepan, cover with cold water by 3cm.',
-        'Bring to the boil over high heat. Once boiling, reduce heat and simmer exactly 9 minutes.',
-        'Transfer immediately to a bowl of ice water for 5 minutes (stops cooking, easy peeling).',
-        'Peel and halve. Dust with paprika and a pinch of salt.',
-        'Can be prepared in advance and refrigerated for up to 4 days.'
+        'Add yogurt, frozen berries, almond milk, and honey to blender.',
+        'Blend until smooth. Add more milk if needed. Serve immediately.',
       ]
     },
     {
-      id:'s5', name:'Mixed Nuts & Dried Fruit',
-      cal:275, protein:6, carbs:29, fat:16, prepTime:1,
-      goals:['build','maintenance'],
+      id:'s5', name:'Tropical Green Smoothie',
+      cal:280, protein:32, carbs:26, fat:4, prepTime:5,
+      goals:["build", "lose", "definition"],
       ingredients:[
-        {item:'Mixed nuts (raw)',   amount:30, unit:'g', cat:'pantry'},
-        {item:'Dried apricots',     amount:30, unit:'g', cat:'vegetables'}
+        {item:'Protein powder',amount:30,unit:'g',cat:'protein'},
+        {item:'Frozen mixed berries',amount:80,unit:'g',cat:'vegetables'},
+        {item:'Spinach',amount:40,unit:'g',cat:'vegetables'},
+        {item:'Banana',amount:0.5,unit:'medium',cat:'vegetables'},
+        {item:'Almond milk',amount:200,unit:'ml',cat:'dairy'},
       ],
       recipe:[
-        'Weigh out nuts and dried fruit.',
-        'Mix together and store in a small container for a portable snack.',
-        'Best consumed mid-morning or pre-workout for sustained energy.'
+        'Add all ingredients to blender.',
+        'Blend until smooth and green. Serve immediately.',
       ]
     },
     {
-      id:'s6', name:'Rice Cakes with Hummus & Veg',
-      cal:245, protein:8, carbs:33, fat:9, prepTime:4,
-      goals:['lose','maintenance'],
+      id:'s6', name:'Overnight Oats Smoothie Bowl',
+      cal:360, protein:28, carbs:48, fat:8, prepTime:5,
+      goals:["build", "maintenance"],
       ingredients:[
-        {item:'Rice cakes (plain)', amount:3,  unit:'whole', cat:'grains'},
-        {item:'Hummus',             amount:4,  unit:'tbsp',  cat:'protein'},
-        {item:'Cucumber slices',    amount:8,  unit:'slices',cat:'vegetables'},
-        {item:'Cherry tomatoes',    amount:4,  unit:'whole', cat:'vegetables'}
+        {item:'Rolled oats',amount:50,unit:'g',cat:'grains'},
+        {item:'Protein powder',amount:25,unit:'g',cat:'protein'},
+        {item:'Almond milk',amount:180,unit:'ml',cat:'dairy'},
+        {item:'Frozen mixed berries',amount:80,unit:'g',cat:'vegetables'},
+        {item:'Honey',amount:1,unit:'tbsp',cat:'pantry'},
       ],
       recipe:[
-        'Spread hummus evenly over each rice cake.',
-        'Top with cucumber slices and halved cherry tomatoes.',
-        'Season with a crack of black pepper.',
-        'Optionally drizzle with a little extra virgin olive oil and paprika.'
+        'Mix oats, protein powder, almond milk, and honey.',
+        'Top with frozen berries.',
+        'Let sit 5 minutes. Add extra milk if needed. Serve as thick bowl.',
       ]
     },
     {
-      id:'s7', name:'String Cheese & Grapes',
-      cal:220, protein:18, carbs:24, fat:7, prepTime:2,
-      goals:['maintenance','definition','build'],
+      id:'s7', name:'Greek Yogurt with Granola & Berries',
+      cal:280, protein:25, carbs:38, fat:5, prepTime:2,
+      goals:["lose", "maintenance", "definition"],
       ingredients:[
-        {item:'String cheese', amount:2, unit:'sticks', cat:'dairy'},
-        {item:'Red grapes',    amount:150, unit:'g', cat:'vegetables'}
+        {item:'Greek yogurt',amount:150,unit:'g',cat:'dairy'},
+        {item:'Granola',amount:25,unit:'g',cat:'grains'},
+        {item:'Frozen mixed berries',amount:80,unit:'g',cat:'vegetables'},
       ],
       recipe:[
-        'Pull apart string cheese into strands.',
-        'Serve alongside fresh red grapes.',
-        'Perfect pre-workout snack or quick energy boost. Very portable.'
+        'Spoon yogurt into bowl.',
+        'Top with granola and frozen berries.',
+        'Serve chilled.',
       ]
     },
     {
-      id:'s8', name:'Beef Jerky & Carrot Sticks',
-      cal:210, protein:28, carbs:15, fat:4, prepTime:2,
-      goals:['lose','definition'],
+      id:'s8', name:'Cottage Cheese with Berries & Walnuts',
+      cal:220, protein:28, carbs:14, fat:8, prepTime:2,
+      goals:["lose", "definition", "maintenance"],
       ingredients:[
-        {item:'Lean beef jerky', amount:40, unit:'g', cat:'protein'},
-        {item:'Carrots', amount:2, unit:'medium', cat:'vegetables'}
+        {item:'Cottage cheese',amount:200,unit:'g',cat:'dairy'},
+        {item:'Frozen mixed berries',amount:60,unit:'g',cat:'vegetables'},
+        {item:'Walnuts',amount:10,unit:'g',cat:'pantry'},
       ],
       recipe:[
-        'Cut carrots into sticks.',
-        'Serve with beef jerky on the side.',
-        'High protein, low fat, satisfying crunch. Great for on-the-go.'
+        'Spoon cottage cheese into bowl.',
+        'Top with berries and crushed walnuts.',
+        'Serve chilled.',
       ]
     },
     {
-      id:'s9', name:'Homemade Protein Energy Balls',
-      cal:195, protein:12, carbs:22, fat:7, prepTime:10,
-      goals:['build','maintenance'],
+      id:'s9', name:'Apple with Almond Butter',
+      cal:240, protein:8, carbs:28, fat:12, prepTime:2,
+      goals:["maintenance", "lose"],
       ingredients:[
-        {item:'Protein powder',    amount:20, unit:'g', cat:'protein'},
-        {item:'Oat flour',         amount:30, unit:'g', cat:'grains'},
-        {item:'Peanut butter',     amount:2, unit:'tbsp', cat:'pantry'},
-        {item:'Honey',             amount:1, unit:'tbsp', cat:'pantry'},
-        {item:'Dark chocolate',    amount:10, unit:'g', cat:'pantry'}
+        {item:'Apple',amount:1,unit:'medium',cat:'vegetables'},
+        {item:'Almond butter',amount:2,unit:'tbsp',cat:'pantry'},
       ],
       recipe:[
-        'Mix protein powder, oat flour, peanut butter, and honey in a bowl.',
-        'Refrigerate mixture for 15 minutes to make it easier to work with.',
-        'Roll into 4–5 balls (about walnut-sized).',
-        'Optional: melt dark chocolate and drizzle over balls or dip.',
-        'Store in an airtight container in the fridge for up to a week.',
-        'Perfect for post-workout or as a convenient meal replacement.'
+        'Slice apple.',
+        'Serve with almond butter for dipping.',
+        'Quick, satisfying snack.',
       ]
     },
     {
-      id:'s10', name:'Greek Yogurt with Granola & Honey',
-      cal:265, protein:20, carbs:35, fat:5, prepTime:3,
-      goals:['build','maintenance'],
+      id:'s10', name:'String Cheese with Grapes',
+      cal:210, protein:14, carbs:24, fat:8, prepTime:2,
+      goals:["maintenance", "lose"],
       ingredients:[
-        {item:'Plain Greek yogurt', amount:170, unit:'g', cat:'dairy'},
-        {item:'Granola',            amount:35, unit:'g', cat:'grains'},
-        {item:'Honey',              amount:1, unit:'tbsp', cat:'pantry'},
-        {item:'Blueberries',        amount:40, unit:'g', cat:'vegetables'}
+        {item:'String cheese',amount:1,unit:'whole',cat:'dairy'},
+        {item:'Grapes',amount:120,unit:'g',cat:'vegetables'},
       ],
       recipe:[
-        'Spoon Greek yogurt into a bowl.',
-        'Top with granola and fresh blueberries.',
-        'Drizzle with a small amount of honey.',
-        'Eat immediately so granola stays crunchy. High protein and satisfying.'
+        'Enjoy string cheese with fresh grapes as a snack.',
+        'Great for on-the-go eating.',
       ]
     },
     {
-      id:'s11', name:'Hummus with Veggie Platter',
-      cal:280, protein:10, carbs:28, fat:14, prepTime:5,
-      goals:['lose','maintenance'],
+      id:'s11', name:'Rice Cakes with Peanut Butter & Berries',
+      cal:280, protein:10, carbs:32, fat:13, prepTime:3,
+      goals:["maintenance", "lose"],
       ingredients:[
-        {item:'Hummus',             amount:5, unit:'tbsp', cat:'protein'},
-        {item:'Carrot sticks',      amount:6, unit:'sticks', cat:'vegetables'},
-        {item:'Celery sticks',      amount:4, unit:'sticks', cat:'vegetables'},
-        {item:'Bell pepper strips', amount:60, unit:'g', cat:'vegetables'},
-        {item:'Cherry tomatoes',    amount:6, unit:'whole', cat:'vegetables'}
+        {item:'Rice cakes',amount:2,unit:'whole',cat:'grains'},
+        {item:'Peanut butter',amount:2,unit:'tbsp',cat:'pantry'},
+        {item:'Frozen mixed berries',amount:40,unit:'g',cat:'vegetables'},
       ],
       recipe:[
-        'Cut carrots, celery, and bell peppers into sticks.',
-        'Arrange in a platter around a bowl of hummus.',
-        'Dip and enjoy. Prep ahead for easy grab-and-go snacking during the week.',
-        'Packed with fiber, vitamins, and plant-based protein from the hummus.'
+        'Spread peanut butter on rice cakes.',
+        'Top with frozen berries (they thaw slightly as you eat).',
+        'Serve immediately.',
       ]
-    }
+    },
   ]
+
 };
 
 // Spanish translations for meal ingredients, recipes, and meal names - COMPREHENSIVE 100% COVERAGE

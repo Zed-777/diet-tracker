@@ -438,6 +438,7 @@ create policy "allow all" on diet_data
       <button class="nav-btn" id="nb-progress" onclick="navigate('progress')"><span class="nav-icon">📈</span><span class="nav-label">Progress</span></button>
       <button class="nav-btn" id="nb-grocery" onclick="navigate('grocery')"><span class="nav-icon">🛒</span><span class="nav-label">Grocery</span></button>
       <button class="nav-btn" id="nb-mindfulness" onclick="navigate('mindfulness')"><span class="nav-icon">🧘</span><span class="nav-label">Mind</span></button>
+      <button class="nav-btn" id="nb-notes" onclick="navigate('notes')"><span class="nav-icon">📝</span><span class="nav-label">Notes</span></button>
       <button class="nav-btn" id="nb-settings" onclick="navigate('settings')"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></button>
     </div>
   </div>
@@ -2675,7 +2676,21 @@ const LANG = {
     sessionSummary: 'You did amazing!',
     sessionsLogged: 'Sessions logged',
     noSessions: 'No sessions yet. Start your first meditation!',
-    weeklyStats: 'Weekly Stats'
+    weeklyStats: 'Weekly Stats',
+    
+    // Notes
+    notesTitle: 'Notes',
+    notesSub: 'Suggested upgrades & improvements',
+    addNote: 'Add Note',
+    enterNoteText: 'Please enter a note',
+    noteTooLong: 'Note must be less than 1000 characters',
+    noNotes: 'No notes yet',
+    noNotesDesc: 'Share your ideas to help improve the app',
+    noteAdded: 'Note added successfully! ✓',
+    failedToAddNote: 'Failed to save note',
+    noteDeleted: 'Note deleted',
+    deleteNoteConfirm: 'Delete this note?',
+    failedToDeleteNote: 'Failed to delete note'
   },
   es: {
     // Header & Navigation
@@ -2938,7 +2953,21 @@ const LANG = {
     sessionSummary: '¡Hiciste un gran trabajo!',
     sessionsLogged: 'Sesiones registradas',
     noSessions: '¡Sin sesiones aún. Comienza tu primera meditación!',
-    weeklyStats: 'Estadísticas Semanales'
+    weeklyStats: 'Estadísticas Semanales',
+    
+    // Notas
+    notesTitle: 'Notas',
+    notesSub: 'Mejoras y actualización sugeridas',
+    addNote: 'Agregar Nota',
+    enterNoteText: 'Por favor ingresa una nota',
+    noteTooLong: 'La nota debe tener menos de 1000 caracteres',
+    noNotes: 'Sin notas aún',
+    noNotesDesc: 'Comparte tus ideas para ayudar a mejorar la aplicación',
+    noteAdded: '¡Nota agregada exitosamente! ✓',
+    failedToAddNote: 'Error al guardar la nota',
+    noteDeleted: 'Nota eliminada',
+    deleteNoteConfirm: '¿Eliminar esta nota?',
+    failedToDeleteNote: 'Error al eliminar la nota'
   }
 };
 
@@ -3097,7 +3126,7 @@ function flash(msg, type='ok') {
 // ═══════════════════════════════════════════════════════════════
 function navigate(view) {
   S.view = view;
-  ['today','week','month','progress','grocery','mindfulness','settings'].forEach(v => {
+  ['today','week','month','progress','grocery','mindfulness','notes','settings'].forEach(v => {
     const btn = document.getElementById('nb-' + v);
     if (btn) btn.classList.toggle('active', v === view);
   });
@@ -4328,6 +4357,105 @@ function renderMindfulnessSetup() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// NOTES SECTION
+// ═══════════════════════════════════════════════════════════════
+function renderNotes() {
+  const notes = S.notes || [];
+  
+  let html = `
+    <div style="animation:slideup .3s ease">
+      <div style="margin-bottom:16px">
+        <div class="view-title">📝 ${T('notesTitle') || 'Notes'}</div>
+        <div class="view-sub">${T('notesSub') || 'Suggested upgrades & improvements'}</div>
+      </div>
+      
+      <div style="background:var(--sf);border:1px solid var(--b2);border-radius:var(--radius);padding:14px;margin-bottom:16px">
+        <div style="margin-bottom:10px">
+          <textarea id="note-input" placeholder="Share your ideas for improvements..." style="resize:vertical;min-height:80px;margin-bottom:10px"></textarea>
+        </div>
+        <button class="btn-primary" onclick="addNote()">${T('addNote') || 'Add Note'}</button>
+      </div>
+  `;
+  
+  if (notes.length === 0) {
+    html += `
+      <div class="empty-state">
+        <div class="empty-icon">💡</div>
+        <div class="empty-title">${T('noNotes') || 'No notes yet'}</div>
+        <div style="font-size:12px;color:var(--t3);margin-top:8px">${T('noNotesDesc') || 'Share your ideas to help improve the app'}</div>
+      </div>`;
+  } else {
+    html += `<div style="display:grid;gap:10px">`;
+    [...notes].reverse().forEach((note, idx) => {
+      const noteIdx = notes.length - 1 - idx;
+      const date = new Date(note.date);
+      const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      html += `
+        <div style="background:var(--sf);border:1px solid var(--b1);border-radius:var(--radius);padding:14px;animation:slideup .3s ease">
+          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px">
+            <div style="flex:1">
+              <div style="font-size:13px;color:var(--t1);line-height:1.6;word-break:break-word">${note.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+              <div style="font-size:10px;color:var(--t3);margin-top:8px">${dateStr}</div>
+            </div>
+            <button onclick="deleteNote(${noteIdx})" style="background:none;border:none;color:#EF4444;cursor:pointer;font-size:16px;padding:4px 8px;flex-shrink:0">✕</button>
+          </div>
+        </div>`;
+    });
+    html += '</div>';
+  }
+  
+  html += '</div>';
+  document.getElementById('view').innerHTML = html;
+  document.getElementById('note-input')?.focus();
+}
+
+async function addNote() {
+  const input = document.getElementById('note-input');
+  const text = (input?.value || '').trim();
+  
+  if (!text) {
+    flash(T('enterNoteText') || 'Please enter a note', 'er');
+    return;
+  }
+  
+  if (text.length > 1000) {
+    flash(T('noteTooLong') || 'Note must be less than 1000 characters', 'er');
+    return;
+  }
+  
+  try {
+    if (!S.notes) S.notes = [];
+    const note = {
+      text,
+      date: new Date().toISOString(),
+      id: Date.now()
+    };
+    S.notes.push(note);
+    await DB.set('notes', S.notes);
+    input.value = '';
+    flash(T('noteAdded') || 'Note added successfully! ✓', 'ok');
+    renderView();
+  } catch(e) {
+    console.error('Error adding note:', e);
+    flash(T('failedToAddNote') || 'Failed to save note', 'er');
+  }
+}
+
+async function deleteNote(idx) {
+  if (!confirm(T('deleteNoteConfirm') || 'Delete this note?')) return;
+  
+  try {
+    S.notes.splice(idx, 1);
+    await DB.set('notes', S.notes);
+    flash(T('noteDeleted') || 'Note deleted', 'ok');
+    renderView();
+  } catch(e) {
+    console.error('Error deleting note:', e);
+    flash(T('failedToDeleteNote') || 'Failed to delete note', 'er');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // ROUTER
 // ═══════════════════════════════════════════════════════════════
 function renderView() {
@@ -4338,6 +4466,7 @@ function renderView() {
     case 'progress':     renderProgress();     break;
     case 'grocery':      renderGrocery();      break;
     case 'mindfulness':  renderMindfulnessSetup(); break;
+    case 'notes':        renderNotes();        break;
     case 'settings':     renderSettings();     break;
   }
 }
@@ -4400,6 +4529,10 @@ async function init() {
       const wk = row.id.replace('grocery_', '');
       S.grocery[wk] = row.data;
     });
+
+    // Load notes
+    const notesData = await DB.get('notes');
+    S.notes = Array.isArray(notesData) ? notesData : [];
 
     document.getElementById('app').classList.add('active');
     updateHeader();

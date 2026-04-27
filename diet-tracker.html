@@ -595,6 +595,94 @@ const DB = {
 };
 
 // ═══════════════════════════════════════════════════════════════
+// OFFLINE MODULE - Offline detection & operation queueing
+// ═══════════════════════════════════════════════════════════════
+let _isOnline = navigator.onLine;
+let _operationQueue = [];
+
+const OFFLINE = {
+  isOnline() {
+    return _isOnline;
+  },
+  
+  isOffline() {
+    return !_isOnline;
+  },
+  
+  showOfflineBanner() {
+    const existing = document.getElementById('offline-banner');
+    if (existing) return;
+    
+    const banner = document.createElement('div');
+    banner.id = 'offline-banner';
+    banner.innerHTML = `
+      <div style="background:#EF4444;color:#fff;padding:10px 16px;text-align:center;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px">
+        <span style="font-size:16px">📡</span>
+        <span>No internet connection — offline mode enabled</span>
+      </div>`;
+    document.body.insertBefore(banner, document.body.firstChild);
+  },
+  
+  removeOfflineBanner() {
+    const banner = document.getElementById('offline-banner');
+    if (banner) banner.remove();
+  },
+  
+  // Queue an operation for retry when online
+  queueOperation(operation) {
+    _operationQueue.push({
+      timestamp: Date.now(),
+      operation,
+      retries: 0
+    });
+    console.log(`Queued operation (${_operationQueue.length} pending)`);
+  },
+  
+  // Retry all queued operations
+  async retryQueuedOperations() {
+    if (_operationQueue.length === 0) return;
+    
+    console.log(`Retrying ${_operationQueue.length} queued operations`);
+    const queue = [..._operationQueue];
+    _operationQueue = [];
+    
+    for (const item of queue) {
+      try {
+        await item.operation();
+        flash('Offline data synced ✓', 'ok');
+      } catch(e) {
+        console.error('Failed to retry operation:', e);
+        item.retries++;
+        if (item.retries < 3) {
+          _operationQueue.push(item);
+        } else {
+          flash('Failed to sync data after retries', 'er');
+        }
+      }
+    }
+  }
+};
+
+// Initialize offline detection
+window.addEventListener('online', () => {
+  _isOnline = true;
+  OFFLINE.removeOfflineBanner();
+  flash('Back online — syncing...', 'ok');
+  OFFLINE.retryQueuedOperations();
+});
+
+window.addEventListener('offline', () => {
+  _isOnline = false;
+  OFFLINE.showOfflineBanner();
+  flash('Offline mode — operations will sync when online', 'info');
+});
+
+// Check initial state
+if (!navigator.onLine) {
+  _isOnline = false;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // CALCULATION MODULE
 // ═══════════════════════════════════════════════════════════════
 const CALC = {
@@ -636,6 +724,48 @@ const CALC = {
     return 'Obese';
   },
   waterTarget(weight) { return Math.round(weight * 0.033 * 10) / 10; } // litres
+};
+
+// ═══════════════════════════════════════════════════════════════
+// VALIDATION MODULE - INPUT VALIDATION & SANITIZATION
+// ═══════════════════════════════════════════════════════════════
+const VALID = {
+  // Validate numeric input with range checking
+  numeric(value, min, max, fieldName) {
+    const num = parseFloat(value);
+    if (isNaN(num)) {
+      throw new Error(`${fieldName} must be a number`);
+    }
+    if (num < min || num > max) {
+      throw new Error(`${fieldName} must be between ${min} and ${max}`);
+    }
+    return num;
+  },
+  
+  // Validate profile object
+  profile(p) {
+    if (!p || typeof p !== 'object') throw new Error('Invalid profile object');
+    if (!p.gender || !['male', 'female'].includes(p.gender)) throw new Error('Invalid gender');
+    if (!p.goal || !['lose', 'build', 'definition', 'maintenance'].includes(p.goal)) throw new Error('Invalid goal');
+    
+    const age = this.numeric(p.age, 16, 99, 'Age');
+    const height = this.numeric(p.height, 140, 220, 'Height');
+    const weight = this.numeric(p.weight, 40, 200, 'Weight');
+    const tgtW = this.numeric(p.targetWeight, 40, 200, 'Target weight');
+    const act = parseFloat(p.activity);
+    if (isNaN(act) || act < 1.2 || act > 1.9) throw new Error('Invalid activity level');
+    
+    if (p.name !== undefined && typeof p.name !== 'string') throw new Error('Name must be a string');
+    if (typeof p.bmr !== 'number' || p.bmr < 1000 || p.bmr > 3000) throw new Error('Invalid BMR');
+    
+    return true;
+  },
+  
+  // Sanitize string input (prevent XSS)
+  sanitizeString(str) {
+    if (typeof str !== 'string') return '';
+    return str.trim().substring(0, 100);
+  }
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -3096,9 +3226,27 @@ function flash(msg, type='ok') {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// CLEANUP - Resource cleanup on navigation and unload
+// ═══════════════════════════════════════════════════════════════
+function cleanupBeforeNavigate() {
+  // Clear meditation timer if running
+  if (_timerInterval) {
+    clearInterval(_timerInterval);
+    _timerInterval = null;
+  }
+  // Reset meditation state if navigating away from mindfulness
+  if (S.view === 'mindfulness' && _meditationPhase === 'meditating') {
+    _meditationPhase = 'setup';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════════
 function navigate(view) {
+  // Clean up any running timers before navigating
+  cleanupBeforeNavigate();
+  
   S.view = view;
   ['today','week','month','progress','grocery','mindfulness','notes','settings'].forEach(v => {
     const btn = document.getElementById('nb-' + v);
@@ -3118,46 +3266,74 @@ function pick(field, btn) {
 }
 
 async function submitSetup() {
-  const age    = parseInt(document.getElementById('s-age').value);
-  const height = parseFloat(document.getElementById('s-height').value);
-  const weight = parseFloat(document.getElementById('s-weight').value);
-  const tgtW   = parseFloat(document.getElementById('s-target-weight').value) || weight;
-  const act    = document.getElementById('s-activity').value;
-  const name   = document.getElementById('s-name').value.trim();
-  const err    = document.getElementById('setup-err');
-
-  if (!age || age < 16 || !height || height < 140 || !weight || weight < 40) {
-    err.textContent = T('fillValidFields');
-    err.style.display = 'block'; return;
-  }
+  const err = document.getElementById('setup-err');
   err.style.display = 'none';
-
-  const btn = document.getElementById('setup-btn');
-  btn.textContent = T('settingUp'); btn.disabled = true;
-
-  const bmr  = CALC.bmr(S.setupPicks.gender, weight, height, age);
-  const tdee = CALC.tdee(bmr, act);
-  const cal  = CALC.goalCalories(tdee, S.setupPicks.goal);
-  const mac  = CALC.macros(cal, S.setupPicks.goal);
-
-  const profile = {
-    name, gender:S.setupPicks.gender, age, height, weight,
-    targetWeight:tgtW, goal:S.setupPicks.goal, activity:act,
-    bmr, tdee, calories:cal, macros:mac,
-    createdAt:new Date().toISOString(), favourites:[],
-    language: S.language || 'en'
-  };
-
+  
   try {
-    await DB.set('profile', profile);
-    S.profile = profile;
-    document.getElementById('setup').classList.remove('active');
-    document.getElementById('app').classList.add('active');
-    updateHeader();
-    updateNavLabels();
-    navigate('today');
-    flash('Profile created successfully! 🎉', 'ok');
+    // Parse and validate all inputs
+    const age = VALID.numeric(document.getElementById('s-age').value, 16, 99, 'Age');
+    const height = VALID.numeric(document.getElementById('s-height').value, 140, 220, 'Height (cm)');
+    const weight = VALID.numeric(document.getElementById('s-weight').value, 40, 200, 'Current weight (kg)');
+    const tgtW = document.getElementById('s-target-weight').value.trim() 
+      ? VALID.numeric(document.getElementById('s-target-weight').value, 40, 200, 'Target weight (kg)')
+      : weight;
+    
+    const act = document.getElementById('s-activity').value;
+    if (!act || isNaN(parseFloat(act))) throw new Error('Invalid activity level');
+    
+    const name = VALID.sanitizeString(document.getElementById('s-name').value);
+    
+    // Verify selections
+    if (!S.setupPicks.gender) throw new Error('Please select a gender');
+    if (!S.setupPicks.goal) throw new Error('Please select a goal');
+    
+    err.style.display = 'none';
+    const btn = document.getElementById('setup-btn');
+    btn.textContent = T('settingUp'); 
+    btn.disabled = true;
+
+    const bmr = CALC.bmr(S.setupPicks.gender, weight, height, age);
+    const tdee = CALC.tdee(bmr, act);
+    const cal = CALC.goalCalories(tdee, S.setupPicks.goal);
+    const mac = CALC.macros(cal, S.setupPicks.goal);
+
+    const profile = {
+      name, gender: S.setupPicks.gender, age, height, weight,
+      targetWeight: tgtW, goal: S.setupPicks.goal, activity: act,
+      bmr, tdee, calories: cal, macros: mac,
+      createdAt: new Date().toISOString(), favourites: [],
+      language: S.language || 'en'
+    };
+
+    // Validate before saving
+    VALID.profile(profile);
+    
+    try {
+      await DB.set('profile', profile);
+      S.profile = profile;
+      document.getElementById('setup').classList.remove('active');
+      document.getElementById('app').classList.add('active');
+      updateHeader();
+      updateNavLabels();
+      navigate('today');
+      flash('Profile created successfully! 🎉', 'ok');
+    } catch(dbErr) {
+      console.error('Database error:', dbErr);
+      err.textContent = 'Failed to save profile. Check your connection.';
+      err.style.display = 'block';
+      btn.textContent = T('startPlan');
+      btn.disabled = false;
+      throw dbErr;
+    }
   } catch(e) {
+    console.error('Setup validation error:', e);
+    err.textContent = e.message || 'Invalid input. Please check your values.';
+    err.style.display = 'block';
+    const btn = document.getElementById('setup-btn');
+    btn.textContent = T('startPlan');
+    btn.disabled = false;
+  }
+}
     btn.textContent = T('startPlan'); btn.disabled = false;
     console.error('Setup error:', e);
     const isNetworkError = e.message.includes('Failed to fetch') || e.message.includes('Network');
@@ -3189,8 +3365,28 @@ function getLog(dateStr) {
   return S.logs[dateStr] || { completed:[], water:0, swaps:{} };
 }
 async function saveLog(dateStr, log) {
+  // Always update local state first
   S.logs[dateStr] = log;
-  await DB.set('log_' + dateStr, log);
+  
+  // Try to save to database
+  if (OFFLINE.isOnline()) {
+    try {
+      await DB.set('log_' + dateStr, log);
+    } catch(e) {
+      console.error('Failed to save log, queueing for retry:', e);
+      // Queue for retry
+      OFFLINE.queueOperation(async () => {
+        await DB.set('log_' + dateStr, log);
+      });
+      flash('Meal logged (offline — will sync)', 'info');
+    }
+  } else {
+    // Offline: queue the operation
+    OFFLINE.queueOperation(async () => {
+      await DB.set('log_' + dateStr, log);
+    });
+    flash('Offline mode — meal saved locally', 'info');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -3927,27 +4123,44 @@ function closeWeightModal() { document.getElementById('weight-modal').classList.
 
 async function saveWeight() {
   try {
-    const w = parseFloat(document.getElementById('wm-weight').value);
-    const note = document.getElementById('wm-note').value.trim();
-    if (!w || w < 30 || w > 300) { flash(T('invalidWeightLog'), 'er'); return; }
+    const w = VALID.numeric(document.getElementById('wm-weight').value, 30, 300, 'Weight');
+    const note = VALID.sanitizeString(document.getElementById('wm-note').value);
+    
     const entry = { date: todayStr(), weight: w, note };
     S.weights.push(entry);
-    S.weights.sort((a,b) => a.date.localeCompare(b.date));
-    await DB.set('weights', S.weights);
-    // Update current weight in profile
+    S.weights.sort((a, b) => a.date.localeCompare(b.date));
+    
+    // Save weights first
+    try {
+      await DB.set('weights', S.weights);
+    } catch(dbErr) {
+      console.error('Failed to save weight log:', dbErr);
+      throw new Error('Could not save weight - check connection');
+    }
+    
+    // Update profile calculations
     S.profile.weight = w;
-    const bmr  = CALC.bmr(S.profile.gender, w, S.profile.height, S.profile.age);
+    const bmr = CALC.bmr(S.profile.gender, w, S.profile.height, S.profile.age);
     const tdee = CALC.tdee(bmr, S.profile.activity);
     S.profile.calories = CALC.goalCalories(tdee, S.profile.goal);
-    S.profile.macros   = CALC.macros(S.profile.calories, S.profile.goal);
-    await DB.set('profile', S.profile);
+    S.profile.macros = CALC.macros(S.profile.calories, S.profile.goal);
+    
+    try {
+      await DB.set('profile', S.profile);
+    } catch(dbErr) {
+      console.error('Failed to save profile:', dbErr);
+      throw new Error('Weight saved but could not update profile');
+    }
+    
     updateHeader();
     closeWeightModal();
-    flash(T('weightLogged'), 'ok');
+    flash(T('weightLogged') || 'Weight logged ✓', 'ok');
     renderView();
   } catch(e) {
     console.error('Error saving weight:', e);
-    flash(T('failedToSaveWater'), 'er');
+    flash(e.message || 'Failed to log weight', 'er');
+  }
+}
   }
 }
 
@@ -3977,67 +4190,58 @@ function esPick(field, elem) {
 }
 
 async function saveSettingsChanges() {
+  const err = document.getElementById('settings-err');
+  err.style.display = 'none';
+  
   try {
-    const name = document.getElementById('es-name').value.trim();
+    // Parse inputs with validation
+    const name = VALID.sanitizeString(document.getElementById('es-name').value);
     const gender = document.querySelector('[data-field="gender"].sel').getAttribute('data-val');
-    const age = parseInt(document.getElementById('es-age').value);
-    const height = parseInt(document.getElementById('es-height').value);
-    const weight = parseFloat(document.getElementById('es-weight').value);
-    const targetWeight = parseFloat(document.getElementById('es-target-weight').value);
+    const age = VALID.numeric(document.getElementById('es-age').value, 16, 99, 'Age');
+    const height = VALID.numeric(document.getElementById('es-height').value, 140, 220, 'Height (cm)');
+    const weight = VALID.numeric(document.getElementById('es-weight').value, 40, 200, 'Current weight (kg)');
+    const targetWeight = VALID.numeric(document.getElementById('es-target-weight').value, 40, 200, 'Target weight (kg)');
     const goal = document.querySelector('[data-field="goal"].sel').getAttribute('data-val');
     const activity = document.getElementById('es-activity').value;
-
-    // Validate
-    const err = document.getElementById('settings-err');
-    if (!age || age < 16 || age > 99) {
-      err.textContent = '✗ Age must be 16-99';
-      err.style.display = 'block';
-      return;
-    }
-    if (!height || height < 140 || height > 220) {
-      err.textContent = '✗ Height must be 140-220 cm';
-      err.style.display = 'block';
-      return;
-    }
-    if (!weight || weight < 40 || weight > 200) {
-      err.textContent = '✗ Weight must be 40-200 kg';
-      err.style.display = 'block';
-      return;
-    }
-    if (!targetWeight || targetWeight < 40 || targetWeight > 200) {
-      err.textContent = '✗ Target weight must be 40-200 kg';
-      err.style.display = 'block';
-      return;
-    }
-
-    // Update profile with recalculation
-    S.profile.name = name || null;
-    S.profile.gender = gender;
-    S.profile.age = age;
-    S.profile.height = height;
-    S.profile.weight = weight;
-    S.profile.targetWeight = targetWeight;
-    S.profile.goal = goal;
-    S.profile.activity = activity;
-
+    
+    if (!gender || !['male', 'female'].includes(gender)) throw new Error('Invalid gender');
+    if (!goal || !['lose', 'build', 'definition', 'maintenance'].includes(goal)) throw new Error('Invalid goal');
+    if (!activity || isNaN(parseFloat(activity))) throw new Error('Invalid activity level');
+    
     // Recalculate derived fields
     const bmr = CALC.bmr(gender, weight, height, age);
     const tdee = CALC.tdee(bmr, activity);
-    S.profile.calories = CALC.goalCalories(tdee, goal);
-    S.profile.macros = CALC.macros(S.profile.calories, goal);
+    const calories = CALC.goalCalories(tdee, goal);
+    const macros = CALC.macros(calories, goal);
 
-    // Save to Supabase
-    await DB.set('profile', S.profile);
+    // Build updated profile
+    const updatedProfile = {
+      ...S.profile,
+      name: name || S.profile.name,
+      gender, age, height, weight, targetWeight, goal, activity,
+      bmr, tdee, calories, macros,
+      language: S.language || 'en'
+    };
 
-    // Update UI
+    // Validate complete profile before saving
+    VALID.profile(updatedProfile);
+
+    // Save to database
+    try {
+      await DB.set('profile', updatedProfile);
+      S.profile = updatedProfile;
+    } catch(dbErr) {
+      console.error('Database error:', dbErr);
+      throw new Error('Failed to save - check your connection');
+    }
+
     updateHeader();
     closeSettingsModal();
-    flash(T('profileUpdated'), 'ok');
+    flash(T('profileUpdated') || 'Profile updated ✓', 'ok');
     renderView();
   } catch(e) {
     console.error('Error saving settings:', e);
-    const err = document.getElementById('settings-err');
-    err.textContent = '✗ ' + (e.message || 'Failed to save');
+    err.textContent = e.message || 'Failed to save profile';
     err.style.display = 'block';
   }
 }
@@ -4430,18 +4634,45 @@ async function deleteNote(idx) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ROUTER
+// ROUTER - ERROR BOUNDARY
 // ═══════════════════════════════════════════════════════════════
+
+// Error fallback UI helper
+function renderErrorFallback(error) {
+  const msg = error?.message || 'Unknown error. Try refreshing.';
+  return `
+    <div style="text-align:center;padding:60px 20px;color:var(--t1)">
+      <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+      <div style="font-family:var(--disp);font-size:18px;font-weight:700;margin-bottom:4px">Something went wrong</div>
+      <div style="font-size:13px;color:var(--t3);margin-bottom:20px;line-height:1.5">
+        ${msg.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+      </div>
+      <button onclick="location.reload()" style="background:var(--ac);color:#fff;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;font-weight:600;font-size:14px">
+        Reload Page
+      </button>
+    </div>`;
+}
+
+// Safe render wrapper
 function renderView() {
-  switch(S.view) {
-    case 'today':        renderToday();        break;
-    case 'week':         renderWeek();         break;
-    case 'month':        renderMonth();        break;
-    case 'progress':     renderProgress();     break;
-    case 'grocery':      renderGrocery();      break;
-    case 'mindfulness':  renderMindfulnessSetup(); break;
-    case 'notes':        renderNotes();        break;
-    case 'settings':     renderSettings();     break;
+  try {
+    const view = S.view;
+    switch(view) {
+      case 'today':        renderToday();        break;
+      case 'week':         renderWeek();         break;
+      case 'month':        renderMonth();        break;
+      case 'progress':     renderProgress();     break;
+      case 'grocery':      renderGrocery();      break;
+      case 'mindfulness':  renderMindfulnessSetup(); break;
+      case 'notes':        renderNotes();        break;
+      case 'settings':     renderSettings();     break;
+      default:             throw new Error(`Unknown view: ${view}`);
+    }
+  } catch(e) {
+    console.error('CRITICAL: Render error for view', S.view, e);
+    const viewEl = document.getElementById('view');
+    if (viewEl) viewEl.innerHTML = renderErrorFallback(e);
+    flash('Display error - try refreshing', 'er');
   }
 }
 
@@ -4470,13 +4701,21 @@ async function init() {
       updateSetupLabels();
       return;
     }
+    
+    // VALIDATION: Verify profile data is not corrupted or malicious
+    try {
+      VALID.profile(profile);
+    } catch(validationErr) {
+      console.error('Profile validation failed - data is corrupted:', validationErr);
+      throw new Error('Profile data is corrupted or invalid. Please reset and recreate your profile.');
+    }
+    
     S.profile = profile;
     
     // Restore language from profile if saved
-    if (profile.language) {
+    if (profile.language && ['en', 'es'].includes(profile.language)) {
       S.language = profile.language;
       const langDisplay = S.language === 'en' ? '[EN]' : '[ES]';
-      document.getElementById('lang-text').textContent = langDisplay;
       document.getElementById('lang-text').textContent = langDisplay;
       localStorage.setItem('dt-language', S.language);
     }
@@ -4531,6 +4770,26 @@ async function init() {
     err.style.display = 'block';
   }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// GLOBAL CLEANUP - Handle page unload and visibility changes
+// ═══════════════════════════════════════════════════════════════
+// Clean up on window unload (page close, tab close, navigation away)
+window.addEventListener('beforeunload', cleanupBeforeNavigate);
+
+// Clean up when page becomes hidden (tab switch, screen lock)
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && _meditationPhase === 'meditating') {
+    cleanupBeforeNavigate();
+  }
+});
+
+// Clean up on keyboard shortcuts (Escape key)
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && _meditationPhase === 'meditating') {
+    skipMeditation();
+  }
+});
 
 init();
 </script>

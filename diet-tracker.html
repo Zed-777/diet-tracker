@@ -4005,7 +4005,7 @@ function startMeditation(minutes, exerciseType = 'breathing') {
   
   // Special handler for Body Love acupressure
   if (exerciseType === 'bodylove') {
-    startBodyLoveGuide();
+    startBodyLoveGuide(minutes);
     return;
   }
   
@@ -4069,25 +4069,28 @@ function startMeditation(minutes, exerciseType = 'breathing') {
 
 let _bodyLoveCurrentPoint = 0;
 let _bodyLovePointTimer = 0;
+let _bodyLoveSecondsPerPoint = 60;
 
-function startBodyLoveGuide() {
+function startBodyLoveGuide(minutes = 5) {
   S.view = 'mindfulness';
   _meditationPhase = 'meditating';
   _bodyLoveCurrentPoint = 0;
-  _mediatationTime = ACUPRESSURE_POINTS.length * 60; // 1 min per point
+  _bodyLovePointTimer = 0;
+  _bodyLoveSecondsPerPoint = Math.floor((minutes * 60) / ACUPRESSURE_POINTS.length);
+  _meditationTime = minutes * 60;
   _meditationElapsed = 0;
   
   showBodyLovePoint(0);
   
-  // Auto-advance through points every 60 seconds
+  // Auto-advance through points
   _timerInterval = setInterval(() => {
     _bodyLovePointTimer++;
     renderBodyLovePoint();
     
-    if (_bodyLovePointTimer >= 60) {
+    if (_bodyLovePointTimer >= _bodyLoveSecondsPerPoint) {
       _bodyLovePointTimer = 0;
       _bodyLoveCurrentPoint++;
-      _meditationElapsed += 60;
+      _meditationElapsed += _bodyLoveSecondsPerPoint;
       
       if (_bodyLoveCurrentPoint >= ACUPRESSURE_POINTS.length) {
         clearInterval(_timerInterval);
@@ -4101,7 +4104,7 @@ function startBodyLoveGuide() {
 
 function showBodyLovePoint(index) {
   const point = ACUPRESSURE_POINTS[index];
-  const remaining = 60 - _bodyLovePointTimer;
+  const remaining = _bodyLoveSecondsPerPoint - _bodyLovePointTimer;
   
   const pointsHtml = ACUPRESSURE_POINTS.map((p, i) => `
     <div style="display:flex;align-items:center;gap:8px;padding:10px;background:${i === index ? 'var(--ac)' : 'var(--s1)'};border-radius:6px;cursor:pointer" onclick="jumpToPoint(${i})">
@@ -4154,7 +4157,7 @@ function showBodyLovePoint(index) {
 }
 
 function renderBodyLovePoint() {
-  const remaining = 60 - _bodyLovePointTimer;
+  const remaining = _bodyLoveSecondsPerPoint - _bodyLovePointTimer;
   const timerEl = document.querySelector('[style*="color:var(--ac)"]')?.parentElement?.querySelector('div');
   if (timerEl && remaining > 0) {
     // Update the timer display if visible

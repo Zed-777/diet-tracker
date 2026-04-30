@@ -4496,20 +4496,22 @@ function renderGrocery() {
   const checked = S.grocery[storageKey] || {};
 
   // Aggregate ingredients from actual meals (accounting for swaps)
+  // Always use English meal for ingredient names (for cost lookup)
+  // but get translations for display if Spanish is selected
   const agg = {};
   dates.forEach(dt => {
     const slots = ['breakfast', 'snack1', 'lunch', 'snack2', 'dinner'];
     slots.forEach(slotKey => {
       const meal = getMealForSlot(dt, slotKey, p.goal);
       if (meal && meal.ingredients) {
-        // Use translated meal if Spanish is selected
-        const mealToUse = S.language === 'es' ? (getMealInSpanish(meal.id) || meal) : meal;
-        mealToUse.ingredients.forEach(ing => {
+        const ingTranslations = S.language === 'es' ? (getMealInSpanish(meal.id)?.ingredients || []) : [];
+        meal.ingredients.forEach((ing, idx) => {
           const key = ing.item.toLowerCase().replace(/[^a-z0-9]/g,'_');
+          const displayName = S.language === 'es' && ingTranslations[idx] ? ingTranslations[idx].item : ing.item;
           if (agg[key]) {
             if (ing.unit === agg[key].unit) agg[key].amount += ing.amount;
           } else {
-            agg[key] = { key, item:ing.item, amount:ing.amount, unit:ing.unit, cat:ing.cat };
+            agg[key] = { key, item:ing.item, displayName, amount:ing.amount, unit:ing.unit, cat:ing.cat };
           }
         });
       }
@@ -4595,7 +4597,7 @@ function renderGrocery() {
         html += `
         <div class="grocery-item ${isChecked?'checked':''}" onclick="toggleGrocery('${storageKey}','${ing.key}')">
           <div class="gi-check ${isChecked?'on':''}">✓</div>
-          <div class="gi-name">${ing.item}</div>
+          <div class="gi-name">${ing.displayName || ing.item}</div>
           <div class="gi-quantity">${amt} ${ing.unit}</div>
           <div class="gi-price">€${cost.toFixed(2)}</div>
         </div>`;

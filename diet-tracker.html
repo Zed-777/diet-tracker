@@ -249,15 +249,17 @@ body.light .meal-card{box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .grocery-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
 .grocery-clear-btn{font-size:12px;color:var(--t3);background:none;border:none;cursor:pointer;padding:4px}
 .grocery-cat{margin-bottom:16px}
-.grocery-cat-title{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.grocery-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--sf);border:1px solid var(--b1);border-radius:8px;margin-bottom:5px;cursor:pointer;transition:opacity .15s}
+.grocery-cat-title{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.grocery-header{display:grid;grid-template-columns:24px 1fr 100px 60px;gap:10px;padding:10px 12px;font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;border-bottom:1px solid var(--b1)}
+.grocery-item{display:grid;grid-template-columns:24px 1fr 100px 60px;gap:10px;align-items:center;padding:10px 12px;background:var(--sf);border:1px solid var(--b1);border-radius:8px;margin-bottom:5px;cursor:pointer;transition:opacity .15s}
 body.light .grocery-item{box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .grocery-item.checked{opacity:.45}
 .grocery-item.checked .gi-name{text-decoration:line-through}
-.gi-check{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--b2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;transition:all .15s}
+.gi-check{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--b2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;transition:all .15s;margin:0 auto}
 .gi-check.on{background:var(--ac);border-color:var(--ac);color:#fff}
-.gi-name{flex:1;font-size:13px;color:var(--t1)}
-.gi-amount{font-size:12px;color:var(--t3);flex-shrink:0}
+.gi-name{font-size:13px;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gi-quantity{font-size:12px;color:var(--t3);text-align:right}
+.gi-price{font-size:13px;color:var(--ac);font-weight:600;text-align:right}
 
 /* ── SETTINGS VIEW ── */
 .settings-section{margin-bottom:20px}
@@ -2819,6 +2821,9 @@ const LANG = {
     generated: 'Generated from your meal plan',
     noMeals: 'No meals logged',
     noMealsPlanned: 'No meals planned',
+    item: 'Item',
+    quantity: 'Quantity',
+    price: 'Price',
     
     // Grocery categories
     proteins: '🥩 Proteins',
@@ -3113,6 +3118,9 @@ const LANG = {
     generated: 'Generado desde tu plan de comidas',
     noMeals: 'Sin comidas registradas',
     noMealsPlanned: 'Sin comidas planeadas',
+    item: 'Artículo',
+    quantity: 'Cantidad',
+    price: 'Precio',
     dayOf: 'Día de',
     weekOf: 'Semana de',
     
@@ -4527,7 +4535,6 @@ function renderGrocery() {
     let catCost = 0;
     catData.items.forEach(ing => {
       const cost = COST.getIngredientCost(ing.item, ing.amount, ing.unit);
-      ing.cost = cost;
       catCost += cost;
       totalCost += cost;
     });
@@ -4571,21 +4578,26 @@ function renderGrocery() {
       if (!cat.items.length) return;
       const catCost = costByCat[cat.key] || 0;
       html += `<div class="grocery-cat">
-        <div class="grocery-cat-title" style="display:flex;justify-content:space-between;align-items:center">
+        <div class="grocery-cat-title">
           <span>${T(cat.key)}</span>
-          <span style="font-size:12px;color:var(--ac);font-weight:700">💰 €${catCost.toFixed(2)}</span>
+          <span style="font-size:12px;color:var(--ac);font-weight:700;margin-left:auto">💰 €${catCost.toFixed(2)}</span>
+        </div>
+        <div class="grocery-header">
+          <div></div>
+          <div>${T('item')}</div>
+          <div style="text-align:right">${T('quantity')}</div>
+          <div style="text-align:right">${T('price')}</div>
         </div>`;
       cat.items.forEach(ing => {
         const isChecked = !!checked[ing.key];
         const amt = Number.isInteger(ing.amount) ? ing.amount : parseFloat(ing.amount.toFixed(1));
+        const cost = COST.getIngredientCost(ing.item, ing.amount, ing.unit);
         html += `
         <div class="grocery-item ${isChecked?'checked':''}" onclick="toggleGrocery('${storageKey}','${ing.key}')">
           <div class="gi-check ${isChecked?'on':''}">✓</div>
           <div class="gi-name">${ing.item}</div>
-          <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
-            <div style="font-size:11px;color:var(--t3)">€${ing.cost.toFixed(2)}</div>
-            <div class="gi-amount">${amt} ${ing.unit}</div>
-          </div>
+          <div class="gi-quantity">${amt} ${ing.unit}</div>
+          <div class="gi-price">€${cost.toFixed(2)}</div>
         </div>`;
       });
       html += '</div>';

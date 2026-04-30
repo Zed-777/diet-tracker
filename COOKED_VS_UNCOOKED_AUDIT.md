@@ -1,4 +1,5 @@
 # Cooked vs Uncooked Ingredient Audit
+
 ## Diet Tracker Recipe Review
 
 **Date:** April 30, 2026  
@@ -10,11 +11,13 @@
 ## Why This Matters
 
 Users need **uncooked quantities** to:
+
 - Know how much to purchase at the store
 - Properly measure before cooking
 - Get consistent results
 
 Cooked weights are problematic because:
+
 - Different cooking methods yield different final weights
 - Water absorption varies by cooking time
 - Users naturally measure ingredients **before cooking**
@@ -24,6 +27,7 @@ Cooked weights are problematic because:
 ## Conversion Formula
 
 **Brown Rice:**
+
 - Cooked rice ÷ 3 ≈ Uncooked rice
 - Example: 150g cooked ÷ 3 = **50g uncooked**
 
@@ -58,7 +62,9 @@ Cooked weights are problematic because:
 ## Detailed Conversions
 
 ### Breakfast Recipes
+
 ✅ **No cooked ingredients found**
+
 - All breakfast items use correct quantities
 - Pasta already marked as "g dry" (correct)
 
@@ -67,58 +73,70 @@ Cooked weights are problematic because:
 ### Lunch Recipes
 
 #### l1: Grilled Salmon with Brown Rice & Broccoli
+
 ```
 BEFORE:  {item:'Brown rice', amount:150, unit:'g cooked', cat:'grains'}
 AFTER:   {item:'Brown rice', amount:50, unit:'g', cat:'grains'}
 ```
+
 - **150g cooked ÷ 3 = 50g uncooked**
 - **User instruction:** "Cook 50g rice. It will expand to ~150g cooked."
 
 ---
 
 #### l2: Chicken Brown Rice Bowl with Cherry Tomatoes
+
 ```
 BEFORE:  {item:'Brown rice', amount:150, unit:'g cooked', cat:'grains'}
 AFTER:   {item:'Brown rice', amount:50, unit:'g', cat:'grains'}
 ```
+
 - **150g cooked ÷ 3 = 50g uncooked**
 
 ---
 
 #### l3: Turkey Meatballs with Brown Rice
+
 ```
 BEFORE:  {item:'Brown rice', amount:100, unit:'g cooked', cat:'grains'}
 AFTER:   {item:'Brown rice', amount:35, unit:'g', cat:'grains'}
 ```
+
 - **100g cooked ÷ 3 = 33g → round to 35g for easier measuring**
 - 35g is a convenient portion (roughly 3 tablespoons dry rice)
 
 ---
 
 #### l5: Asian Chicken Stir-Fry with Brown Rice
+
 ```
 BEFORE:  {item:'Brown rice', amount:150, unit:'g cooked', cat:'grains'}
 AFTER:   {item:'Brown rice', amount:50, unit:'g', cat:'grains'}
 ```
+
 - **150g cooked ÷ 3 = 50g uncooked**
 
 ---
 
 #### l6: Canned Tuna Salad with Brown Rice
+
 ```
 BEFORE:  {item:'Brown rice', amount:120, unit:'g cooked', cat:'grains'}
 AFTER:   {item:'Brown rice', amount:40, unit:'g', cat:'grains'}
 ```
+
 - **120g cooked ÷ 3 = 40g uncooked**
 - Convenient portion (roughly 3.3 tablespoons)
 
 ---
 
 #### l11: Asian Chicken Bowl with Rice
+
 ```
 BEFORE:  {item:'Brown rice', amount:140, unit:'g cooked', cat:'grains'}
 AFTER:   {item:'Brown rice', amount:45, unit:'g', cat:'grains'}
 ```
+
 - **140g cooked ÷ 3 = 47g → round to 45g for easier measuring**
 - Rounding down slightly (45g) keeps the cooked portion close to 135g
 
@@ -127,10 +145,12 @@ AFTER:   {item:'Brown rice', amount:45, unit:'g', cat:'grains'}
 ### Dinner Recipes
 
 #### d1: Grilled Salmon with Brown Rice & Vegetables
+
 ```
 BEFORE:  {item:'Brown rice', amount:160, unit:'g cooked', cat:'grains'}
 AFTER:   {item:'Brown rice', amount:50, unit:'g', cat:'grains'}
 ```
+
 - **160g cooked ÷ 3 = 53g → round to 50g**
 - Rounding down slightly maintains nutritional balance
 - 50g is a standard portion for measuring
@@ -138,29 +158,35 @@ AFTER:   {item:'Brown rice', amount:50, unit:'g', cat:'grains'}
 ---
 
 #### d3: Lean Beef Steak with Brown Rice
+
 ```
 BEFORE:  {item:'Brown rice', amount:150, unit:'g cooked', cat:'grains'}
 AFTER:   {item:'Brown rice', amount:50, unit:'g', cat:'grains'}
 ```
+
 - **150g cooked ÷ 3 = 50g uncooked**
 
 ---
 
 #### d7: Asian Chicken with Brown Rice
+
 ```
 BEFORE:  {item:'Brown rice', amount:160, unit:'g cooked', cat:'grains'}
 AFTER:   {item:'Brown rice', amount:50, unit:'g', cat:'grains'}
 ```
+
 - **160g cooked ÷ 3 = 53g → round to 50g**
 - Standard portion size
 
 ---
 
 #### d8: Lean Beef Stir-Fry with Brown Rice
+
 ```
 BEFORE:  {item:'Brown rice', amount:140, unit:'g cooked', cat:'grains'}
 AFTER:   {item:'Brown rice', amount:45, unit:'g', cat:'grains'}
 ```
+
 - **140g cooked ÷ 3 = 47g → round to 45g**
 - Easier to measure (roughly 3.5 tablespoons)
 
@@ -173,12 +199,14 @@ AFTER:   {item:'Brown rice', amount:45, unit:'g', cat:'grains'}
 ### Example: l1 (Salmon + Rice)
 
 **Current macros (with 150g cooked rice):**
+
 - Calories: 580
 - Protein: 48g
 - Carbs: 60g
 - Fat: 15g
 
 **After switching to 50g uncooked rice:**
+
 - Calories: ~570 (10 cal difference due to slight rice reduction)
 - Protein: 48g (unchanged - rice is minor protein source)
 - Carbs: ~58g (2g less carbs)
@@ -205,18 +233,22 @@ Rounding to convenient values (35g, 40g, 45g, 50g) serves users better than exac
 ## Recommendations
 
 ### 1. Update All Recipes (Priority: HIGH)
+
 - Convert all 10 recipes from "g cooked" to "g" (uncooked)
 - Use the rounded values above for easier user measurements
 
 ### 2. Update Recipe Instructions (Priority: HIGH)
+
 - Add clarification: "Cook 50g brown rice according to package directions (~150g cooked)"
 - Users need to know what to do with the raw quantity
 
 ### 3. Optional: Add Metric Conversions (Priority: MEDIUM)
+
 - Could add tablespoon equivalents: "50g rice ≈ 3.5 tablespoons dry rice"
 - Helps users without kitchen scales
 
 ### 4. Other Ingredients Check (Priority: MEDIUM)
+
 - Verify no other recipes use "cooked" measurements
 - Pasta already uses "g dry" (correct) ✓
 - Proteins (meat, fish, eggs) should use raw weight ✓
@@ -226,18 +258,22 @@ Rounding to convenient values (35g, 40g, 45g, 50g) serves users better than exac
 ## Verification Checklist
 
 ✅ **Lunch recipes reviewed:** 11 total
+
 - 6 with rice ingredients
 - 5 without rice (pasta or other carbs)
 
 ✅ **Dinner recipes reviewed:** 10 total
+
 - 4 with rice ingredients
 - 6 without rice (pasta or vegetables)
 
 ✅ **Breakfast recipes:** Spot check
+
 - No "cooked" measurements found
 - All recipes properly specify "g dry" for pasta
 
 ✅ **Snack recipes:** Spot check
+
 - No grain-based cooked measurements found
 
 ---

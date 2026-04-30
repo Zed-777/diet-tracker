@@ -2936,6 +2936,15 @@ const LANG = {
     exerciseStats: 'Exercise Count',
     chooseExercise: 'Choose Exercise',
     weeklyStats: 'Weekly Stats',
+    bodyLoveExercise: 'Body Love',
+    acupressureGuide: 'Acupressure Wellness Guide',
+    pointsTitle: 'Wellness Points',
+    pointOfTotal: 'Point {{current}} of {{total}}',
+    benefits: 'Benefits:',
+    howToPractice: 'How to practice:',
+    previous: 'Previous',
+    next: 'Next',
+    finish: 'Finish',
     
     // Notes
     notesTitle: 'Notes',
@@ -3237,6 +3246,15 @@ const LANG = {
     weeklyStats: 'Estadísticas Semanales',
     exerciseStats: 'Recuento de Ejercicios',
     chooseExercise: 'Elige Ejercicio',
+    bodyLoveExercise: 'Amor Corporal',
+    acupressureGuide: 'Guía de Bienestar con Acupresión',
+    pointsTitle: 'Puntos de Bienestar',
+    pointOfTotal: 'Punto {{current}} de {{total}}',
+    benefits: 'Beneficios:',
+    howToPractice: 'Cómo practicar:',
+    previous: 'Anterior',
+    next: 'Siguiente',
+    finish: 'Finalizar',
     
     // Notas
     notesTitle: 'Notas',
@@ -3885,16 +3903,65 @@ let _currentExerciseType = 'breathing'; // breathing, bodycan, visualization, lo
 // MINDFULNESS EXERCISES LIBRARY
 const MINDFULNESS_EXERCISES = {
   breathing: { name: 'Breathing', emoji: '💨', desc: '10-second breathing cycle' },
-  bodyscan: { name: 'Body Scan', emoji: '🧠', desc: 'Progressive body awareness' },
+  bodylove: { name: 'Body Love', emoji: '💚', desc: 'Acupressure wellness points' },
   visualization: { name: 'Visualization', emoji: '🌅', desc: 'Guided imagery' },
-  lovingkindness: { name: 'Loving Kindness', emoji: '💚', desc: 'Compassion meditation' }
+  lovingkindness: { name: 'Loving Kindness', emoji: '💖', desc: 'Compassion meditation' }
 };
+
+// ACUPRESSURE POINTS LIBRARY
+const ACUPRESSURE_POINTS = [
+  {
+    id: 'li4',
+    name: 'Union Valley (LI-4)',
+    location: 'Between thumb & index finger',
+    benefits: 'Stress relief, immune boost, headache',
+    how: 'Apply firm circular pressure for 1 minute. Take deep breaths.',
+    position: { x: 85, y: 20 },
+    emoji: '👆'
+  },
+  {
+    id: 'pc8',
+    name: 'Palace of Labor (PC-8)',
+    location: 'Center of palm',
+    benefits: 'Anxiety relief, better sleep, calm',
+    how: 'Press center of palm with thumb. Breathe deeply for 1 minute.',
+    position: { x: 50, y: 45 },
+    emoji: '🤚'
+  },
+  {
+    id: 'gv20',
+    name: 'Hundred Convergences (GV-20)',
+    location: 'Top of head (crown)',
+    benefits: 'Mental clarity, focus, mood lift',
+    how: 'Gently tap or apply pressure to crown. Relax shoulders.',
+    position: { x: 50, y: 5 },
+    emoji: '🧠'
+  },
+  {
+    id: 'cv6',
+    name: 'Sea of Energy (CV-6)',
+    location: '2 fingers below navel',
+    benefits: 'Energy, vitality, wellness',
+    how: 'Gentle circular pressure below navel. 1-2 minutes.',
+    position: { x: 50, y: 75 },
+    emoji: '⚡'
+  },
+  {
+    id: 'k3',
+    name: 'Great Stream (K-3)',
+    location: 'Inside ankle (between bone & tendon)',
+    benefits: 'Calm, grounding, sleep support',
+    how: 'Firm pressure inside ankle. Breathe slowly for 1 minute.',
+    position: { x: 15, y: 85 },
+    emoji: '🦶'
+  }
+];
 
 function initMindfulnessData() {
   if (!S.profile.mindfulness) {
     S.profile.mindfulness = {
       sessions: [],
-      exerciseCounts: { breathing: 0, bodyscan: 0, visualization: 0, lovingkindness: 0 }
+      exerciseCounts: { breathing: 0, bodylove: 0, visualization: 0, lovingkindness: 0 }
     };
   }
 }
@@ -3935,6 +4002,13 @@ function getExerciseCounts() {
 
 function startMeditation(minutes, exerciseType = 'breathing') {
   _currentExerciseType = exerciseType;
+  
+  // Special handler for Body Love acupressure
+  if (exerciseType === 'bodylove') {
+    startBodyLoveGuide();
+    return;
+  }
+  
   _meditationTime = minutes * 60;
   _meditationElapsed = 0;
   _meditationPhase = 'meditating';
@@ -3991,6 +4065,117 @@ function startMeditation(minutes, exerciseType = 'breathing') {
       renderMindfulness();
     }
   }, 1000);
+}
+
+let _bodyLoveCurrentPoint = 0;
+let _bodyLovePointTimer = 0;
+
+function startBodyLoveGuide() {
+  S.view = 'mindfulness';
+  _meditationPhase = 'meditating';
+  _bodyLoveCurrentPoint = 0;
+  _mediatationTime = ACUPRESSURE_POINTS.length * 60; // 1 min per point
+  _meditationElapsed = 0;
+  
+  showBodyLovePoint(0);
+  
+  // Auto-advance through points every 60 seconds
+  _timerInterval = setInterval(() => {
+    _bodyLovePointTimer++;
+    renderBodyLovePoint();
+    
+    if (_bodyLovePointTimer >= 60) {
+      _bodyLovePointTimer = 0;
+      _bodyLoveCurrentPoint++;
+      _meditationElapsed += 60;
+      
+      if (_bodyLoveCurrentPoint >= ACUPRESSURE_POINTS.length) {
+        clearInterval(_timerInterval);
+        endMeditation();
+      } else {
+        showBodyLovePoint(_bodyLoveCurrentPoint);
+      }
+    }
+  }, 1000);
+}
+
+function showBodyLovePoint(index) {
+  const point = ACUPRESSURE_POINTS[index];
+  const remaining = 60 - _bodyLovePointTimer;
+  
+  const pointsHtml = ACUPRESSURE_POINTS.map((p, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:10px;background:${i === index ? 'var(--ac)' : 'var(--s1)'};border-radius:6px;cursor:pointer" onclick="jumpToPoint(${i})">
+      <div style="font-size:18px">${p.emoji}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:${i === index ? 'white' : 'var(--t1)'}">${p.name}</div>
+        <div style="font-size:10px;color:${i === index ? 'rgba(255,255,255,.8)' : 'var(--t3)'}">${p.location}</div>
+      </div>
+      ${i === index ? `<div style="font-size:18px;font-weight:900;color:white">${remaining}s</div>` : ''}
+    </div>
+  `).join('');
+  
+  document.getElementById('view').innerHTML = `
+    <div style="animation:slideup .3s ease;padding:0">
+      <div style="background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.05));border-bottom:1px solid var(--b1);padding:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:28px">${point.emoji}</div>
+          <div style="text-align:right">
+            <div style="font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Point ${index + 1} of ${ACUPRESSURE_POINTS.length}</div>
+            <div style="font-size:24px;font-weight:900;color:var(--ac)">${String(remaining).padStart(2,'0')}s</div>
+          </div>
+        </div>
+        <div style="font-size:16px;font-weight:700;color:var(--t1)">${point.name}</div>
+        <div style="font-size:12px;color:var(--t3);margin-top:4px">${point.location}</div>
+      </div>
+      
+      <div style="padding:16px;border-bottom:1px solid var(--b1)">
+        <div style="background:var(--s1);border:2px dashed var(--ac);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px">
+          <div style="font-size:64px;margin-bottom:12px">${point.emoji}</div>
+          <div style="font-size:13px;color:var(--t2);line-height:1.6">${point.how}</div>
+        </div>
+        
+        <div style="background:var(--sf);border:1px solid var(--b1);border-radius:8px;padding:12px;margin-bottom:12px">
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600">Benefits:</div>
+          <div style="font-size:12px;color:var(--t2)">${point.benefits}</div>
+        </div>
+        
+        <div class="meditation-controls">
+          <button class="med-btn secondary" onclick="jumpToPoint(${Math.max(0, index - 1)})" ${index === 0 ? 'disabled' : ''}>${index === 0 ? 'First Point' : 'Previous'}</button>
+          <button class="med-btn secondary" onclick="skipBodyLove()">Finish</button>
+          <button class="med-btn secondary" onclick="jumpToPoint(${Math.min(ACUPRESSURE_POINTS.length - 1, index + 1)})" ${index === ACUPRESSURE_POINTS.length - 1 ? 'disabled' : ''}>${index === ACUPRESSURE_POINTS.length - 1 ? 'Last Point' : 'Next'}</button>
+        </div>
+      </div>
+      
+      <div style="padding:12px;background:var(--s2)">
+        <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:600">Points</div>
+        <div style="display:flex;flex-direction:column;gap:8px;max-height:40vh;overflow-y:auto">${pointsHtml}</div>
+      </div>
+    </div>`;
+}
+
+function renderBodyLovePoint() {
+  const remaining = 60 - _bodyLovePointTimer;
+  const timerEl = document.querySelector('[style*="color:var(--ac)"]')?.parentElement?.querySelector('div');
+  if (timerEl && remaining > 0) {
+    // Update the timer display if visible
+    const view = document.getElementById('view');
+    if (view && view.innerHTML.includes('Point')) {
+      showBodyLovePoint(_bodyLoveCurrentPoint);
+    }
+  }
+}
+
+function jumpToPoint(index) {
+  if (index >= 0 && index < ACUPRESSURE_POINTS.length) {
+    _bodyLoveCurrentPoint = index;
+    _bodyLovePointTimer = 0;
+    showBodyLovePoint(index);
+  }
+}
+
+function skipBodyLove() {
+  if (_timerInterval) clearInterval(_timerInterval);
+  endMeditation();
 }
 
 async function endMeditation() {

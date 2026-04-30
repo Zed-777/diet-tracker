@@ -133,6 +133,20 @@ body.light .water-card{box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .cup-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--b2);background:var(--s2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
 .cup-btn.filled{background:rgba(59,130,246,.15);border-color:var(--water)}
 
+/* ── COST CARD ── */
+.cost-card{background:var(--sf);border:1px solid var(--b1);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;animation:slideup .3s ease}
+body.light .cost-card{box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.cost-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.cost-title{font-size:13px;font-weight:700;color:var(--t1)}
+.cost-total{font-size:12px;color:var(--ac);font-weight:700}
+.cost-badge{display:inline-block;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;color:var(--ac);margin-left:6px}
+.cost-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.cost-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12px;border-bottom:1px solid var(--b1)}
+.cost-item:nth-child(2n){border-bottom:none}
+.cost-item-label{color:var(--t2)}
+.cost-item-value{font-weight:700;color:var(--t1)}
+.meal-cost-badge{font-size:11px;font-weight:700;color:var(--ac);background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:6px;padding:3px 7px;flex-shrink:0}
+
 /* ── MEAL CARDS ── */
 .meal-section-title{font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;margin:14px 0 8px;padding-left:2px}
 .meal-card{background:var(--sf);border:1px solid var(--b1);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;animation:slideup .3s ease;transition:border-color var(--tr)}
@@ -3639,8 +3653,31 @@ function renderToday() {
     </div>
   </div>`;
 
-  // Meals
+  // Calculate daily cost
+  const dailyCost = slots.reduce((sum, slot) => {
+    if (log.completed.includes(slot.key)) {
+      return sum + COST.getMealCost(slot.meal);
+    }
+    return sum;
+  }, 0);
+
+  // Daily cost summary card
   const slotLabels = {breakfast:T('breakfast'),snack1:T('morningSnack'),lunch:T('lunch'),snack2:T('afternoonSnack'),dinner:T('dinner')};
+  const costBreakdown = slots.filter(s => log.completed.includes(s.key)).map(slot => {
+    const mealCost = COST.getMealCost(slot.meal);
+    return `<div class="cost-item"><span class="cost-item-label">${slotLabels[slot.key]}</span><span class="cost-item-value">€${mealCost.toFixed(2)}</span></div>`;
+  }).join('');
+
+  html += `
+  <div class="cost-card">
+    <div class="cost-header">
+      <div class="cost-title">💰 ${T('dailyCost')}</div>
+      <div class="cost-total">€${dailyCost.toFixed(2)}</div>
+    </div>
+    ${costBreakdown ? `<div style="font-size:11px;color:var(--t3);margin-bottom:8px">${T('costByCategory')}</div><div class="cost-breakdown">${costBreakdown}</div>` : `<div style="font-size:11px;color:var(--t3)">No meals logged yet</div>`}
+  </div>`;
+
+  // Meals
   const slotIcons  = {breakfast:'🌅',snack1:'🍎',lunch:'☀️',snack2:'🥜',dinner:'🌙'};
 
   slots.forEach(slot => {
@@ -3648,7 +3685,6 @@ function renderToday() {
     const m = slot.meal;
     const isFav = (p.favourites||[]).includes(m.id);
     html += `
-    <div class="meal-section-title">${slotIcons[slot.key]} ${slotLabels[slot.key]}</div>
     <div class="meal-card ${done?'done':''}" id="mc-${slot.key}">
       <div class="meal-header" onclick="toggleMealDetail('${slot.key}')">
         <div class="meal-check ${done?'checked':''}" onclick="event.stopPropagation();toggleMeal('${slot.key}','${dt}')">
@@ -3662,7 +3698,10 @@ function renderToday() {
             <span class="meal-macro-item" style="color:#EF4444">●&thinsp;${m.fat}g F</span>
           </div>
         </div>
-        <div class="meal-cal">${m.cal} kcal</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+          <div class="meal-cost-badge">💰 €${COST.getMealCost(m).toFixed(2)}</div>
+          <div class="meal-cal">${m.cal} kcal</div>
+        </div>
         <div class="meal-expand-btn">⌄</div>
       </div>
       <div class="meal-detail" id="md-${slot.key}">
@@ -3691,6 +3730,10 @@ function renderToday() {
             ${isFav ? T('isFavourite') : T('favourite')}
           </button>
           <button class="meal-action-btn" onclick="openSwap('${slot.key}','${dt}')">${T('swap')}</button>
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--b1);display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
+          <div><span style="color:var(--t3)">💰 ${T('costPerMeal')}:</span> <strong style="color:var(--ac)">€${COST.getMealCost(m).toFixed(2)}</strong></div>
+          <div><span style="color:var(--t3)">📊 ${T('totalCost')}:</span> <strong style="color:var(--t1)">€${COST.getMealCost(m).toFixed(2)}</strong></div>
         </div>
       </div>
     </div>`;
@@ -4052,6 +4095,12 @@ function renderWeek() {
       .filter(sl => log.completed.includes(sl.key))
       .reduce((a,sl) => a + sl.meal.cal, 0);
   }, 0);
+  const weekCost = days.reduce((s,day) => {
+    const log = getLog(day.date);
+    return s + PLAN.mealSlots(day)
+      .filter(sl => log.completed.includes(sl.key))
+      .reduce((a,sl) => a + COST.getMealCost(sl.meal), 0);
+  }, 0);
   const completedMeals = days.reduce((s,day) => s + getLog(day.date).completed.length, 0);
   const perfectDays = days.filter(day => getLog(day.date).completed.length === 5).length;
 
@@ -4063,6 +4112,16 @@ function renderWeek() {
       <div class="mstat"><div class="mstat-val">${completedMeals}</div><div class="mstat-lbl">${T('mealsDone')}</div></div>
       <div class="mstat"><div class="mstat-val">${perfectDays}</div><div class="mstat-lbl">${T('perfectDays')}</div></div>
       <div class="mstat"><div class="mstat-val">${weekCal}</div><div class="mstat-lbl">${T('kcalEaten')}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;padding:12px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:8px">
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <div style="font-size:11px;color:var(--t3)">${T('weeklyCost')}</div>
+        <div style="font-size:18px;font-weight:700;color:var(--ac)">€${weekCost.toFixed(2)}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <div style="font-size:11px;color:var(--t3)">${T('costPerDay')}</div>
+        <div style="font-size:18px;font-weight:700;color:var(--t1)">€${(weekCost/7).toFixed(2)}</div>
+      </div>
     </div>
     ${table}`;
 }
@@ -4454,6 +4513,20 @@ function renderGrocery() {
     if (cats[ing.cat]) cats[ing.cat].items.push(ing);
   });
 
+  // Calculate costs by category
+  const costByCat = {};
+  let totalCost = 0;
+  Object.entries(cats).forEach(([cat, catData]) => {
+    let catCost = 0;
+    catData.items.forEach(ing => {
+      const cost = COST.getIngredientCost(ing.item, ing.amount, ing.unit);
+      ing.cost = cost;
+      catCost += cost;
+      totalCost += cost;
+    });
+    costByCat[cat] = catCost;
+  });
+
   const total = Object.values(agg).length;
   const checkedCount = Object.values(checked).filter(Boolean).length;
 
@@ -4489,8 +4562,12 @@ function renderGrocery() {
   } else {
     Object.values(cats).forEach(cat => {
       if (!cat.items.length) return;
+      const catCost = costByCat[cat.key] || 0;
       html += `<div class="grocery-cat">
-        <div class="grocery-cat-title">${T(cat.key)}</div>`;
+        <div class="grocery-cat-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>${T(cat.key)}</span>
+          <span style="font-size:12px;color:var(--ac);font-weight:700">💰 €${catCost.toFixed(2)}</span>
+        </div>`;
       cat.items.forEach(ing => {
         const isChecked = !!checked[ing.key];
         const amt = Number.isInteger(ing.amount) ? ing.amount : parseFloat(ing.amount.toFixed(1));
@@ -4498,11 +4575,18 @@ function renderGrocery() {
         <div class="grocery-item ${isChecked?'checked':''}" onclick="toggleGrocery('${storageKey}','${ing.key}')">
           <div class="gi-check ${isChecked?'on':''}">✓</div>
           <div class="gi-name">${ing.item}</div>
-          <div class="gi-amount">${amt} ${ing.unit}</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+            <div style="font-size:11px;color:var(--t3)">€${ing.cost.toFixed(2)}</div>
+            <div class="gi-amount">${amt} ${ing.unit}</div>
+          </div>
         </div>`;
       });
       html += '</div>';
     });
+    html += `<div style="margin-top:14px;padding:12px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:8px;display:flex;justify-content:space-between;align-items:center;font-weight:700">
+      <div style="color:var(--t1)">${T('estimatedGroceryCost')}</div>
+      <div style="font-size:18px;color:var(--ac)">€${totalCost.toFixed(2)}</div>
+    </div>`;
   }
 
   document.getElementById('view').innerHTML = html;

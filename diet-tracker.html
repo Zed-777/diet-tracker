@@ -2512,6 +2512,114 @@ function fmtDateFull(str) {
 function daysInMonth(y, m) { return new Date(y, m+1, 0).getDate(); }
 
 // ═══════════════════════════════════════════════════════════════
+// INGREDIENT PRICING (CASTELLÓN, SPAIN)
+// ═══════════════════════════════════════════════════════════════
+const INGREDIENT_PRICES = {
+  // Proteins
+  'Large eggs': {price: 0.28, unit: 'per egg'}, 'Egg whites': {price: 2.50, unit: 'per 500g'}, 'Chicken breast': {price: 6.50, unit: 'per kg'}, 'Lean beef strips': {price: 9.00, unit: 'per kg'}, 'Pork tenderloin': {price: 7.50, unit: 'per kg'}, 'Turkey sausage': {price: 4.50, unit: 'per 200g'}, 'Lean turkey mince': {price: 6.00, unit: 'per kg'}, 'Salmon fillet': {price: 12.00, unit: 'per kg'}, 'Protein powder': {price: 15.00, unit: 'per kg'}, 'Canned tuna in water': {price: 1.20, unit: 'per can'}, 'Canned tuna': {price: 1.20, unit: 'per can'}, 'Shrimp (medium)': {price: 13.00, unit: 'per kg'}, 'Cod fillet': {price: 10.00, unit: 'per kg'}, 'Sea bass fillet': {price: 11.00, unit: 'per kg'}, 'Firm tofu': {price: 2.80, unit: 'per 400g'}, 'Black beans (canned)': {price: 0.90, unit: 'per can'}, 'Turkey mince': {price: 6.00, unit: 'per kg'}, 'Beef jerky': {price: 12.00, unit: 'per 100g'}, 'Smoked salmon': {price: 18.00, unit: 'per 100g'}, 'Grilled chicken': {price: 7.50, unit: 'per kg'}, 'White fish fillet (haddock/cod)': {price: 10.00, unit: 'per kg'},
+  // Grains
+  'Wholegrain bread': {price: 1.80, unit: 'per loaf'}, 'Whole wheat bread': {price: 1.80, unit: 'per loaf'}, 'Rolled oats': {price: 1.40, unit: 'per kg'}, 'oats': {price: 1.40, unit: 'per kg'}, 'Granola': {price: 4.50, unit: 'per kg'}, 'Brown rice': {price: 0.60, unit: 'per kg'}, 'Whole wheat tortilla': {price: 2.20, unit: 'per pack'}, 'Egg noodles': {price: 1.20, unit: 'per 500g'}, 'Rice noodles': {price: 1.50, unit: 'per pack'}, 'Pasta': {price: 0.85, unit: 'per 500g'}, 'Quinoa': {price: 3.50, unit: 'per 500g'}, 'Couscous': {price: 1.80, unit: 'per 500g'}, 'Bagel': {price: 3.00, unit: 'per pack'}, 'Whole wheat bagel': {price: 3.00, unit: 'per pack'}, 'Rice cakes': {price: 2.40, unit: 'per pack'}, 'Oat flour': {price: 2.80, unit: 'per 500g'}, 'Breadcrumbs': {price: 1.50, unit: 'per 400g'}, 'Whole wheat pasta': {price: 1.20, unit: 'per 500g'}, 'Canned chickpeas': {price: 0.95, unit: 'per can'}, 'Red lentils': {price: 1.80, unit: 'per 500g'},
+  // Vegetables & Fruits
+  'Avocado': {price: 0.85, unit: 'each'}, 'Banana': {price: 0.12, unit: 'each'}, 'Frozen banana': {price: 3.20, unit: 'per kg'}, 'Blueberries': {price: 4.50, unit: 'per 200g'}, 'Frozen berries': {price: 3.80, unit: 'per kg'}, 'Frozen mixed berries': {price: 3.50, unit: 'per kg'}, 'Mixed berries': {price: 4.80, unit: 'per kg'}, 'Spinach': {price: 1.80, unit: 'per 250g'}, 'Baby spinach': {price: 2.20, unit: 'per 250g'}, 'Red capsicum': {price: 2.50, unit: 'per kg'}, 'Capsicum': {price: 2.50, unit: 'per kg'}, 'Bell pepper': {price: 2.50, unit: 'per kg'}, 'Bell peppers': {price: 2.50, unit: 'per kg'}, 'Broccoli': {price: 2.00, unit: 'per kg'}, 'Asparagus': {price: 3.50, unit: 'per kg'}, 'Carrot': {price: 0.90, unit: 'per kg'}, 'Carrots': {price: 0.90, unit: 'per kg'}, 'Sweet potato': {price: 1.50, unit: 'per kg'}, 'Tomato': {price: 1.80, unit: 'per kg'}, 'Cherry tomatoes': {price: 2.80, unit: 'per kg'}, 'Canned tomatoes': {price: 0.75, unit: 'per can'}, 'Lettuce': {price: 1.20, unit: 'each'}, 'Cos lettuce': {price: 1.50, unit: 'each'}, 'Mixed salad leaves': {price: 2.20, unit: 'per 200g'}, 'Mixed greens': {price: 2.20, unit: 'per 200g'}, 'Lemon': {price: 0.20, unit: 'each'}, 'Garlic': {price: 2.50, unit: 'per kg'}, 'Onion': {price: 0.95, unit: 'per kg'}, 'Red onion': {price: 1.20, unit: 'per kg'}, 'Ginger': {price: 3.50, unit: 'per kg'}, 'Dried apricots': {price: 6.00, unit: 'per kg'}, 'Red grapes': {price: 2.80, unit: 'per kg'}, 'Grapes': {price: 2.80, unit: 'per kg'}, 'Brussels sprouts': {price: 2.80, unit: 'per kg'}, 'fresh berries': {price: 4.50, unit: 'per kg'}, 'Mixed nuts (raw)': {price: 8.50, unit: 'per 500g'}, 'Walnuts': {price: 8.00, unit: 'per 500g'}, 'Peanuts': {price: 5.50, unit: 'per 500g'}, 'Apple': {price: 1.50, unit: 'per kg'}, 'Cucumber': {price: 1.20, unit: 'per kg'}, 'Celery': {price: 1.80, unit: 'per kg'}, 'Zucchini': {price: 1.40, unit: 'per kg'}, 'Green beans': {price: 2.40, unit: 'per kg'}, 'New potatoes': {price: 1.20, unit: 'per kg'},
+  // Dairy
+  'Greek yogurt (0% fat)': {price: 3.20, unit: 'per 500g'}, 'Plain Greek yogurt': {price: 3.20, unit: 'per 500g'}, 'Almond milk': {price: 1.80, unit: 'per liter'}, 'Milk (2%)': {price: 0.95, unit: 'per liter'}, 'Feta cheese': {price: 8.50, unit: 'per 200g'}, 'Cheddar cheese': {price: 9.00, unit: 'per 200g'}, 'String cheese': {price: 4.50, unit: 'per 200g'}, 'Fresh mozzarella': {price: 4.80, unit: 'per 250g'}, 'Cream cheese': {price: 3.50, unit: 'per 200g'}, 'Parmesan cheese': {price: 11.00, unit: 'per 200g'}, 'Light Caesar dressing': {price: 2.80, unit: 'per 250ml'}, 'Coconut milk': {price: 2.20, unit: 'per 400ml'}, 'Light coconut milk': {price: 2.20, unit: 'per 400ml'}, 'Greek yogurt': {price: 3.20, unit: 'per 500g'}, 'Low-fat cottage cheese': {price: 2.80, unit: 'per 500g'}, 'Cottage cheese': {price: 2.80, unit: 'per 500g'},
+  // Pantry
+  'Honey': {price: 4.50, unit: 'per 500g'}, 'Almond butter': {price: 7.50, unit: 'per 500g'}, 'Peanut butter': {price: 3.50, unit: 'per 500g'}, 'Chia seeds': {price: 8.00, unit: 'per 200g'}, 'Cinnamon': {price: 4.50, unit: 'per 50g'}, 'Paprika': {price: 3.50, unit: 'per 50g'}, 'Salt & black pepper': {price: 1.50, unit: 'per 100g'}, 'Salt & pepper': {price: 1.50, unit: 'per 100g'}, 'Salt': {price: 0.50, unit: 'per 500g'}, 'Pepper': {price: 3.00, unit: 'per 50g'}, 'Black pepper': {price: 3.00, unit: 'per 50g'}, 'Olive oil': {price: 5.50, unit: 'per liter'}, 'Extra virgin olive oil': {price: 8.00, unit: 'per liter'}, 'Sesame oil': {price: 6.00, unit: 'per 500ml'}, 'Soy sauce': {price: 2.50, unit: 'per 500ml'}, 'Oyster sauce': {price: 3.20, unit: 'per 250ml'}, 'Curry paste (mild)': {price: 3.80, unit: 'per jar'}, 'Pad Thai sauce': {price: 2.50, unit: 'per 250ml'}, 'Passata tomato sauce': {price: 1.20, unit: 'per 500ml'}, 'Butter': {price: 3.50, unit: 'per 250g'}, 'Dill': {price: 2.50, unit: 'per bunch'}, 'Dill or herbs': {price: 2.50, unit: 'per bunch'}, 'Italian herbs': {price: 3.00, unit: 'per 50g'}, 'Herbs': {price: 2.50, unit: 'per bunch'}, 'Rosemary': {price: 2.50, unit: 'per bunch'}, 'Basil': {price: 2.50, unit: 'per bunch'}, 'Cilantro': {price: 2.50, unit: 'per bunch'}, 'Parsley': {price: 2.50, unit: 'per bunch'}, 'Garlic powder': {price: 3.00, unit: 'per 50g'}, 'Garlic & ginger': {price: 2.50, unit: 'per jar'}, 'Cumin & paprika': {price: 3.00, unit: 'per 50g'}, 'Cumin': {price: 3.00, unit: 'per 50g'}, 'Oregano': {price: 3.00, unit: 'per 50g'}, 'Lemon juice': {price: 1.80, unit: 'per 250ml'}, 'Lime': {price: 0.25, unit: 'each'}, 'Lime juice': {price: 1.80, unit: 'per 250ml'}, 'Lime wedge': {price: 0.25, unit: 'each'}, 'Lemon & herbs': {price: 2.50, unit: 'per jar'}, 'Lemon zest': {price: 0.20, unit: 'per lemon'}, 'Hummus': {price: 2.80, unit: 'per 200g'}, 'Salsa': {price: 2.20, unit: 'per 200g'}, 'Coconut flakes': {price: 4.50, unit: 'per 200g'}, 'Dark chocolate': {price: 3.50, unit: 'per 100g'}, 'Olives (pitted)': {price: 3.50, unit: 'per 250g'}, 'Croutons': {price: 2.20, unit: 'per 150g'}, 'Vegetable stock': {price: 1.50, unit: 'per liter'}
+};
+
+// Cost calculation functions
+const COST = {
+  getIngredientCost(ingredientName, amount, unit) {
+    const priceData = INGREDIENT_PRICES[ingredientName];
+    if (!priceData) return 0;
+    
+    const { price, unit: priceUnit } = priceData;
+    let multiplier = 1;
+    
+    // Unit conversion table
+    const conversions = {
+      'g': {'per kg': 0.001, 'per 500g': 0.002, 'per 200g': 0.005, 'per 150g': 0.00667, 'per 100g': 0.01},
+      'ml': {'per liter': 0.001, 'per 500ml': 0.002, 'per 250ml': 0.004, 'per 400ml': 0.0025},
+      'tbsp': {'per tbsp': 1}, 'tsp': {'per tsp': 1},
+      'whole': {'each': 1, 'per unit': 1}, 'cup': {'per cup': 1},
+      'clove': {'per unit': 1}, 'cloves': {'per kg': 0.001},
+      'bunch': {'per bunch': 1}, 'pack': {'per pack': 1, 'per 200g': 1, 'per 250g': 1, 'per 300g': 1, 'per 400g': 1, 'per 500g': 1, 'per 6-pack': 0.167, 'per 4-pack': 0.25},
+      'can': {'per can': 1, 'per 150g can': 1, 'per 400g can': 1, 'per 400ml can': 1},
+      'jar': {'per jar': 1}, 'loaf': {'per loaf': 1}, 'liter': {'per liter': 1}, 'kg': {'per kg': 1},
+      'drained': {'per can': 1},
+      'each': {'each': 1}
+    };
+    
+    if (conversions[unit] && conversions[unit][priceUnit]) {
+      multiplier = amount * conversions[unit][priceUnit];
+    } else if (unit === priceUnit || priceUnit === 'each' && unit === 'whole') {
+      multiplier = amount;
+    }
+    
+    return Math.max(0, price * multiplier);
+  },
+  
+  getMealCost(mealId) {
+    const meal = Object.values(MEALS).flat().find(m => m.id === mealId);
+    if (!meal) return 0;
+    
+    return meal.ingredients.reduce((sum, ing) => {
+      return sum + this.getIngredientCost(ing.item, ing.amount, ing.unit);
+    }, 0);
+  },
+  
+  getDayCost(dateStr) {
+    const log = S.logs[dateStr];
+    if (!log || !log.completed) return 0;
+    
+    return log.completed.reduce((sum, mealId) => {
+      return sum + this.getMealCost(mealId);
+    }, 0);
+  },
+  
+  getWeekCost(startDate) {
+    let total = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + i);
+      total += this.getDayCost(dateStr(d));
+    }
+    return total;
+  },
+  
+  getMonthCost(y, m) {
+    let total = 0;
+    const days = daysInMonth(y, m);
+    for (let day = 1; day <= days; day++) {
+      const d = new Date(y, m, day);
+      total += this.getDayCost(dateStr(d));
+    }
+    return total;
+  },
+  
+  getCostByCategory(ingredientsList) {
+    const categoryMap = {'proteins': 0, 'grains': 0, 'vegetables': 0, 'dairy': 0, 'pantry': 0};
+    
+    ingredientsList.forEach(ing => {
+      const priceData = INGREDIENT_PRICES[ing.item];
+      if (priceData) {
+        const cost = this.getIngredientCost(ing.item, ing.amount, ing.unit);
+        const cat = priceData.unit.split('/')[0] === 'per' ? 'pantry' : ing.item.includes('Berry') || ing.item.includes('Tomato') || ing.item.includes('Lemon') ? 'vegetables' : 'pantry';
+        
+        // Better categorization
+        if (['Large eggs', 'Chicken breast', 'Salmon fillet', 'Beef strips', 'Turkey mince', 'Canned tuna'].some(p => ing.item.includes(p.split(' ')[0]))) categoryMap['proteins'] += cost;
+        else if (['Brown rice', 'Pasta', 'Oats', 'Bread', 'Bagel', 'Rice cakes'].some(p => ing.item.includes(p.split(' ')[0]))) categoryMap['grains'] += cost;
+        else if (['Spinach', 'Broccoli', 'Tomato', 'Carrot', 'Pepper', 'Onion', 'Lemon', 'Banana', 'Berries'].some(p => ing.item.includes(p))) categoryMap['vegetables'] += cost;
+        else if (['Yogurt', 'Milk', 'Cheese', 'Cottage cheese'].some(p => ing.item.includes(p))) categoryMap['dairy'] += cost;
+        else categoryMap['pantry'] += cost;
+      }
+    });
+    
+    return categoryMap;
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
 // TRANSLATIONS
 // ═══════════════════════════════════════════════════════════════
 const LANG = {
@@ -2757,6 +2865,25 @@ const LANG = {
     
     // Misc
     ok: 'of',
+    
+    // Cost Analysis
+    costAnalysis: '💰 Cost Analysis',
+    dailyCost: 'Daily Cost',
+    weeklyCost: 'Weekly Cost',
+    monthlyCost: 'Monthly Cost',
+    totalCost: 'Total Cost',
+    costPerMeal: 'Cost per Meal',
+    costPerDay: 'Cost per Day',
+    costPerWeek: 'Cost per Week',
+    costPerMonth: 'Cost per Month',
+    costByCategory: 'Cost by Category',
+    proteinsCost: 'Proteins',
+    grainsCost: 'Grains & Carbs',
+    vegetablesCost: 'Vegetables & Fruits',
+    dairyCost: 'Dairy',
+    pantryCost: 'Pantry & Spices',
+    estimatedGroceryCost: 'Estimated Weekly Grocery Cost',
+    budgetFriendly: '✓ Budget-friendly option',
     
     // Quote of the Day
     quoteOfDay: 'Quote of the Day',
@@ -3034,6 +3161,25 @@ const LANG = {
     
     // Misc
     ok: 'de',
+    
+    // Análisis de Costos
+    costAnalysis: '💰 Análisis de Costos',
+    dailyCost: 'Costo Diario',
+    weeklyCost: 'Costo Semanal',
+    monthlyCost: 'Costo Mensual',
+    totalCost: 'Costo Total',
+    costPerMeal: 'Costo por Comida',
+    costPerDay: 'Costo por Día',
+    costPerWeek: 'Costo por Semana',
+    costPerMonth: 'Costo por Mes',
+    costByCategory: 'Costo por Categoría',
+    proteinsCost: 'Proteínas',
+    grainsCost: 'Granos y Carbohidratos',
+    vegetablesCost: 'Verduras y Frutas',
+    dairyCost: 'Lácteos',
+    pantryCost: 'Despensa y Especias',
+    estimatedGroceryCost: 'Costo Estimado de Compras Semanales',
+    budgetFriendly: '✓ Opción económica',
     
     // Cita del Día
     quoteOfDay: 'Cita del Día',

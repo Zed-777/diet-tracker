@@ -3668,19 +3668,18 @@ function renderToday() {
     </div>
   </div>`;
 
-  // Calculate daily cost
+  // Calculate daily cost (ALL meals for the day)
   const dailyCost = slots.reduce((sum, slot) => {
-    if (log.completed.includes(slot.key)) {
-      return sum + COST.getMealCost(slot.meal);
-    }
-    return sum;
+    return sum + COST.getMealCost(slot.meal);
   }, 0);
 
-  // Daily cost summary card
+  // Daily cost summary card (show all meals with completion status)
   const slotLabels = {breakfast:T('breakfast'),snack1:T('morningSnack'),lunch:T('lunch'),snack2:T('afternoonSnack'),dinner:T('dinner')};
-  const costBreakdown = slots.filter(s => log.completed.includes(s.key)).map(slot => {
+  const costBreakdown = slots.map(slot => {
     const mealCost = COST.getMealCost(slot.meal);
-    return `<div class="cost-item"><span class="cost-item-label">${slotLabels[slot.key]}</span><span class="cost-item-value">€${mealCost.toFixed(2)}</span></div>`;
+    const done = log.completed.includes(slot.key);
+    const style = done ? 'opacity:1;' : 'opacity:0.5;';
+    return `<div class="cost-item" style="${style}"><span class="cost-item-label">${done ? '✓' : '○'} ${slotLabels[slot.key]}</span><span class="cost-item-value">€${mealCost.toFixed(2)}</span></div>`;
   }).join('');
 
   html += `

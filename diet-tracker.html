@@ -2940,6 +2940,11 @@ const LANG = {
     acupressureGuide: 'Acupressure Wellness Guide',
     pointsTitle: 'Wellness Points',
     pointOfTotal: 'Point {{current}} of {{total}}',
+    bodyScanExercise: 'Body Scan',
+    bodyScanGuide: 'MBSR Guided Body Scan',
+    regionsTitle: 'Body Regions',
+    whatToNotice: 'What to Notice:',
+    breathing: 'Breathing:',
     benefits: 'Benefits:',
     howToPractice: 'How to practice:',
     previous: 'Previous',
@@ -3250,6 +3255,11 @@ const LANG = {
     acupressureGuide: 'Guía de Bienestar con Acupresión',
     pointsTitle: 'Puntos de Bienestar',
     pointOfTotal: 'Punto {{current}} de {{total}}',
+    bodyScanExercise: 'Escaneo Corporal',
+    bodyScanGuide: 'Escaneo Corporal Guiado MBSR',
+    regionsTitle: 'Regiones del Cuerpo',
+    whatToNotice: 'Qué Observar:',
+    breathing: 'Respiración:',
     benefits: 'Beneficios:',
     howToPractice: 'Cómo practicar:',
     previous: 'Anterior',
@@ -3904,9 +3914,83 @@ let _currentExerciseType = 'breathing'; // breathing, bodycan, visualization, lo
 const MINDFULNESS_EXERCISES = {
   breathing: { name: 'Breathing', emoji: '💨', desc: '10-second breathing cycle' },
   bodylove: { name: 'Body Love', emoji: '💚', desc: 'Acupressure wellness points' },
-  visualization: { name: 'Visualization', emoji: '🌅', desc: 'Guided imagery' },
+  bodyscan: { name: 'Body Scan', emoji: '🔍', desc: 'MBSR guided body awareness' },
   lovingkindness: { name: 'Loving Kindness', emoji: '💖', desc: 'Compassion meditation' }
 };
+
+// BODY SCAN REGIONS LIBRARY (MBSR-based)
+const BODY_SCAN_REGIONS = [
+  {
+    id: 'feet',
+    name: 'Feet & Toes',
+    location: 'Foundation of your body',
+    focus: 'Feel any sensations—warmth, tingling, pressure. Notice without judgment.',
+    breathing: 'Breathe naturally, imagining breath flowing to your feet.',
+    benefits: 'Grounding, circulation, connection to earth',
+    position: { x: 50, y: 85 },
+    emoji: '🦶'
+  },
+  {
+    id: 'legs',
+    name: 'Legs & Calves',
+    location: 'From knees down to ankles',
+    focus: 'Notice muscles, skin texture, any tension. Let them relax.',
+    breathing: 'With each exhale, let your legs become heavier and more relaxed.',
+    benefits: 'Release leg tension, improve circulation',
+    position: { x: 50, y: 65 },
+    emoji: '🦵'
+  },
+  {
+    id: 'thighs',
+    name: 'Thighs & Hips',
+    location: 'Upper legs and hip area',
+    focus: 'This area often holds stress. Scan for tension and consciously release.',
+    breathing: 'Breathe into this space. With each exhale, melt tension away.',
+    benefits: 'Core stability, release stored tension',
+    position: { x: 50, y: 50 },
+    emoji: '🫀'
+  },
+  {
+    id: 'torso',
+    name: 'Torso & Chest',
+    location: 'Abdomen, stomach, heart area',
+    focus: 'Feel your breath naturally expanding and contracting your belly.',
+    breathing: 'Slow, deep breaths here—this is where calm lives.',
+    benefits: 'Breath awareness, nervous system calm',
+    position: { x: 50, y: 40 },
+    emoji: '💚'
+  },
+  {
+    id: 'arms',
+    name: 'Hands & Arms',
+    location: 'Both arms from shoulders to fingertips',
+    focus: 'Scan hands, forearms, shoulders. Feel the edges of your body.',
+    breathing: 'Let your arms feel light and relaxed with each breath.',
+    benefits: 'Fine sensation, arm tension release',
+    position: { x: 25, y: 35 },
+    emoji: '🙌'
+  },
+  {
+    id: 'shoulders',
+    name: 'Shoulders & Neck',
+    location: 'Upper back, shoulder blades, neck',
+    focus: 'Often tense—notice any tightness here and gently release.',
+    breathing: 'As you exhale, feel shoulders dropping, neck loosening.',
+    benefits: 'Release upper body tension, improve posture awareness',
+    position: { x: 50, y: 25 },
+    emoji: '🧠'
+  },
+  {
+    id: 'head',
+    name: 'Head & Face',
+    location: 'Forehead, eyes, jaw, entire head',
+    focus: 'Relax your jaw, soften eyes, smooth your forehead.',
+    breathing: 'Let your mind quiet as you complete this full-body journey.',
+    benefits: 'Mental clarity, headache relief, calm focus',
+    position: { x: 50, y: 10 },
+    emoji: '✨'
+  }
+];
 
 // ACUPRESSURE POINTS LIBRARY
 const ACUPRESSURE_POINTS = [
@@ -3961,7 +4045,7 @@ function initMindfulnessData() {
   if (!S.profile.mindfulness) {
     S.profile.mindfulness = {
       sessions: [],
-      exerciseCounts: { breathing: 0, bodylove: 0, visualization: 0, lovingkindness: 0 }
+      exerciseCounts: { breathing: 0, bodylove: 0, bodyscan: 0, lovingkindness: 0 }
     };
   }
 }
@@ -4006,6 +4090,12 @@ function startMeditation(minutes, exerciseType = 'breathing') {
   // Special handler for Body Love acupressure
   if (exerciseType === 'bodylove') {
     startBodyLoveGuide(minutes);
+    return;
+  }
+  
+  // Special handler for Body Scan MBSR
+  if (exerciseType === 'bodyscan') {
+    startBodyScanGuide(minutes);
     return;
   }
   
@@ -4070,6 +4160,10 @@ function startMeditation(minutes, exerciseType = 'breathing') {
 let _bodyLoveCurrentPoint = 0;
 let _bodyLovePointTimer = 0;
 let _bodyLoveSecondsPerPoint = 60;
+
+let _bodyScanCurrentRegion = 0;
+let _bodyScanRegionTimer = 0;
+let _bodyScanSecondsPerRegion = 60;
 
 function startBodyLoveGuide(minutes = 5) {
   S.view = 'mindfulness';
@@ -4253,6 +4347,218 @@ function jumpToPoint(index) {
 }
 
 function skipBodyLove() {
+  if (_timerInterval) clearInterval(_timerInterval);
+  endMeditation();
+}
+
+function startBodyScanGuide(minutes = 5) {
+  S.view = 'mindfulness';
+  _meditationPhase = 'meditating';
+  _bodyScanCurrentRegion = 0;
+  _bodyScanRegionTimer = 0;
+  _bodyScanSecondsPerRegion = Math.floor((minutes * 60) / BODY_SCAN_REGIONS.length);
+  _meditationTime = minutes * 60;
+  _meditationElapsed = 0;
+  
+  showBodyScanRegion(0);
+  
+  // Auto-advance through regions
+  _timerInterval = setInterval(() => {
+    _bodyScanRegionTimer++;
+    renderBodyScanRegion();
+    
+    if (_bodyScanRegionTimer >= _bodyScanSecondsPerRegion) {
+      _bodyScanRegionTimer = 0;
+      _bodyScanCurrentRegion++;
+      _meditationElapsed += _bodyScanSecondsPerRegion;
+      
+      if (_bodyScanCurrentRegion >= BODY_SCAN_REGIONS.length) {
+        clearInterval(_timerInterval);
+        endMeditation();
+      } else {
+        showBodyScanRegion(_bodyScanCurrentRegion);
+      }
+    }
+  }, 1000);
+}
+
+function showBodyScanRegion(index) {
+  const region = BODY_SCAN_REGIONS[index];
+  const remaining = _bodyScanSecondsPerRegion - _bodyScanRegionTimer;
+  
+  // Get visual diagram for this region
+  const visualHtml = getRegionVisual(region.id);
+  
+  const regionsHtml = BODY_SCAN_REGIONS.map((r, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:10px;background:${i === index ? 'var(--ac)' : 'var(--s1)'};border-radius:6px;cursor:pointer" onclick="jumpToRegion(${i})">
+      <div style="font-size:18px">${r.emoji}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:${i === index ? 'white' : 'var(--t1)'}\">${r.name}</div>
+        <div style="font-size:10px;color:${i === index ? 'rgba(255,255,255,.8)' : 'var(--t3)'}\">${r.location}</div>
+      </div>
+      ${i === index ? `<div style="font-size:18px;font-weight:900;color:white\">${remaining}s</div>` : ''}
+    </div>
+  `).join('');
+  
+  document.getElementById('view').innerHTML = `
+    <div style="animation:slideup .3s ease;padding:0;display:flex;flex-direction:column;height:100vh">
+      <div style="background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.05));border-bottom:1px solid var(--b1);padding:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:28px">${region.emoji}</div>
+          <div style="text-align:right">
+            <div style="font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Region ${index + 1} of ${BODY_SCAN_REGIONS.length}</div>
+            <div style="font-size:24px;font-weight:900;color:var(--ac)" id="bodyscan-timer">${String(remaining).padStart(2,'0')}s</div>
+          </div>
+        </div>
+        <div style="font-size:16px;font-weight:700;color:var(--t1)">${region.name}</div>
+        <div style="font-size:12px;color:var(--t3);margin-top:4px">${region.location}</div>
+      </div>
+      
+      <div style="flex:1;overflow-y:auto;padding:16px">
+        <div style="background:var(--s1);border:2px solid var(--ac);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px">
+          ${visualHtml}
+        </div>
+        
+        <div style="background:var(--sf);border:1px solid var(--b1);border-radius:8px;padding:12px;margin-bottom:12px">
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600">What to Notice:</div>
+          <div style="font-size:13px;color:var(--t2);line-height:1.6">${region.focus}</div>
+        </div>
+        
+        <div style="background:var(--sf);border:1px solid var(--b1);border-radius:8px;padding:12px;margin-bottom:12px">
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600">Breathing:</div>
+          <div style="font-size:13px;color:var(--t2);line-height:1.6">${region.breathing}</div>
+        </div>
+        
+        <div style="background:var(--sf);border:1px solid var(--b1);border-radius:8px;padding:12px;margin-bottom:16px">
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600">Benefits:</div>
+          <div style="font-size:12px;color:var(--t2)">${region.benefits}</div>
+        </div>
+        
+        <div style="padding:12px;background:var(--s2);border-radius:8px">
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:600">All Regions</div>
+          <div style="display:flex;flex-direction:column;gap:8px">${regionsHtml}</div>
+        </div>
+      </div>
+      
+      <div class="meditation-controls" style="border-top:1px solid var(--b1);padding:12px;background:var(--bg)">
+        <button class="med-btn secondary" onclick="jumpToRegion(${Math.max(0, index - 1)})" ${index === 0 ? 'disabled' : ''}>${index === 0 ? 'First' : 'Prev'}</button>
+        <button class="med-btn secondary" onclick="skipBodyScan()">Finish</button>
+        <button class="med-btn secondary" onclick="jumpToRegion(${Math.min(BODY_SCAN_REGIONS.length - 1, index + 1)})" ${index === BODY_SCAN_REGIONS.length - 1 ? 'disabled' : ''}>${index === BODY_SCAN_REGIONS.length - 1 ? 'Last' : 'Next'}</button>
+      </div>
+    </div>`;
+}
+
+function getRegionVisual(regionId) {
+  const visuals = {
+    feet: `<svg viewBox="0 0 200 300" style="width:150px;height:225px;margin:0 auto;display:block">
+      <!-- Left foot -->
+      <ellipse cx="70" cy="250" rx="25" ry="35" fill="none" stroke="var(--t2)" stroke-width="2"/>
+      <path d="M 50 240 L 45 220 M 60 245 L 55 215 M 70 248 L 70 210 M 80 245 L 85 215 M 90 240 L 95 220" stroke="var(--t2)" stroke-width="1.5" fill="none"/>
+      <!-- Highlight feet -->
+      <circle cx="70" cy="250" r="18" fill="var(--ac)" opacity="0.6"/>
+      <circle cx="70" cy="250" r="14" fill="none" stroke="var(--ac)" stroke-width="2"/>
+      <!-- Right foot -->
+      <ellipse cx="130" cy="250" rx="25" ry="35" fill="none" stroke="var(--t2)" stroke-width="1.5" opacity="0.4"/>
+      <text x="100" y="150" text-anchor="middle" font-size="14" fill="var(--t2)">Ground your attention here</text>
+    </svg>`,
+    
+    legs: `<svg viewBox="0 0 200 300" style="width:150px;height:225px;margin:0 auto;display:block">
+      <!-- Left leg -->
+      <path d="M 70 100 L 65 220" stroke="var(--t2)" stroke-width="6" fill="none"/>
+      <ellipse cx="65" cy="220" rx="8" ry="12" fill="none" stroke="var(--t2)" stroke-width="2"/>
+      <!-- Right leg -->
+      <path d="M 130 100 L 135 220" stroke="var(--t2)" stroke-width="6" fill="none" opacity="0.4"/>
+      <!-- Highlight both legs -->
+      <path d="M 70 100 L 65 220" stroke="var(--ac)" stroke-width="8" opacity="0.6"/>
+      <text x="100" y="150" text-anchor="middle" font-size="14" fill="var(--t2)">Feel any muscle tension</text>
+    </svg>`,
+    
+    thighs: `<svg viewBox="0 0 200 300" style="width:150px;height:225px;margin:0 auto;display:block">
+      <!-- Left thigh & hip -->
+      <path d="M 70 80 L 70 160" stroke="var(--t2)" stroke-width="14" fill="none"/>
+      <circle cx="70" cy="70" r="12" fill="none" stroke="var(--t2)" stroke-width="2"/>
+      <!-- Right thigh & hip -->
+      <path d="M 130 80 L 130 160" stroke="var(--t2)" stroke-width="14" fill="none" opacity="0.4"/>
+      <!-- Highlight thighs -->
+      <path d="M 70 80 L 70 160" stroke="var(--ac)" stroke-width="16" opacity="0.6"/>
+      <circle cx="70" cy="70" r="10" fill="var(--ac)" opacity="0.6"/>
+      <text x="100" y="220" text-anchor="middle" font-size="14" fill="var(--t2)">Core & stability</text>
+    </svg>`,
+    
+    torso: `<svg viewBox="0 0 200 300" style="width:150px;height:225px;margin:0 auto;display:block">
+      <!-- Torso outline -->
+      <path d="M 70 60 L 70 150 Q 65 160 75 165 L 125 165 Q 135 160 130 150 L 130 60 Q 100 50 70 60" fill="none" stroke="var(--t2)" stroke-width="2"/>
+      <!-- Ribs -->
+      <path d="M 75 80 Q 100 85 125 80" stroke="var(--t2)" stroke-width="1" fill="none" opacity="0.5"/>
+      <path d="M 75 110 Q 100 115 125 110" stroke="var(--t2)" stroke-width="1" fill="none" opacity="0.5"/>
+      <!-- Heart area highlight -->
+      <circle cx="100" cy="85" r="16" fill="var(--ac)" opacity="0.6"/>
+      <circle cx="100" cy="85" r="12" fill="none" stroke="var(--ac)" stroke-width="2"/>
+      <text x="100" y="200" text-anchor="middle" font-size="14" fill="var(--t2)">Feel your breath flow</text>
+    </svg>`,
+    
+    arms: `<svg viewBox="0 0 200 300" style="width:150px;height:225px;margin:0 auto;display:block">
+      <!-- Left arm -->
+      <path d="M 50 80 L 30 180" stroke="var(--t2)" stroke-width="8" fill="none"/>
+      <circle cx="25" cy="190" r="6" fill="none" stroke="var(--t2)" stroke-width="2"/>
+      <!-- Right arm -->
+      <path d="M 150 80 L 170 180" stroke="var(--t2)" stroke-width="8" fill="none" opacity="0.4"/>
+      <!-- Highlight left arm -->
+      <path d="M 50 80 L 30 180" stroke="var(--ac)" stroke-width="10" opacity="0.6"/>
+      <circle cx="25" cy="190" r="8" fill="var(--ac)" opacity="0.6"/>
+      <text x="100" y="250" text-anchor="middle" font-size="14" fill="var(--t2)">Relax your hands</text>
+    </svg>`,
+    
+    shoulders: `<svg viewBox="0 0 200 300" style="width:150px;height:225px;margin:0 auto;display:block">
+      <!-- Neck -->
+      <path d="M 85 50 L 85 80 M 115 50 L 115 80" stroke="var(--t2)" stroke-width="3" fill="none"/>
+      <!-- Shoulders -->
+      <path d="M 50 85 L 100 80 L 150 85" stroke="var(--t2)" stroke-width="10" fill="none"/>
+      <!-- Upper back -->
+      <path d="M 65 100 Q 100 110 135 100" stroke="var(--t2)" stroke-width="6" fill="none" opacity="0.6"/>
+      <!-- Highlight shoulders -->
+      <path d="M 50 85 L 100 80 L 150 85" stroke="var(--ac)" stroke-width="12" opacity="0.6"/>
+      <text x="100" y="200" text-anchor="middle" font-size="14" fill="var(--t2)">Let tension melt away</text>
+    </svg>`,
+    
+    head: `<svg viewBox="0 0 200 300" style="width:150px;height:225px;margin:0 auto;display:block">
+      <!-- Head circle -->
+      <circle cx="100" cy="70" r="40" fill="none" stroke="var(--t2)" stroke-width="2"/>
+      <!-- Face outline -->
+      <path d="M 90 50 Q 100 40 110 50" stroke="var(--t2)" stroke-width="2" fill="none"/>
+      <!-- Eyes -->
+      <circle cx="90" cy="65" r="3" fill="var(--t2)"/>
+      <circle cx="110" cy="65" r="3" fill="var(--t2)"/>
+      <!-- Mouth -->
+      <path d="M 95 80 Q 100 85 105 80" stroke="var(--t2)" stroke-width="1" fill="none"/>
+      <!-- Highlight head -->
+      <circle cx="100" cy="70" r="30" fill="var(--ac)" opacity="0.5"/>
+      <circle cx="100" cy="70" r="28" fill="none" stroke="var(--ac)" stroke-width="2"/>
+      <text x="100" y="180" text-anchor="middle" font-size="14" fill="var(--t2)">Find calm & clarity</text>
+    </svg>`
+  };
+  
+  return visuals[regionId] || `<div style="font-size:48px">${BODY_SCAN_REGIONS.find(r => r.id === regionId)?.emoji}</div>`;
+}
+
+function renderBodyScanRegion() {
+  const remaining = Math.max(0, _bodyScanSecondsPerRegion - _bodyScanRegionTimer);
+  const timerEl = document.getElementById('bodyscan-timer');
+  if (timerEl) {
+    // Only update the timer text, don't re-render the whole view
+    timerEl.textContent = `${String(remaining).padStart(2,'0')}s`;
+  }
+}
+
+function jumpToRegion(index) {
+  if (index >= 0 && index < BODY_SCAN_REGIONS.length) {
+    _bodyScanCurrentRegion = index;
+    _bodyScanRegionTimer = 0;
+    showBodyScanRegion(index);
+  }
+}
+
+function skipBodyScan() {
   if (_timerInterval) clearInterval(_timerInterval);
   endMeditation();
 }

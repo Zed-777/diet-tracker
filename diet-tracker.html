@@ -4106,6 +4106,9 @@ function showBodyLovePoint(index) {
   const point = ACUPRESSURE_POINTS[index];
   const remaining = _bodyLoveSecondsPerPoint - _bodyLovePointTimer;
   
+  // Get visual diagram for this point
+  const visualHtml = getPointVisual(point.id);
+  
   const pointsHtml = ACUPRESSURE_POINTS.map((p, i) => `
     <div style="display:flex;align-items:center;gap:8px;padding:10px;background:${i === index ? 'var(--ac)' : 'var(--s1)'};border-radius:6px;cursor:pointer" onclick="jumpToPoint(${i})">
       <div style="font-size:18px">${p.emoji}</div>
@@ -4118,53 +4121,126 @@ function showBodyLovePoint(index) {
   `).join('');
   
   document.getElementById('view').innerHTML = `
-    <div style="animation:slideup .3s ease;padding:0">
+    <div style="animation:slideup .3s ease;padding:0;display:flex;flex-direction:column;height:100vh">
       <div style="background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.05));border-bottom:1px solid var(--b1);padding:16px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <div style="font-size:28px">${point.emoji}</div>
           <div style="text-align:right">
             <div style="font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Point ${index + 1} of ${ACUPRESSURE_POINTS.length}</div>
-            <div style="font-size:24px;font-weight:900;color:var(--ac)">${String(remaining).padStart(2,'0')}s</div>
+            <div style="font-size:24px;font-weight:900;color:var(--ac)" id="bodylove-timer">${String(remaining).padStart(2,'0')}s</div>
           </div>
         </div>
         <div style="font-size:16px;font-weight:700;color:var(--t1)">${point.name}</div>
         <div style="font-size:12px;color:var(--t3);margin-top:4px">${point.location}</div>
       </div>
       
-      <div style="padding:16px;border-bottom:1px solid var(--b1)">
-        <div style="background:var(--s1);border:2px dashed var(--ac);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px">
-          <div style="font-size:64px;margin-bottom:12px">${point.emoji}</div>
-          <div style="font-size:13px;color:var(--t2);line-height:1.6">${point.how}</div>
+      <div style="flex:1;overflow-y:auto;padding:16px">
+        <div style="background:var(--s1);border:2px solid var(--ac);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px">
+          ${visualHtml}
         </div>
         
         <div style="background:var(--sf);border:1px solid var(--b1);border-radius:8px;padding:12px;margin-bottom:12px">
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600">How to Practice:</div>
+          <div style="font-size:13px;color:var(--t2);line-height:1.6">${point.how}</div>
+        </div>
+        
+        <div style="background:var(--sf);border:1px solid var(--b1);border-radius:8px;padding:12px;margin-bottom:16px">
           <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600">Benefits:</div>
           <div style="font-size:12px;color:var(--t2)">${point.benefits}</div>
         </div>
         
-        <div class="meditation-controls">
-          <button class="med-btn secondary" onclick="jumpToPoint(${Math.max(0, index - 1)})" ${index === 0 ? 'disabled' : ''}>${index === 0 ? 'First Point' : 'Previous'}</button>
-          <button class="med-btn secondary" onclick="skipBodyLove()">Finish</button>
-          <button class="med-btn secondary" onclick="jumpToPoint(${Math.min(ACUPRESSURE_POINTS.length - 1, index + 1)})" ${index === ACUPRESSURE_POINTS.length - 1 ? 'disabled' : ''}>${index === ACUPRESSURE_POINTS.length - 1 ? 'Last Point' : 'Next'}</button>
+        <div style="padding:12px;background:var(--s2);border-radius:8px">
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:600">All Points</div>
+          <div style="display:flex;flex-direction:column;gap:8px">${pointsHtml}</div>
         </div>
       </div>
       
-      <div style="padding:12px;background:var(--s2)">
-        <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:600">Points</div>
-        <div style="display:flex;flex-direction:column;gap:8px;max-height:40vh;overflow-y:auto">${pointsHtml}</div>
+      <div class="meditation-controls" style="border-top:1px solid var(--b1);padding:12px;background:var(--bg)">
+        <button class="med-btn secondary" onclick="jumpToPoint(${Math.max(0, index - 1)})" ${index === 0 ? 'disabled' : ''}>${index === 0 ? 'First' : 'Prev'}</button>
+        <button class="med-btn secondary" onclick="skipBodyLove()">Finish</button>
+        <button class="med-btn secondary" onclick="jumpToPoint(${Math.min(ACUPRESSURE_POINTS.length - 1, index + 1)})" ${index === ACUPRESSURE_POINTS.length - 1 ? 'disabled' : ''}>${index === ACUPRESSURE_POINTS.length - 1 ? 'Last' : 'Next'}</button>
       </div>
     </div>`;
 }
 
+function getPointVisual(pointId) {
+  const visuals = {
+    li4: `<svg viewBox="0 0 200 300" style="width:150px;height:225px;margin:0 auto;display:block">
+      <!-- Hand outline -->
+      <ellipse cx="100" cy="80" rx="50" ry="60" fill="none" stroke="var(--t2)" stroke-width="2"/>
+      <!-- Fingers -->
+      <line x1="75" y1="20" x2="70" y2="0" stroke="var(--t2)" stroke-width="2"/>
+      <line x1="100" y1="15" x2="100" y2="0" stroke="var(--t2)" stroke-width="2"/>
+      <line x1="125" y1="20" x2="130" y2="0" stroke="var(--t2)" stroke-width="2"/>
+      <!-- Point location -->
+      <circle cx="85" cy="60" r="12" fill="var(--ac)" opacity="0.8"/>
+      <circle cx="85" cy="60" r="8" fill="none" stroke="var(--ac)" stroke-width="2"/>
+      <text x="100" y="150" text-anchor="middle" font-size="14" fill="var(--t2)">Between thumb & index</text>
+    </svg>`,
+    
+    pc8: `<svg viewBox="0 0 200 300" style="width:150px;height:225px;margin:0 auto;display:block">
+      <!-- Palm -->
+      <ellipse cx="100" cy="100" rx="45" ry="70" fill="none" stroke="var(--t2)" stroke-width="2"/>
+      <!-- Hand lines -->
+      <path d="M 70 80 Q 100 90 130 80" stroke="var(--t2)" stroke-width="1" fill="none" opacity="0.5"/>
+      <path d="M 65 120 Q 100 130 135 120" stroke="var(--t2)" stroke-width="1" fill="none" opacity="0.5"/>
+      <!-- Point at center -->
+      <circle cx="100" cy="100" r="14" fill="var(--ac)" opacity="0.8"/>
+      <circle cx="100" cy="100" r="10" fill="none" stroke="var(--ac)" stroke-width="2"/>
+      <text x="100" y="180" text-anchor="middle" font-size="14" fill="var(--t2)">Center of palm</text>
+    </svg>`,
+    
+    gv20: `<svg viewBox="0 0 200 300" style="width:150px;height:225px;margin:0 auto;display:block">
+      <!-- Head circle -->
+      <circle cx="100" cy="70" r="40" fill="none" stroke="var(--t2)" stroke-width="2"/>
+      <!-- Face features -->
+      <circle cx="90" cy="60" r="4" fill="var(--t2)"/>
+      <circle cx="110" cy="60" r="4" fill="var(--t2)"/>
+      <path d="M 95 75 Q 100 80 105 75" stroke="var(--t2)" stroke-width="1" fill="none"/>
+      <!-- Crown point -->
+      <circle cx="100" cy="30" r="12" fill="var(--ac)" opacity="0.8"/>
+      <circle cx="100" cy="30" r="8" fill="none" stroke="var(--ac)" stroke-width="2"/>
+      <!-- Hair lines -->
+      <path d="M 85 35 Q 100 20 115 35" stroke="var(--t2)" stroke-width="2" fill="none"/>
+      <text x="100" y="130" text-anchor="middle" font-size="14" fill="var(--t2)">Top of head</text>
+    </svg>`,
+    
+    cv6: `<svg viewBox="0 0 200 300" style="width:150px;height:225px;margin:0 auto;display:block">
+      <!-- Torso -->
+      <path d="M 70 60 L 70 180 Q 100 190 130 180 L 130 60 Q 100 50 70 60" fill="none" stroke="var(--t2)" stroke-width="2"/>
+      <!-- Ribcage lines -->
+      <path d="M 75 100 Q 100 105 125 100" stroke="var(--t2)" stroke-width="1" fill="none" opacity="0.5"/>
+      <!-- Navel reference -->
+      <circle cx="100" cy="140" r="3" fill="var(--t3)" opacity="0.5"/>
+      <!-- Point 2 fingers below navel -->
+      <circle cx="100" cy="160" r="12" fill="var(--ac)" opacity="0.8"/>
+      <circle cx="100" cy="160" r="8" fill="none" stroke="var(--ac)" stroke-width="2"/>
+      <text x="100" y="220" text-anchor="middle" font-size="12" fill="var(--t2)">Below navel</text>
+    </svg>`,
+    
+    k3: `<svg viewBox="0 0 200 300" style="width:150px;height:225px;margin:0 auto;display:block">
+      <!-- Leg -->
+      <path d="M 85 80 L 75 200" stroke="var(--t2)" stroke-width="8" fill="none"/>
+      <!-- Foot -->
+      <ellipse cx="75" cy="220" rx="15" ry="20" fill="none" stroke="var(--t2)" stroke-width="2"/>
+      <!-- Ankle bones -->
+      <circle cx="65" cy="210" r="4" fill="var(--t2)" opacity="0.6"/>
+      <!-- Inside ankle point -->
+      <circle cx="70" cy="215" r="12" fill="var(--ac)" opacity="0.8"/>
+      <circle cx="70" cy="215" r="8" fill="none" stroke="var(--ac)" stroke-width="2"/>
+      <text x="100" y="260" text-anchor="middle" font-size="12" fill="var(--t2)">Inside ankle</text>
+    </svg>`
+  };
+  
+  return visuals[pointId] || `<div style="font-size:48px">${ACUPRESSURE_POINTS.find(p => p.id === pointId)?.emoji}</div>`;
+}
+
 function renderBodyLovePoint() {
-  const remaining = _bodyLoveSecondsPerPoint - _bodyLovePointTimer;
-  const timerEl = document.querySelector('[style*="color:var(--ac)"]')?.parentElement?.querySelector('div');
-  if (timerEl && remaining > 0) {
-    // Update the timer display if visible
-    const view = document.getElementById('view');
-    if (view && view.innerHTML.includes('Point')) {
-      showBodyLovePoint(_bodyLoveCurrentPoint);
-    }
+  const remaining = Math.max(0, _bodyLoveSecondsPerPoint - _bodyLovePointTimer);
+  const timerEl = document.getElementById('bodylove-timer');
+  if (timerEl) {
+    // Only update the timer text, don't re-render the whole view
+    timerEl.textContent = `${String(remaining).padStart(2,'0')}s`;
   }
 }
 

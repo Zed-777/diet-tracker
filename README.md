@@ -7,12 +7,13 @@ A production-ready meal tracking application with personalized nutrition plannin
 - **Smart Meal Planning** — 42+ recipes with goal-based selection (high protein, low carb, balanced)
 - **Personalized Nutrition** — BMR, TDEE, macro calculations based on profile
 - **Daily Tracking** — Log meals, water intake, weight with trending
-- **Grocery Lists** — Auto-generated from meal plans (day/week/month)
+- **Grocery Lists** — Auto-generated from meal plans (day/week/month) with **cost estimates**
+- **Cost Analysis** — 💰 Meal costs, daily spending, weekly budgets (Castellón, Spain prices)
 - **Meal Swapping** — Substitute meals while maintaining nutrition targets
 - **Progress Analytics** — Weight trends, adherence stats, streaks
 - **Offline Support** — Works without internet, syncs when online
 - **3 Themes** — Dark, light, and pink modes
-- **Bilingual** — English and Spanish support
+- **Bilingual** — English and Spanish support (100% accurate translations)
 - **Error Handling** — Comprehensive error boundaries and validation
 - **Mobile Optimized** — Responsive design for all devices
 

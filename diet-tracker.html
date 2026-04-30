@@ -3673,22 +3673,12 @@ function renderToday() {
     return sum + COST.getMealCost(slot.meal);
   }, 0);
 
-  // Daily cost summary card (show all meals with completion status)
-  const slotLabels = {breakfast:T('breakfast'),snack1:T('morningSnack'),lunch:T('lunch'),snack2:T('afternoonSnack'),dinner:T('dinner')};
-  const costBreakdown = slots.map(slot => {
-    const mealCost = COST.getMealCost(slot.meal);
-    const done = log.completed.includes(slot.key);
-    const style = done ? 'opacity:1;' : 'opacity:0.5;';
-    return `<div class="cost-item" style="${style}"><span class="cost-item-label">${done ? '✓' : '○'} ${slotLabels[slot.key]}</span><span class="cost-item-value">€${mealCost.toFixed(2)}</span></div>`;
-  }).join('');
-
   html += `
   <div class="cost-card">
     <div class="cost-header">
       <div class="cost-title">💰 ${T('dailyCost')}</div>
       <div class="cost-total">€${dailyCost.toFixed(2)}</div>
     </div>
-    ${costBreakdown ? `<div style="font-size:11px;color:var(--t3);margin-bottom:8px">${T('costByCategory')}</div><div class="cost-breakdown">${costBreakdown}</div>` : `<div style="font-size:11px;color:var(--t3)">No meals logged yet</div>`}
   </div>`;
 
   // Meals

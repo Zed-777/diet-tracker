@@ -2573,9 +2573,16 @@ const COST = {
     return Math.max(0, price * multiplier);
   },
   
-  getMealCost(mealId) {
-    const meal = Object.values(MEALS).flat().find(m => m.id === mealId);
-    if (!meal) return 0;
+  getMealCost(mealOrId) {
+    let meal;
+    if (typeof mealOrId === 'string') {
+      // It's a meal ID - look it up
+      meal = Object.values(MEALS).flat().find(m => m.id === mealOrId);
+    } else {
+      // It's a meal object directly
+      meal = mealOrId;
+    }
+    if (!meal || !meal.ingredients) return 0;
     
     return meal.ingredients.reduce((sum, ing) => {
       return sum + this.getIngredientCost(ing.item, ing.amount, ing.unit);

@@ -2916,10 +2916,15 @@ const LANG = {
     // Manual Meal Logger
     addManualMeal: '+ Add Manual Meal',
     manualMealQuest: 'What did you eat?',
-    mealNameLabel: 'Meal name',
-    mealNamePlaceholder: 'e.g., Restaurant Pasta',
-    mealTypeLabel: 'Meal type',
-    mealTimeLabel: 'When did you eat it?',
+    mealNameLabel: 'Meal name (optional)',
+    mealNamePlaceholder: 'e.g., Grilled Chicken Salad',
+    mealTypeLabel: 'Which meal is this?',
+    breakfast: 'Breakfast',
+    morningSnack: 'Morning Snack',
+    lunch: 'Lunch',
+    afternoonSnack: 'Afternoon Snack',
+    dinner: 'Dinner',
+    otherMeal: 'Other/Snack',
     mainIngredientQ: "What's the main ingredient?",
     chicken: 'Chicken',
     beef: 'Beef',
@@ -2943,10 +2948,10 @@ const LANG = {
     baked: 'Baked',
     cookingNotSure: 'Not sure',
     portionSizeQ: 'How much did you eat?',
-    portionSmall: 'Small (appetizer/side)',
-    portionMedium: 'Medium (regular serving)',
-    portionLarge: 'Large (generous/buffet)',
-    portionHuge: 'Huge (multiple servings)',
+    portionSmall: 'Small (120g • appetizer)',
+    portionMedium: 'Medium (180g • regular)',
+    portionLarge: 'Large (270g • generous)',
+    portionHuge: 'Huge (400g • multiple)',
     additionsQ: 'What else did you add?',
     addButter: 'Butter/Oil',
     addCheese: 'Cheese',
@@ -3294,10 +3299,15 @@ const LANG = {
     // Registro Manual de Comidas
     addManualMeal: '+ Añadir Comida Manual',
     manualMealQuest: '¿Qué comiste?',
-    mealNameLabel: 'Nombre de la comida',
-    mealNamePlaceholder: 'p. ej., Pasta de Restaurante',
-    mealTypeLabel: 'Tipo de comida',
-    mealTimeLabel: '¿Cuándo la comiste?',
+    mealNameLabel: 'Nombre de la comida (opcional)',
+    mealNamePlaceholder: 'p. ej., Ensalada de Pollo a la Parrilla',
+    mealTypeLabel: '¿Cuál comida es esta?',
+    breakfast: 'Desayuno',
+    morningSnack: 'Refrigerio Matutino',
+    lunch: 'Almuerzo',
+    afternoonSnack: 'Refrigerio Vespertino',
+    dinner: 'Cena',
+    otherMeal: 'Otro/Refrigerio',
     mainIngredientQ: '¿Cuál es el ingrediente principal?',
     chicken: 'Pollo',
     beef: 'Res',
@@ -3321,10 +3331,10 @@ const LANG = {
     baked: 'Horneado',
     cookingNotSure: 'No estoy seguro',
     portionSizeQ: '¿Cuánto comiste?',
-    portionSmall: 'Pequeño (aperitivo/guarnición)',
-    portionMedium: 'Mediano (porción regular)',
-    portionLarge: 'Grande (generoso/bufé)',
-    portionHuge: 'Enorme (múltiples porciones)',
+    portionSmall: 'Pequeño (120g • aperitivo)',
+    portionMedium: 'Mediano (180g • regular)',
+    portionLarge: 'Grande (270g • generoso)',
+    portionHuge: 'Enorme (400g • múltiple)',
     additionsQ: '¿Qué más agregaste?',
     addButter: 'Mantequilla/Aceite',
     addCheese: 'Queso',
@@ -3914,13 +3924,12 @@ function openManualMealModal() {
   _manualMealQuestionnaire = {
     mealName: '',
     mealType: 'lunch',
-    mealTime: new Date().toTimeString().slice(0, 5),
     foodType: 'chicken',
     protein: null,
     cookingMethod: 'grilled',
     portionSize: 'medium',
     additions: [],
-    accuracy: 'estimate',
+    accuracy: 'reasonable',
     notes: ''
   };
   
@@ -3954,32 +3963,16 @@ function renderManualMealScreen() {
   let html = '';
   
   switch (_manualMealCurrentScreen) {
-    case 0: // Screen 1: Basic Info
+    case 0: // Screen 1: Meal Type Selection
       html = `
-        <h2 style="color:var(--t1); margin-bottom:20px;">${T('manualMealQuest')}</h2>
-        <div style="margin-bottom:16px;">
-          <label style="color:var(--t2); display:block; margin-bottom:6px; font-weight:500;">${T('mealNameLabel')}</label>
-          <input type="text" id="q-mealName" value="${_manualMealQuestionnaire.mealName}"
-            placeholder="${T('mealNamePlaceholder')}"
-            style="width:100%; padding:10px; border:1px solid var(--b1); border-radius:6px;
-              background:var(--sf); color:var(--t1); box-sizing:border-box;">
-        </div>
-        <div style="margin-bottom:16px;">
-          <label style="color:var(--t2); display:block; margin-bottom:6px; font-weight:500;">${T('mealTypeLabel')}</label>
-          <select id="q-mealType" style="width:100%; padding:10px; border:1px solid var(--b1);
-            border-radius:6px; background:var(--sf); color:var(--t1); box-sizing:border-box;">
-            <option value="breakfast" ${_manualMealQuestionnaire.mealType === 'breakfast' ? 'selected' : ''}>${T('breakfast')}</option>
-            <option value="snack" ${_manualMealQuestionnaire.mealType === 'snack' ? 'selected' : ''}>Snack</option>
-            <option value="lunch" ${_manualMealQuestionnaire.mealType === 'lunch' ? 'selected' : ''}>${T('lunch')}</option>
-            <option value="dinner" ${_manualMealQuestionnaire.mealType === 'dinner' ? 'selected' : ''}>${T('dinner')}</option>
-            <option value="other" ${_manualMealQuestionnaire.mealType === 'other' ? 'selected' : ''}>Other</option>
-          </select>
-        </div>
-        <div style="margin-bottom:16px;">
-          <label style="color:var(--t2); display:block; margin-bottom:6px; font-weight:500;">${T('mealTimeLabel')}</label>
-          <input type="time" id="q-mealTime" value="${_manualMealQuestionnaire.mealTime}"
-            style="width:100%; padding:10px; border:1px solid var(--b1); border-radius:6px;
-              background:var(--sf); color:var(--t1); box-sizing:border-box;">
+        <h2 style="color:var(--t1); margin-bottom:20px;">${T('mealTypeLabel')}</h2>
+        <div style="display:grid; gap:10px;">
+          <button onclick="updateManualMealQuestionnaire('mealType', 'breakfast');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'breakfast' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'breakfast' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('breakfast')}</button>
+          <button onclick="updateManualMealQuestionnaire('mealType', 'morningSnack');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'morningSnack' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'morningSnack' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('morningSnack')}</button>
+          <button onclick="updateManualMealQuestionnaire('mealType', 'lunch');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'lunch' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'lunch' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('lunch')}</button>
+          <button onclick="updateManualMealQuestionnaire('mealType', 'afternoonSnack');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'afternoonSnack' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'afternoonSnack' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('afternoonSnack')}</button>
+          <button onclick="updateManualMealQuestionnaire('mealType', 'dinner');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'dinner' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'dinner' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('dinner')}</button>
+          <button onclick="updateManualMealQuestionnaire('mealType', 'other');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'other' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'other' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('otherMeal')}</button>
         </div>
         ${renderManualMealButtons()}
       `;
@@ -4056,7 +4049,7 @@ function renderManualMealScreen() {
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('portionSizeQ')}</h2>
         <div style="display:grid; gap:10px;">
           ${['small', 'medium', 'large', 'huge'].map(size => `
-            <label style="display:flex; align-items:center; padding:12px; border:2px solid ${_manualMealQuestionnaire.portionSize === size ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.portionSize === size ? 'var(--s1)' : 'transparent'};">
+            <label style="display:flex; align-items:center; padding:14px; border:2px solid ${_manualMealQuestionnaire.portionSize === size ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.portionSize === size ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
               <input type="radio" name="portionSize" value="${size}" 
                 ${_manualMealQuestionnaire.portionSize === size ? 'checked' : ''}
                 onclick="updateManualMealQuestionnaire('portionSize', '${size}')"

@@ -3004,6 +3004,9 @@ const LANG = {
     manualMeals: 'Manual Meals',
     deleteMeal: 'Delete',
     editMeal: 'Edit',
+    saveAsTemplate: '💾 Save as Template',
+    selectPreviousMeal: 'Use Previous Meal',
+    createNew: 'Create New Meal',
     
     // Quote of the Day
     quoteOfDay: 'Quote of the Day',
@@ -3411,6 +3414,9 @@ const LANG = {
     manualMeals: 'Comidas Manuales',
     deleteMeal: 'Eliminar',
     editMeal: 'Editar',
+    saveAsTemplate: '💾 Guardar como Plantilla',
+    selectPreviousMeal: 'Usar Comida Anterior',
+    createNew: 'Crear Nueva Comida',
     
     // Cita del Día
     quoteOfDay: 'Cita del Día',
@@ -3980,7 +3986,9 @@ function openManualMealModal() {
     additions: [],
     garnish: [],
     accuracy: 'reasonable',
-    notes: ''
+    notes: '',
+    isFromTemplate: false,
+    templateId: null
   };
   
   const html = `
@@ -3988,13 +3996,26 @@ function openManualMealModal() {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.7); display: flex; align-items: center;
       justify-content: center; z-index: 9999;
-    ">
+    " onclick="if(event.target.id==='manual-meal-modal') closeManualMealModal();">
       <div style="
-        background: var(--bg); border-radius: 12px; padding: 24px;
-        max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        background: var(--bg); border-radius: 12px; padding: 0;
+        max-width: 500px; width: 90%; max-height: 80vh; overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3); display: flex; flex-direction: column;
       ">
-        <div id="manual-meal-content"></div>
+        <div style="
+          display: flex; justify-content: space-between; align-items: center;
+          padding: 16px 24px; border-bottom: 1px solid var(--b1); flex-shrink: 0;
+        ">
+          <h3 style="color: var(--t1); margin: 0; font-size: 18px; font-weight: 600;">${T('manualMealTitle') || 'Add Manual Meal'}</h3>
+          <button onclick="closeManualMealModal()" style="
+            background: none; border: none; color: var(--t2); font-size: 24px;
+            cursor: pointer; padding: 0; width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center; transition: color .2s;
+          " onmouseover="this.style.color='var(--t1)'" onmouseout="this.style.color='var(--t2)'">
+            ✕
+          </button>
+        </div>
+        <div id="manual-meal-content" style="overflow-y: auto; padding: 24px; flex: 1;"></div>
       </div>
     </div>
   `;
@@ -4013,8 +4034,47 @@ function renderManualMealScreen() {
   let html = '';
   
   switch (_manualMealCurrentScreen) {
-    case 0: // Screen 1: Meal Type Selection
+    case -1: // Screen 0b: Template Selection (shown after meal type if templates exist)
+      const templates = S.profile.mealTemplates || [];
+      if (templates.length === 0) {
+        _manualMealCurrentScreen = 0;
+        renderManualMealScreen();
+        return;
+      }
       html = `
+        <h2 style="color:var(--t1); margin-bottom:20px;">${T('selectPreviousMeal') || 'Quick Select: Previous Meals'}</h2>
+        <div style="display:grid; gap:10px; margin-bottom:20px;">
+          ${templates.map(t => `
+            <button onclick="loadMealTemplate('${t.id}')" style="
+              padding:14px; border:1px solid var(--b1); border-radius:8px; 
+              background:var(--sf); color:var(--t1); cursor:pointer; font-weight:600; 
+              text-align:left; transition:all .2s; font-size:14px;
+            ">${t.name} <span style="color:var(--t3); font-size:12px;">- ${T(t.mealType)}</span></button>
+          `).join('')}
+        </div>
+        <button onclick="_manualMealCurrentScreen = 0; renderManualMealScreen();" style="
+          width:100%; padding:12px; background:var(--s2); border:1px solid var(--b1); 
+          border-radius:8px; color:var(--t2); cursor:pointer; font-weight:600;
+        ">${T('createNew') || 'Create New Meal'}</button>
+      `;
+      break;
+      
+    case 0: // Screen 1: Meal Type Selection
+      // Show template selection first if templates exist
+      const hasTemplates = (S.profile.mealTemplates || []).length > 0;
+      let templateHtml = '';
+      if (hasTemplates && !_manualMealQuestionnaire.isFromTemplate) {
+        templateHtml = `
+          <button onclick="_manualMealCurrentScreen = -1; renderManualMealScreen();" style="
+            width:100%; padding:12px; background:rgba(16,185,129,.12); border:2px solid var(--ac);
+            border-radius:8px; color:var(--ac); cursor:pointer; font-weight:600; margin-bottom:20px; font-size:14px;
+          " title="Use one of your saved meal templates">
+            ⏱ ${T('selectPreviousMeal') || 'Use Previous Meal'}
+          </button>
+        `;
+      }
+      html = `
+        ${templateHtml}
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('mealTypeLabel')}</h2>
         <div style="display:grid; gap:10px;">
           <button onclick="updateManualMealQuestionnaire('mealType', 'breakfast');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'breakfast' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'breakfast' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('breakfast')}</button>
@@ -4262,7 +4322,12 @@ function renderManualMealScreen() {
           </div>
           ${_manualMealQuestionnaire.notes ? `<div style="color:var(--t3); font-size:12px; margin-top:8px;"><strong>${T('notesLabel')}:</strong> ${_manualMealQuestionnaire.notes}</div>` : ''}
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <button onclick="saveMealAsTemplate()" style="
+          width:100%; padding:10px; background:rgba(139,92,246,.12); border:1px solid var(--pro); 
+          border-radius:8px; color:var(--pro); cursor:pointer; font-weight:600; font-size:13px; 
+          margin-bottom:12px;
+        ">💾 Save as Template</button>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
           <button onclick="closeManualMealModal()" style="
             padding:12px; background:var(--s1); border:1px solid var(--b1); border-radius:8px;
             color:var(--t1); cursor:pointer; font-weight:500;
@@ -4362,6 +4427,57 @@ function removeManualMealGarnish(idx) {
   renderManualMealScreen();
 }
 
+function saveMealAsTemplate() {
+  const templateName = prompt('Template name:', _manualMealQuestionnaire.mealName);
+  if (!templateName || !templateName.trim()) return;
+  
+  if (!S.profile.mealTemplates) S.profile.mealTemplates = [];
+  
+  const template = {
+    id: `template_${Date.now()}`,
+    name: templateName.trim(),
+    mealType: _manualMealQuestionnaire.mealType,
+    foodType: _manualMealQuestionnaire.foodType,
+    protein: _manualMealQuestionnaire.protein,
+    additionalProteinType: _manualMealQuestionnaire.additionalProteinType,
+    cookingMethod: _manualMealQuestionnaire.cookingMethod,
+    portionSize: _manualMealQuestionnaire.portionSize,
+    additions: [..._manualMealQuestionnaire.additions],
+    garnish: [..._manualMealQuestionnaire.garnish],
+    accuracy: _manualMealQuestionnaire.accuracy,
+    notes: _manualMealQuestionnaire.notes
+  };
+  
+  S.profile.mealTemplates.push(template);
+  DB.set('profile', S.profile);
+  flash(`Template '${templateName}' saved!`, 'success');
+}
+
+function loadMealTemplate(templateId) {
+  if (!S.profile.mealTemplates) return;
+  const template = S.profile.mealTemplates.find(t => t.id === templateId);
+  if (!template) return;
+  
+  // Load template data into questionnaire
+  _manualMealQuestionnaire.mealName = template.name;
+  _manualMealQuestionnaire.mealType = template.mealType;
+  _manualMealQuestionnaire.foodType = template.foodType;
+  _manualMealQuestionnaire.protein = template.protein;
+  _manualMealQuestionnaire.additionalProteinType = template.additionalProteinType;
+  _manualMealQuestionnaire.cookingMethod = template.cookingMethod;
+  _manualMealQuestionnaire.portionSize = template.portionSize;
+  _manualMealQuestionnaire.additions = [...(template.additions || [])];
+  _manualMealQuestionnaire.garnish = [...(template.garnish || [])];
+  _manualMealQuestionnaire.accuracy = template.accuracy;
+  _manualMealQuestionnaire.notes = template.notes;
+  _manualMealQuestionnaire.isFromTemplate = true;
+  _manualMealQuestionnaire.templateId = templateId;
+  
+  // Skip to review screen
+  _manualMealCurrentScreen = 8;
+  renderManualMealScreen();
+}
+
 function closeManualMealModal() {
   const modal = document.getElementById('manual-meal-modal');
   if (modal) modal.remove();
@@ -4387,9 +4503,11 @@ async function finalizeManualMeal() {
     questionnaire: {
       foodType: _manualMealQuestionnaire.foodType,
       protein: _manualMealQuestionnaire.protein,
+      additionalProteinType: _manualMealQuestionnaire.additionalProteinType,
       cookingMethod: _manualMealQuestionnaire.cookingMethod,
       portionSize: _manualMealQuestionnaire.portionSize,
       additions: _manualMealQuestionnaire.additions,
+      garnish: _manualMealQuestionnaire.garnish,
       accuracy: _manualMealQuestionnaire.accuracy
     },
     macros: macros,
@@ -4398,10 +4516,67 @@ async function finalizeManualMeal() {
   };
   
   // Save the meal
-  await saveManualMeal(S.viewDate, meal);
+  try {
+    const result = await saveManualMeal(S.viewDate, meal);
+    if (result) {
+      closeManualMealModal();
+      renderToday();
+    }
+  } catch (err) {
+    console.error('Error finalizing meal:', err);
+    flash('Error saving meal', 'error');
+  }
+}
+
+function saveMealAsTemplate() {
+  const templateName = prompt('Template name:', _manualMealQuestionnaire.mealName);
+  if (!templateName || !templateName.trim()) return;
   
-  closeManualMealModal();
-  renderToday();
+  if (!S.profile.mealTemplates) S.profile.mealTemplates = [];
+  
+  const template = {
+    id: `template_${Date.now()}`,
+    name: templateName.trim(),
+    mealType: _manualMealQuestionnaire.mealType,
+    foodType: _manualMealQuestionnaire.foodType,
+    protein: _manualMealQuestionnaire.protein,
+    additionalProteinType: _manualMealQuestionnaire.additionalProteinType,
+    cookingMethod: _manualMealQuestionnaire.cookingMethod,
+    portionSize: _manualMealQuestionnaire.portionSize,
+    additions: [..._manualMealQuestionnaire.additions],
+    garnish: [..._manualMealQuestionnaire.garnish],
+    accuracy: _manualMealQuestionnaire.accuracy,
+    notes: _manualMealQuestionnaire.notes
+  };
+  
+  S.profile.mealTemplates.push(template);
+  DB.set('profile', S.profile);
+  flash(`Template '${templateName}' saved!`, 'success');
+}
+
+function loadMealTemplate(templateId) {
+  if (!S.profile.mealTemplates) return;
+  const template = S.profile.mealTemplates.find(t => t.id === templateId);
+  if (!template) return;
+  
+  // Load template data into questionnaire
+  _manualMealQuestionnaire.mealName = template.name;
+  _manualMealQuestionnaire.mealType = template.mealType;
+  _manualMealQuestionnaire.foodType = template.foodType;
+  _manualMealQuestionnaire.protein = template.protein;
+  _manualMealQuestionnaire.additionalProteinType = template.additionalProteinType;
+  _manualMealQuestionnaire.cookingMethod = template.cookingMethod;
+  _manualMealQuestionnaire.portionSize = template.portionSize;
+  _manualMealQuestionnaire.additions = [...(template.additions || [])];
+  _manualMealQuestionnaire.garnish = [...(template.garnish || [])];
+  _manualMealQuestionnaire.accuracy = template.accuracy;
+  _manualMealQuestionnaire.notes = template.notes;
+  _manualMealQuestionnaire.isFromTemplate = true;
+  _manualMealQuestionnaire.templateId = templateId;
+  
+  // Skip to review screen
+  _manualMealCurrentScreen = 8;
+  renderManualMealScreen();
 }
 
 // ═══════════════════════════════════════════════════════════════

@@ -249,16 +249,561 @@
 
 ---
 
-## 📝 Git Commit History (This Session)
+## 🎯 Phase 3: Real-World Meal Tracking + Analytics (UPCOMING)
 
-| Commit | Date | Feature | Status |
-|--------|------|---------|--------|
-| 902e210 | Apr 29 | Simplified daily cost card | ✅ |
-| bf0b2fe | Apr 30 | Mindfulness overhaul + persistence | ✅ |
-| dee7f86 | Apr 30 | Body Love acupressure (v1) | ✅ |
-| 97cf0d6 | Apr 30 | Fix Body Love duration parameter | ✅ |
-| 34c675a | Apr 30 | Body Love visuals + fix flashing | ✅ |
-| 9091ab2 | May 1 | Body Scan MBSR visualization | ✅ |
+### Feature: Manual Meal Logger + Consumption Analytics
+
+**Status:** 🟢 PLANNING  
+**Priority:** HIGH (Revolutionary feature)  
+**Complexity:** HIGH (substantial implementation)
+
+---
+
+## 📋 Detailed Specification: Manual Meal Logging System
+
+### 1. PROBLEM STATEMENT
+
+Current limitation: App only tracks **planned meals** (selected/completed). Real-world scenario:
+- User goes out for dinner with friends
+- Can't follow planned meal
+- No way to log what they actually ate
+- Consumption data becomes inaccurate
+
+**Solution:** Manual meal logger + questionnaire-based macro estimation
+
+---
+
+## 2. DATA STRUCTURES
+
+### New Profile Fields
+
+```javascript
+// In S.profile:
+{
+  // Existing fields...
+  
+  // NEW: Manual meals storage
+  manualMeals: {
+    "2026-05-01": [
+      {
+        id: "manual_${timestamp}",
+        timestamp: "2026-05-01T19:30:00Z",
+        mealName: "Restaurant Pasta",
+        mealType: "lunch", // or "dinner", "snack", etc.
+        source: "manual", // vs "planned"
+        
+        // Questionnaire answers
+        questionnaire: {
+          foodType: "pasta", // Main ingredient
+          protein: "chicken", // Protein source (optional)
+          cookingMethod: "fried", // boiled/grilled/fried/raw/sauteed
+          portionSize: "large", // small/medium/large
+          additions: ["oil", "cheese"], // Array of add-ons
+          accuracy: "estimate" // "measured" or "estimate"
+        },
+        
+        // Calculated macros
+        macros: {
+          kcal: 850,
+          protein: 28,
+          carbs: 95,
+          fat: 32,
+          confidence: 0.75 // 0-1 confidence score
+        },
+        
+        // Metadata
+        notes: "Restaurant meal - best guess",
+        isLogged: true
+      }
+    ]
+  },
+  
+  // NEW: Consumption history (for analytics)
+  consumptionLog: {
+    "2026-05-01": {
+      planned: { kcal: 2100, protein: 150, carbs: 220, fat: 70 },
+      actual: { kcal: 2350, protein: 155, carbs: 245, fat: 95 },
+      variance: { kcal: 250, protein: 5, carbs: 25, fat: 25 },
+      mealCount: 6 // 5 planned + 1 manual
+    }
+  }
+}
+```
+
+### Daily Log Structure Update
+
+```javascript
+// In daily logs (getLog(date)):
+{
+  completed: ["breakfast", "snack1"], // Tracked planned meals
+  manualMeals: ["manual_1234567890"], // Manual meal IDs logged today
+  actualConsumption: {
+    kcal: 1850,
+    protein: 125,
+    carbs: 200,
+    fat: 60
+    // Calculated from: planned meals (completed) + manual meals
+  },
+  water: 8
+}
+```
+
+---
+
+## 3. USER FLOW
+
+### 3.1 Manual Meal Input Button (TODAY Tab)
+
+**Location:** Below meal cards, above quote
+```
+┌─────────────────────────────────┐
+│ [+ Add Manual Meal]             │
+└─────────────────────────────────┘
+```
+
+**On click:** Opens modal with questionnaire
+
+---
+
+### 3.2 Questionnaire Modal
+
+**Screen 1: Basic Info**
+```
+What did you eat today?
+├─ Meal name: [text input] "Restaurant Pasta"
+├─ Meal type: [dropdown] "Lunch" / "Dinner" / "Snack" / "Other"
+└─ When did you eat it? [time picker] "7:30 PM"
+```
+
+**Screen 2: Food Classification**
+```
+What's the main ingredient?
+├─ [Radio buttons]
+│  ○ Chicken
+│  ○ Beef
+│  ○ Fish/Seafood
+│  ○ Pork
+│  ○ Pasta/Rice/Grains
+│  ○ Vegetables
+│  ○ Eggs
+│  ○ Dairy
+│  ○ Other [text]
+└─ Select one
+```
+
+**Screen 3: Protein Source (if applicable)**
+```
+Does it have additional protein?
+├─ ○ Yes: [dropdown] Chicken / Beef / Fish / Eggs / Tofu / Beans
+├─ ○ No (just the main ingredient)
+└─ ○ Mixed (multiple proteins)
+```
+
+**Screen 4: Cooking Method**
+```
+How was it cooked?
+├─ ○ Raw
+├─ ○ Boiled/Steamed
+├─ ○ Grilled
+├─ ○ Fried/Deep-fried
+├─ ○ Sautéed
+├─ ○ Baked
+└─ ○ Not sure
+```
+
+**Screen 5: Portion Size**
+```
+How much did you eat?
+├─ ○ Small (appetizer/side)
+├─ ○ Medium (regular serving)
+├─ ○ Large (generous/buffet)
+├─ ○ Huge (multiple servings)
+└─ [Slider showing portion estimates in grams]
+```
+
+**Screen 6: Additions/Extras**
+```
+What else did you add?
+├─ ☐ Butter/Oil
+├─ ☐ Cheese
+├─ ☐ Sauce (heavy/creamy)
+├─ ☐ Bacon/Meat topping
+├─ ☐ Nuts
+├─ ☐ Dressing/Mayo
+└─ ☐ Dessert/Sweet
+```
+
+**Screen 7: Confidence**
+```
+How confident are you about this estimate?
+├─ ○ Rough guess (±300 kcal)
+├─ ○ Reasonable estimate (±150 kcal)
+├─ ○ Pretty accurate (±50 kcal)
+└─ [Notes: Optional comments]
+```
+
+**Final:** Review + Save
+```
+Estimated macros:
+├─ 850 kcal
+├─ 28g protein
+├─ 95g carbs
+├─ 32g fat
+└─ Confidence: 75%
+
+[Cancel] [Adjust] [Save Meal]
+```
+
+---
+
+## 4. MACRO ESTIMATION ENGINE
+
+### 4.1 Calculation Logic
+
+Based on questionnaire answers, calculate macros using:
+- **Base nutrition database** (simplified, ~30 common foods)
+- **Multipliers** for cooking method (fat changes based on frying vs grilling)
+- **Portion adjustments** (small/medium/large = ×0.6 / ×1.0 / ×1.5)
+- **Addition penalties** (oil = +180 kcal, cheese = +110 kcal per serving, etc.)
+
+### 4.2 Base Database Example
+
+```javascript
+const MACRO_ESTIMATES = {
+  // Main food sources (per 100g cooked)
+  chicken: { kcal: 165, protein: 31, carbs: 0, fat: 3.6 },
+  beef: { kcal: 250, protein: 26, carbs: 0, fat: 17 },
+  fish: { kcal: 130, protein: 22, carbs: 0, fat: 5 },
+  pasta: { kcal: 131, protein: 5, carbs: 25, fat: 1.1 },
+  rice: { kcal: 130, protein: 2.7, carbs: 28, fat: 0.3 },
+  vegetables: { kcal: 35, protein: 2, carbs: 7, fat: 0.4 },
+  eggs: { kcal: 155, protein: 13, carbs: 1.1, fat: 11 },
+  
+  // Cooking method multipliers (fat impact)
+  cooking: {
+    raw: { fatMult: 1.0 },
+    boiled: { fatMult: 1.1 }, // minimal oil
+    grilled: { fatMult: 1.3 }, // some oil
+    sauteed: { fatMult: 1.8 }, // medium oil
+    fried: { fatMult: 2.5 }, // lots of oil
+    baked: { fatMult: 1.4 }
+  },
+  
+  // Additions (per serving)
+  additions: {
+    butter: { kcal: 180, fat: 20 },
+    oil: { kcal: 180, fat: 20 },
+    cheese: { kcal: 110, protein: 7, fat: 9 },
+    bacon: { kcal: 80, protein: 6, fat: 6 },
+    sauce_heavy: { kcal: 150, carbs: 5, fat: 12 },
+    nuts: { kcal: 200, protein: 7, fat: 14 }
+  },
+  
+  // Portion multipliers
+  portions: {
+    small: 0.6,
+    medium: 1.0,
+    large: 1.5,
+    huge: 2.2
+  }
+};
+```
+
+### 4.3 Calculation Function
+
+```javascript
+function estimateMealMacros(questionnaire) {
+  const { foodType, protein, cookingMethod, portionSize, additions, accuracy } = questionnaire;
+  
+  // Start with base food
+  let macros = { ...MACRO_ESTIMATES[foodType] };
+  
+  // Apply portion size
+  const portionMult = MACRO_ESTIMATES.portions[portionSize] || 1.0;
+  Object.keys(macros).forEach(key => macros[key] *= portionMult);
+  
+  // Apply cooking method fat multiplier
+  if (cookingMethod && MACRO_ESTIMATES.cooking[cookingMethod]) {
+    macros.fat *= MACRO_ESTIMATES.cooking[cookingMethod].fatMult;
+    macros.kcal = calculateKcal(macros); // Recalculate calories
+  }
+  
+  // Add protein source if different from main
+  if (protein && protein !== foodType) {
+    const proteinMacros = { ...MACRO_ESTIMATES[protein] };
+    Object.keys(proteinMacros).forEach(key => {
+      macros[key] = (macros[key] || 0) + proteinMacros[key] * portionMult;
+    });
+  }
+  
+  // Add extras
+  if (additions && additions.length > 0) {
+    additions.forEach(add => {
+      const addMacros = MACRO_ESTIMATES.additions[add];
+      if (addMacros) {
+        Object.keys(addMacros).forEach(key => {
+          macros[key] = (macros[key] || 0) + addMacros[key];
+        });
+      }
+    });
+  }
+  
+  // Calculate confidence (lower accuracy = lower confidence)
+  const confidenceMap = { measured: 0.95, estimate: 0.70 };
+  const confidence = confidenceMap[accuracy] || 0.70;
+  
+  return {
+    ...macros,
+    kcal: Math.round(macros.kcal),
+    protein: Math.round(macros.protein),
+    carbs: Math.round(macros.carbs),
+    fat: Math.round(macros.fat),
+    confidence: confidence
+  };
+}
+
+function calculateKcal(macros) {
+  return (macros.protein * 4) + (macros.carbs * 4) + (macros.fat * 9);
+}
+```
+
+---
+
+## 5. IMPLEMENTATION PHASES
+
+### Phase 1: Data Structure & UI Foundation
+- ✅ Add S.profile.manualMeals structure
+- ✅ Add S.profile.consumptionLog structure
+- ✅ Create "Add Manual Meal" button (TODAY tab)
+- ✅ Build questionnaire modal UI (7 screens)
+- ⏳ Wire button to modal
+
+### Phase 2: Macro Estimation Engine
+- ✅ Build MACRO_ESTIMATES database
+- ✅ Implement estimateMealMacros() function
+- ✅ Add calculation logic with all multipliers
+- ✅ Integrate questionnaire → macros pipeline
+- ⏳ Test accuracy with real food examples
+
+### Phase 3: Manual Meal Storage & Display
+- ✅ Save manual meals to S.profile.manualMeals
+- ✅ Persist to Supabase
+- ✅ Display manual meals on TODAY tab (separate section)
+- ✅ Add edit/delete functionality for manual meals
+- ⏳ Show actual consumption card (planned + manual totals)
+
+### Phase 4: Consumption Analytics
+- ✅ Build consumptionLog auto-calculator
+- ✅ Track planned vs actual daily comparison
+- ✅ Update WEEK/MONTH views with consumption data
+- ✅ Add PROGRESS tab analytics section
+  - Charts: Kcal over time (planned vs actual)
+  - Charts: Macro breakdown (planned vs actual)
+  - Variance analysis (how often user hits macros)
+  - Consistency trends
+- ⏳ Style and polish
+
+---
+
+## 6. KEY FUNCTIONS TO IMPLEMENT
+
+### Data Management
+```javascript
+// Save manual meal
+async function saveManualMeal(date, mealData) { }
+
+// Delete manual meal
+async function deleteManualMeal(date, mealId) { }
+
+// Get all manual meals for date
+function getManualMeals(date) { }
+
+// Calculate actual consumption (planned + manual)
+function calculateActualConsumption(date) { }
+```
+
+### UI Components
+```javascript
+// Open questionnaire modal
+function openManualMealModal() { }
+
+// Render questionnaire screen
+function renderQuestionnaireScreen(screenNumber) { }
+
+// Render manual meals section on TODAY
+function renderManualMealsSection() { }
+
+// Render consumption comparison card
+function renderActualConsumptionCard() { }
+```
+
+### Analytics
+```javascript
+// Get consumption history (last 30 days)
+function getConsumptionHistory(days = 30) { }
+
+// Calculate variance patterns
+function analyzeConsumptionVariance(startDate, endDate) { }
+
+// Generate consumption analytics for PROGRESS tab
+function generateConsumptionAnalytics() { }
+```
+
+---
+
+## 7. UI PLACEMENT & INTEGRATION
+
+### TODAY Tab
+```
+┌─────────────────────────────────────────┐
+│ TODAY                                   │
+├─────────────────────────────────────────┤
+│ [Macro Ring / Cost Card]                │
+├─────────────────────────────────────────┤
+│ Planned Meals:                          │
+│ ├─ 🌅 Breakfast ✓                       │
+│ ├─ 🍎 Snack 1  ✓                        │
+│ ├─ ☀️  Lunch                            │
+│ ├─ 🥜 Snack 2                           │
+│ └─ 🌙 Dinner                            │
+├─────────────────────────────────────────┤
+│ [+ Add Manual Meal] [Actual Consumption]│
+├─────────────────────────────────────────┤
+│ Manual Meals:                           │
+│ ├─ 🍝 Restaurant Pasta (19:30)         │
+│ │  850 kcal | 28P 95C 32F | [Edit][X]  │
+│ └─ 🍷 Wine (22:00)                     │
+│    150 kcal | 0P 5C 0F | [Edit][X]     │
+├─────────────────────────────────────────┤
+│ Actual Consumption Today:                │
+│ ├─ Planned: 2100 kcal (150P 220C 70F)   │
+│ ├─ Manual:  1000 kcal (28P 100C 32F)    │
+│ └─ Total:   3100 kcal (178P 320C 102F)  │
+│   Variance: +1000 kcal, +28P, +100C     │
+├─────────────────────────────────────────┤
+│ [Quote of the day]                      │
+└─────────────────────────────────────────┘
+```
+
+### PROGRESS Tab (NEW SECTION)
+```
+┌─────────────────────────────────────────┐
+│ CONSUMPTION ANALYTICS                   │
+├─────────────────────────────────────────┤
+│ Last 7 Days:                            │
+│ ├─ Avg Kcal: 2100 (planned) vs 2250     │
+│ ├─ Protein Hit Rate: 85% of days        │
+│ ├─ Carbs Variance: ±120 kcal avg        │
+│ └─ Fat Consistency: 89%                 │
+├─────────────────────────────────────────┤
+│ [Chart: Kcal over time (7/30/90 days)]  │
+│ [Chart: Macro breakdown - Planned vs Act]│
+│ [Table: Daily variance report]          │
+└─────────────────────────────────────────┘
+```
+
+---
+
+## 8. TRANSLATION KEYS NEEDED
+
+```javascript
+// English (LANG.en)
+{
+  manualMealButton: "Add Manual Meal",
+  questionnaire: {
+    title: "What did you eat?",
+    mealName: "What's the meal called?",
+    mealType: "Meal type",
+    mainIngredient: "Main ingredient?",
+    proteinSource: "Additional protein?",
+    cookingMethod: "How was it cooked?",
+    portionSize: "Portion size?",
+    additions: "Added anything?",
+    confidence: "How confident?",
+    review: "Review your estimate",
+    save: "Save Meal",
+    cancel: "Cancel"
+  },
+  consumption: {
+    actualToday: "Actual Consumption Today",
+    planned: "Planned",
+    manual: "Manual",
+    total: "Total",
+    variance: "Variance",
+    analytics: "Consumption Analytics"
+  }
+}
+
+// Spanish (LANG.es)
+{
+  manualMealButton: "Agregar Comida Manual",
+  // ... etc
+}
+```
+
+---
+
+## 9. TECHNICAL CONSIDERATIONS
+
+### Performance
+- Manual meals stored in profile (not separate DB calls)
+- Consumption calculations cached (recalculate on meal add/delete only)
+- Questionnaire screens lazy-load (not all at once)
+
+### Data Integrity
+- Validate macro estimates (no negative values)
+- Confidence scoring to flag unreliable estimates
+- Manual meals separated from planned (clear distinction)
+
+### User Experience
+- Questionnaire can be skipped (simplified mode: just name + estimated kcal)
+- Manual meal editing (not just delete)
+- Clear visual distinction between planned and actual meals
+- Undo functionality (within same session)
+
+### Backward Compatibility
+- Old profiles without manualMeals field won't break
+- Initialize on first manual meal save
+- No impact on existing planned meal tracking
+
+---
+
+## 10. SUCCESS METRICS
+
+1. ✅ Manual meals correctly estimated within ±150 kcal (75% of the time)
+2. ✅ Questionnaire completes in <2 minutes
+3. ✅ Consumption analytics accurately reflect planned vs actual
+4. ✅ No data loss or persistence issues
+5. ✅ Bilingual support complete
+6. ✅ Mobile responsive
+
+---
+
+## 11. TIMELINE ESTIMATE
+
+- Phase 1: 1-2 hours (data structures + modal UI)
+- Phase 2: 2-3 hours (macro engine + testing)
+- Phase 3: 1-2 hours (storage + display)
+- Phase 4: 2-3 hours (analytics + PROGRESS tab)
+
+**Total: 6-10 hours of focused development**
+
+---
+
+## 12. RISKS & MITIGATIONS
+
+| Risk | Mitigation |
+|------|-----------|
+| Macro estimates too inaccurate | Add confidence scoring, allow manual adjustment |
+| Questionnaire too complex | Provide simplified mode + skip options |
+| Performance with large data | Cache calculations, limit analytics window |
+| User confusion (planned vs actual) | Clear visual separation, color coding |
+
+---
+
+**Status:** Ready for Phase 1 implementation  
+**Complexity Level:** High (but manageable)  
+**Innovation Level:** ⭐⭐⭐⭐⭐ Revolutionary
 
 ---
 

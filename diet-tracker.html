@@ -4492,19 +4492,37 @@ function toggleManualMealAddition(addition) {
   renderManualMealScreen();
 }
 
+const GARNISH_SIZE_GRAMS = {
+  small: 50,
+  medium: 100,
+  large: 150
+};
+
 function addManualMealGarnish(type) {
-  // Show size selector
   showGarnishSizeSelector(type);
 }
 
+function removeGarnishSizeSelector() {
+  const overlay = document.getElementById('garnish-size-overlay');
+  if (overlay) overlay.remove();
+}
+
 function showGarnishSizeSelector(type) {
+  removeGarnishSizeSelector();
   const sizeHtml = `
-    <div style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--sf); padding:20px; border-radius:12px; z-index:10000; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
-      <div style="color:var(--t1); font-weight:600; margin-bottom:16px;">${T('garnish' + type.charAt(0).toUpperCase() + type.slice(1))} - ${T('selectSize')}</div>
-      <div style="display:grid; gap:10px;">
-        <button onclick="addGarnishWithSize('${type}', 'small'); document.querySelector('[style*=\"position:fixed\"]').parentElement.removeChild(document.querySelector('[style*=\"position:fixed\"]'));" style="padding:10px; background:var(--ac); border:none; color:#fff; border-radius:6px; cursor:pointer; font-weight:600;">${T('garnishSmall')}</button>
-        <button onclick="addGarnishWithSize('${type}', 'medium'); document.querySelector('[style*=\"position:fixed\"]').parentElement.removeChild(document.querySelector('[style*=\"position:fixed\"]'));" style="padding:10px; background:var(--ac); border:none; color:#fff; border-radius:6px; cursor:pointer; font-weight:600;">${T('garnishMedium')}</button>
-        <button onclick="addGarnishWithSize('${type}', 'large'); document.querySelector('[style*=\"position:fixed\"]').parentElement.removeChild(document.querySelector('[style*=\"position:fixed\"]'));" style="padding:10px; background:var(--ac); border:none; color:#fff; border-radius:6px; cursor:pointer; font-weight:600;">${T('garnishLarge')}</button>
+    <div id="garnish-size-overlay" onclick="if(event.target.id==='garnish-size-overlay') removeGarnishSizeSelector()" style="position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:10000; display:flex; align-items:center; justify-content:center;">
+      <div style="background:var(--sf); padding:20px; border-radius:12px; width:min(100%,420px); box-shadow:0 20px 60px rgba(0,0,0,0.5); position:relative;">
+        <button onclick="removeGarnishSizeSelector()" style="position:absolute; top:14px; right:14px; background:none; border:none; color:var(--t2); font-size:20px; cursor:pointer;">✕</button>
+        <div style="color:var(--t1); font-weight:600; margin-bottom:16px;">${T('garnish' + type.charAt(0).toUpperCase() + type.slice(1))} - ${T('selectSize')}</div>
+        <div style="display:grid; gap:10px; margin-bottom:16px;">
+          ${['small', 'medium', 'large'].map(size => `
+            <button onclick="addGarnishWithSize('${type}', '${size}')" style="padding:14px; background:var(--ac); border:none; color:#fff; border-radius:8px; cursor:pointer; font-weight:600; display:flex; justify-content:space-between; align-items:center;">
+              <span>${T('garnish' + size.charAt(0).toUpperCase() + size.slice(1))}</span>
+              <span style="font-size:12px; color:rgba(255,255,255,.85);">${GARNISH_SIZE_GRAMS[size]}g</span>
+            </button>
+          `).join('')}
+        </div>
+        <button onclick="removeGarnishSizeSelector()" style="width:100%; padding:12px; background:var(--s2); border:1px solid var(--b1); color:var(--t2); border-radius:8px; cursor:pointer; font-weight:600;">${T('questCancel') || 'Cancel'}</button>
       </div>
     </div>
   `;
@@ -4512,10 +4530,10 @@ function showGarnishSizeSelector(type) {
 }
 
 function addGarnishWithSize(type, size) {
+  removeGarnishSizeSelector();
   _manualMealQuestionnaire.garnish.push({ type, size });
   renderManualMealScreen();
 }
-
 function removeManualMealGarnish(idx) {
   _manualMealQuestionnaire.garnish.splice(idx, 1);
   renderManualMealScreen();

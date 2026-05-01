@@ -3007,6 +3007,14 @@ const LANG = {
     saveAsTemplate: '💾 Save as Template',
     selectPreviousMeal: 'Use Previous Meal',
     createNew: 'Create New Meal',
+    mealDetails: 'Meal Details',
+    cookingMethod: 'Cooking Method',
+    portionSize: 'Portion Size',
+    additions: 'Additions',
+    garnish: 'Garnish',
+    mealTemplates: 'Meal Templates',
+    noTemplates: 'No meal templates yet',
+    templatesDesc: 'Manage your saved meal templates',
     
     // Quote of the Day
     quoteOfDay: 'Quote of the Day',
@@ -3417,6 +3425,14 @@ const LANG = {
     saveAsTemplate: '💾 Guardar como Plantilla',
     selectPreviousMeal: 'Usar Comida Anterior',
     createNew: 'Crear Nueva Comida',
+    mealDetails: 'Detalles de la Comida',
+    cookingMethod: 'Método de Cocción',
+    portionSize: 'Tamaño de Porción',
+    additions: 'Adiciones',
+    garnish: 'Guarnición',
+    mealTemplates: 'Plantillas de Comidas',
+    noTemplates: 'Sin plantillas de comidas aún',
+    templatesDesc: 'Gestiona tus plantillas de comidas guardadas',
     
     // Cita del Día
     quoteOfDay: 'Cita del Día',
@@ -3912,6 +3928,21 @@ function getManualMeals(date) {
   initManualMealData();
   const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
   return S.profile.manualMeals[dateStr] || [];
+}
+
+async function deleteTemplate(templateId) {
+  if (!confirm('Delete this meal template?')) return;
+  
+  try {
+    if (!S.profile.mealTemplates) S.profile.mealTemplates = [];
+    S.profile.mealTemplates = S.profile.mealTemplates.filter(t => t.id !== templateId);
+    await DB.set('profile', S.profile);
+    flash('Template deleted', 'success');
+    renderSettings();
+  } catch (err) {
+    console.error('Error deleting template:', err);
+    flash('Error deleting template', 'error');
+  }
 }
 
 function updateConsumptionLog(date) {
@@ -4806,29 +4837,40 @@ function renderToday() {
       <div class="view-sub" style="margin-bottom:12px;">${T('manualMeals')}</div>`;
     
     manualMeals.forEach(meal => {
+      const mealId = `mm-${meal.id}`;
       html += `
       <div class="meal-card" style="background:var(--s1); border:1px solid var(--ac);">
-        <div style="padding:12px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <div>
-              <div style="font-weight:600; color:var(--t1);">${meal.mealName}</div>
-              <div style="font-size:11px; color:var(--ac); font-weight:600; margin-top:2px;">${T(meal.mealType || 'lunch')}</div>
-            </div>
-            <div style="display:flex; gap:8px;">
-              <button onclick="deleteManualMeal('${dateStr(S.viewDate)}', '${meal.id}')" style="
-                padding:4px 8px; background:#EF4444; border:none; border-radius:4px;
-                color:#fff; font-size:12px; cursor:pointer;
-              ">${T('deleteMeal')}</button>
+        <div style="display:flex; align-items:center; gap:10px; padding:12px; cursor:pointer;" onclick="toggleMealDetail('${mealId}')">
+          <div style="flex:1; min-width:0;">
+            <div style="font-weight:600; color:var(--t1);">${meal.mealName}</div>
+            <div style="font-size:11px; color:var(--ac); font-weight:600; margin-top:2px;">${T(meal.mealType || 'lunch')}</div>
+            <div style="color:var(--t2); font-size:12px; margin-top:4px;">
+              <span style="margin-right:16px;">${meal.macros.kcal} kcal</span>
+              <span style="color:#8B5CF6; margin-right:8px;">● ${meal.macros.protein}g</span>
+              <span style="color:#F59E0B; margin-right:8px;">● ${meal.macros.carbs}g</span>
+              <span style="color:#EF4444;">● ${meal.macros.fat}g</span>
             </div>
           </div>
-          <div style="color:var(--t2); font-size:13px; margin-bottom:8px;">
-            <span style="margin-right:16px;">${meal.macros.kcal} kcal</span>
-            <span style="color:#8B5CF6; margin-right:8px;">● ${meal.macros.protein}g P</span>
-            <span style="color:#F59E0B; margin-right:8px;">● ${meal.macros.carbs}g C</span>
-            <span style="color:#EF4444;">● ${meal.macros.fat}g F</span>
+          <div style="display:flex; gap:8px; flex-direction:column; align-items:flex-end;">
+            <button class="meal-expand-btn" style="color:var(--t3); font-size:16px; padding:4px; background:none; border:none; cursor:pointer;">⌄</button>
+            <button onclick="deleteManualMeal('${dateStr(S.viewDate)}', '${meal.id}'); event.stopPropagation();" style="
+              padding:4px 8px; background:#EF4444; border:none; border-radius:4px;
+              color:#fff; font-size:11px; cursor:pointer; white-space:nowrap;
+            ">${T('deleteMeal')}</button>
           </div>
-          ${meal.notes ? `<div style="color:var(--t3); font-size:12px; font-style:italic;">${meal.notes}</div>` : ''}
-          <div style="color:var(--t3); font-size:11px; margin-top:6px;">
+        </div>
+        <div id="md-${mealId}" class="meal-detail" style="background:var(--s2); padding:12px; border-top:1px solid var(--b1);">
+          <div style="font-size:12px; color:var(--t2); margin-bottom:8px; font-weight:600;">${T('mealDetails')}</div>
+          <div style="font-size:11px; color:var(--t3); margin-bottom:12px;">
+            <strong>${T('foodType')}:</strong> ${T(meal.questionnaire.foodType || 'other')}
+          </div>
+          ${meal.questionnaire.protein !== null ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('protein')}:</strong> ${T(meal.questionnaire.protein === 'separate' ? 'proteinSourceSeparate' : meal.questionnaire.protein === 'mixed' ? 'proteinSourceMixed' : 'proteinSourceNo')}</div>` : ''}
+          ${meal.questionnaire.cookingMethod ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('cookingMethod')}:</strong> ${meal.questionnaire.cookingMethod}</div>` : ''}
+          ${meal.questionnaire.portionSize ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('portionSize')}:</strong> ${meal.questionnaire.portionSize}</div>` : ''}
+          ${meal.questionnaire.additions.length > 0 ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('additions')}:</strong> ${meal.questionnaire.additions.join(', ')}</div>` : ''}
+          ${meal.questionnaire.garnish.length > 0 ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('garnish')}:</strong> ${meal.questionnaire.garnish.join(', ')}</div>` : ''}
+          ${meal.notes ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('notesLabel')}:</strong> ${meal.notes}</div>` : ''}
+          <div style="font-size:10px; color:var(--t3); margin-top:8px; padding-top:8px; border-top:1px solid var(--b1);">
             Confidence: ${Math.round(meal.macros.confidence * 100)}%
           </div>
         </div>
@@ -4838,49 +4880,8 @@ function renderToday() {
     html += `</div>`;
   }
 
-  // Render actual consumption card
-  const consumptionData = S.profile.consumptionLog?.[dateStr(S.viewDate)] || null;
-  if (manualMeals.length > 0 || consumptionData) {
-    const planned = consumptionData?.planned || { kcal: 0, protein: 0, carbs: 0, fat: 0 };
-    const actual = consumptionData?.actual || { kcal: 0, protein: 0, carbs: 0, fat: 0 };
-    const variance = consumptionData?.variance || { kcal: 0, protein: 0, carbs: 0, fat: 0 };
-    
-    html += `<div style="margin-top:16px;">
-      <div class="view-sub" style="margin-bottom:12px;">${T('actualConsumption')}</div>
-      <div style="background:var(--sf); padding:12px; border-radius:8px; border:1px solid var(--b1);">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
-          <div>
-            <div style="font-size:12px; color:var(--t2); margin-bottom:4px;">${T('plannedLabel')}</div>
-            <div style="color:var(--ac); font-size:16px; font-weight:600;">${planned.kcal} kcal</div>
-            <div style="font-size:11px; color:var(--t3); margin-top:4px;">
-              <span style="color:#8B5CF6;">● ${planned.protein}g</span>
-              <span style="color:#F59E0B;">● ${planned.carbs}g</span>
-              <span style="color:#EF4444;">● ${planned.fat}g</span>
-            </div>
-          </div>
-          <div>
-            <div style="font-size:12px; color:var(--t2); margin-bottom:4px;">${T('manualLabel')}</div>
-            <div style="color:var(--ac); font-size:16px; font-weight:600;">${actual.kcal - planned.kcal} kcal</div>
-            <div style="font-size:11px; color:var(--t3); margin-top:4px;">
-              <span style="color:#8B5CF6;">● ${(actual.protein - planned.protein).toFixed(1)}g</span>
-              <span style="color:#F59E0B;">● ${(actual.carbs - planned.carbs).toFixed(1)}g</span>
-              <span style="color:#EF4444;">● ${(actual.fat - planned.fat).toFixed(1)}g</span>
-            </div>
-          </div>
-        </div>
-        <div style="border-top:1px solid var(--b1); padding-top:12px;">
-          <div style="font-size:12px; color:var(--t2); margin-bottom:4px;">${T('totalLabel')}</div>
-          <div style="color:var(--ac); font-size:18px; font-weight:700;">${actual.kcal} kcal</div>
-          <div style="font-size:11px; color:var(--t3); margin-top:4px;">
-            <span style="color:#8B5CF6;">● ${actual.protein}g</span>
-            <span style="color:#F59E0B;">● ${actual.carbs}g</span>
-            <span style="color:#EF4444;">● ${actual.fat}g</span>
-          </div>
-        </div>
-      </div>
-    </div>`;
-  }
-
+  // Manual meals already included in macro ring, no need for redundant consumption card
+  
   // Add daily quote at the bottom (only on today's view)
   if (isToday) {
     const quote = getDailyQuote();
@@ -6539,6 +6540,22 @@ function renderSettings() {
               <div style="font-size:11px;color:var(--t3);margin-top:2px">${meal.cal} kcal</div>
             </div>
             <button onclick="removeFavourite('${meal.id}')" style="background:none;border:none;color:#EF4444;cursor:pointer;font-weight:600;padding:4px 8px">${T('removeFav')}</button>
+          </div>
+        `).join('')}
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">📋 ${T('mealTemplates')}</div>
+      <div class="view-sub" style="margin-bottom:10px">${T('templatesDesc') || 'Manage your saved meal templates'}</div>
+      ${!p.mealTemplates || p.mealTemplates.length === 0 
+        ? `<div style="padding:16px;background:var(--s2);border-radius:8px;color:var(--t3);font-size:13px;text-align:center">${T('noTemplates')}</div>`
+        : p.mealTemplates.map(template => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--s2);border-radius:8px;margin-bottom:6px">
+            <div>
+              <div style="font-size:13px;color:var(--t1);font-weight:600">${template.name}</div>
+              <div style="font-size:11px;color:var(--t3);margin-top:2px">${T(template.mealType || 'lunch')} • ${template.cal} kcal</div>
+            </div>
+            <button onclick="deleteTemplate('${template.id}')" style="background:none;border:none;color:#EF4444;cursor:pointer;font-weight:600;padding:4px 8px">${T('deleteMeal')}</button>
           </div>
         `).join('')}
     </div>

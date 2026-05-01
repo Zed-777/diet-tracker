@@ -4034,60 +4034,62 @@ function renderManualMealScreen() {
   let html = '';
   
   switch (_manualMealCurrentScreen) {
-    case -1: // Screen 0b: Template Selection (shown after meal type selection)
-      const templates = (S.profile.mealTemplates || []).filter(t => t.mealType === _manualMealQuestionnaire.mealType);
+    case -1: // Screen 0b: Template Selection (shown after meal type if templates exist)
+      const templates = S.profile.mealTemplates || [];
       if (templates.length === 0) {
-        flash('No templates for ' + T(_manualMealQuestionnaire.mealType), 'info');
-        _manualMealCurrentScreen = 1;
+        _manualMealCurrentScreen = 0;
         renderManualMealScreen();
         return;
       }
       html = `
-        <h2 style="color:var(--t1); margin-bottom:20px;">${T('selectPreviousMeal') || 'Choose Template'}</h2>
-        <div style="color:var(--t3); font-size:13px; margin-bottom:16px;">${T('mealTypeLabel')}: <strong style="color:var(--t2);">${T(_manualMealQuestionnaire.mealType)}</strong></div>
+        <h2 style="color:var(--t1); margin-bottom:20px;">${T('selectPreviousMeal') || 'Quick Select: Previous Meals'}</h2>
         <div style="display:grid; gap:10px; margin-bottom:20px;">
           ${templates.map(t => `
             <button onclick="loadMealTemplate('${t.id}')" style="
               padding:14px; border:1px solid var(--b1); border-radius:8px; 
               background:var(--sf); color:var(--t1); cursor:pointer; font-weight:600; 
-              text-align:left; transition:all .2s; font-size:14px; text-transform:none;
-            ">${t.name}</button>
+              text-align:left; transition:all .2s; font-size:14px;
+            ">${t.name} <span style="color:var(--t3); font-size:12px;">- ${T(t.mealType)}</span></button>
           `).join('')}
         </div>
-        <button onclick="_manualMealCurrentScreen = 1; renderManualMealScreen();" style="
+        <button onclick="_manualMealCurrentScreen = 0; renderManualMealScreen();" style="
           width:100%; padding:12px; background:var(--s2); border:1px solid var(--b1); 
           border-radius:8px; color:var(--t2); cursor:pointer; font-weight:600;
-        ">⊕ Create New ${T(_manualMealQuestionnaire.mealType)}</button>
-        <button onclick="_manualMealCurrentScreen = 0; _manualMealQuestionnaire = {mealName:'',mealType:'lunch',foodType:'chicken',protein:null,additionalProteinType:'',cookingMethod:'grilled',portionSize:'medium',additions:[],garnish:[],accuracy:'reasonable',notes:'',isFromTemplate:false,templateId:null}; renderManualMealScreen();" style="
-          width:100%; padding:12px; background:transparent; border:1px solid var(--b1); 
-          border-radius:8px; color:var(--t3); cursor:pointer; font-weight:600; margin-top:8px;
-        ">← Back to Meal Typear(--s2); border:1px solid var(--b1); 
-          border-radius:8px; color:var(--t2); cursor:pointer; font-weight:600;
-        ">⊕ Create New ${T(_manualMealQuestionnaire.mealType)}</button>
-        <button onclick="_manualMealCurrentScreen = 0; _manualMealQuestionnaire = {mealName:'',mealType:'lunch',foodType:'chicken',protein:null,additionalProteinType:'',cookingMethod:'grilled',portionSize:'medium',additions:[],garnish:[],accuracy:'reasonable',notes:'',isFromTemplate:false,templateId:null}; renderManualMealScreen();" style="
-          width:100%; padding:12px; background:transparent; border:1px solid var(--b1); 
-      html = `ck="updateManualMealQuestionnaire('mealType', 'other');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'other' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'other' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('otherMeal')}</button>
+        ">${T('createNew') || 'Create New Meal'}</button>
+      `;
+      break;
+      
+    case 0: // Screen 1: Meal Type Selection
+      html = `
+        <h2 style="color:var(--t1); margin-bottom:20px;">${T('mealTypeLabel')}</h2>
+        <div style="display:grid; gap:10px;">
+          <button onclick="updateManualMealQuestionnaire('mealType', 'breakfast');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'breakfast' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'breakfast' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('breakfast')}</button>
+          <button onclick="updateManualMealQuestionnaire('mealType', 'morningSnack');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'morningSnack' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'morningSnack' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('morningSnack')}</button>
+          <button onclick="updateManualMealQuestionnaire('mealType', 'lunch');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'lunch' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'lunch' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('lunch')}</button>
+          <button onclick="updateManualMealQuestionnaire('mealType', 'afternoonSnack');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'afternoonSnack' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'afternoonSnack' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('afternoonSnack')}</button>
+          <button onclick="updateManualMealQuestionnaire('mealType', 'dinner');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'dinner' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'dinner' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('dinner')}</button>
+          <button onclick="updateManualMealQuestionnaire('mealType', 'other');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'other' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'other' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('otherMeal')}</button>
         </div>
         ${renderManualMealButtons()}
       `;
       break;
       
-    case 1: // Screen 2: Food Classification (with Template Selection)
-      // Show template selection if templates exist for this meal type and user hasn't selected from template yet
+    case 1: // Screen 2: Food Classification
+      // Show template button if templates exist for this meal type
       const hasTemplates = (S.profile.mealTemplates || []).filter(t => t.mealType === _manualMealQuestionnaire.mealType).length > 0;
-      let templateHtml = '';
+      let templateBtn = '';
       if (hasTemplates && !_manualMealQuestionnaire.isFromTemplate) {
-        templateHtml = `
+        templateBtn = `
           <button onclick="_manualMealCurrentScreen = -1; renderManualMealScreen();" style="
             width:100%; padding:12px; background:rgba(16,185,129,.12); border:2px solid var(--ac);
             border-radius:8px; color:var(--ac); cursor:pointer; font-weight:600; margin-bottom:20px; font-size:14px; text-align:center;
-          " title="Use one of your saved meal templates for ${T(_manualMealQuestionnaire.mealType)}">
-            \u23f1 ${T('selectPreviousMeal') || 'Use Previous Meal'}
+          " title="Use one of your saved meal templates">
+            ⏱ ${T('selectPreviousMeal') || 'Use Previous Meal'}
           </button>
         `;
       }
       html = `
-        ${templateHtml}
+        ${templateBtn}
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('mainIngredientQ')}</h2>
         <div style="display:grid; gap:10px;">
           ${['chicken', 'beef', 'fish', 'pork', 'pasta', 'vegetables', 'eggs', 'dairy', 'other'].map(type => `
@@ -4512,43 +4514,37 @@ async function finalizeManualMeal() {
     notes: _manualMealQuestionnaire.notes,
     isLogged: true
   };
-
+  
   // Save the meal
   try {
     const result = await saveManualMeal(S.viewDate, meal);
     if (result) {
-      // Mark this meal type as completed in the log so week view updates
+      // Mark this meal type as completed in the log for week view
       const dateStr = typeof S.viewDate === 'string' ? S.viewDate : S.viewDate.toISOString().split('T')[0];
       const dateObj = typeof S.viewDate === 'string' ? new Date(S.viewDate + 'T00:00') : S.viewDate;
       const log = getLog(dateObj);
       
-      // Map meal type to slot
+      // Map meal type to meal slot
       const mealTypeToSlot = {
         'breakfast': 'breakfast',
         'morningSnack': 'snack1',
         'lunch': 'lunch',
         'afternoonSnack': 'snack2',
-        'dinner': 'dinner',
-        'other': 'breakfast'  // Default to breakfast for 'other'
+        'dinner': 'dinner'
       };
-      const slot = mealTypeToSlot[_manualMealQuestionnaire.mealType] || 'breakfast';
+      const slot = mealTypeToSlot[_manualMealQuestionnaire.mealType];
       
-      // Mark as completed if not already
-      if (log && !log.completed.includes(slot)) {
+      // Mark as completed if not already and slot exists
+      if (log && slot && !log.completed.includes(slot)) {
         log.completed.push(slot);
-        // Save updated log
         S.profile.log[dateStr] = log;
+        updateConsumptionLog(dateStr);
+        await DB.set('profile', S.profile);
       }
       
-      // Recalculate consumption log with updated meal status
-      updateConsumptionLog(dateStr);
-      
-      // Save all changes to Supabase
-      await DB.set('profile', S.profile);
-      
       closeManualMealModal();
-      renderToday();  // Refresh today view
-      renderWeek();   // Refresh week view
+      renderToday();   // Refresh daily view
+      renderWeek();    // Refresh weekly view
     }
   } catch (err) {
     console.error('Error finalizing meal:', err);

@@ -4185,7 +4185,7 @@ function openManualMealModal() {
           display: flex; justify-content: space-between; align-items: center;
           padding: 16px 24px; border-bottom: 1px solid var(--b1); flex-shrink: 0;
         ">
-          <h3 style="color: var(--t1); margin: 0; font-size: 18px; font-weight: 600;">${T('manualMealTitle') || 'Add Manual Meal'}</h3>
+          <h3 style="color: var(--t1); margin: 0; font-size: 18px; font-weight: 600;">${_manualMealScreenTitles[_manualMealCurrentScreen] || 'Add Manual Meal'}</h3>
           <button onclick="closeManualMealModal()" style="
             background: none; border: none; color: var(--t2); font-size: 24px;
             cursor: pointer; padding: 0; width: 32px; height: 32px;
@@ -4205,6 +4205,20 @@ function openManualMealModal() {
 
 let _manualMealCurrentScreen = 0;
 let _manualMealQuestionnaire = {};
+
+const _manualMealScreenTitles = [
+  'Meal Type',                           // Screen 0
+  'Select Main Protein',                 // Screen 1
+  'Select Main Food',                    // Screen 2
+  'Additional Protein',                  // Screen 3
+  'Cooking Method',                      // Screen 4
+  'Portion Size',                        // Screen 5
+  'Additions',                           // Screen 6
+  'Sides & Vegetables',                  // Screen 7
+  'How Did You Measure?',                // Screen 8
+  'Confidence Level',                    // Screen 9
+  'Review Your Meal'                     // Screen 10
+];
 
 function renderManualMealScreen() {
   const container = document.getElementById('manual-meal-content');
@@ -4479,6 +4493,24 @@ function renderManualMealScreen() {
       break;
       
     case 7: // Screen 8: Garnish & Vegetables
+      const garnishLabels = {
+        'broccoli': 'Broccoli/Green vegetables',
+        'carrots': 'Carrots',
+        'spinach': 'Spinach',
+        'mushrooms': 'Mushrooms',
+        'onions': 'Onions',
+        'tomatoes': 'Tomatoes',
+        'potatoes': 'Potatoes/Fries',
+        'sweet_potato': 'Sweet potato',
+        'rice': 'Rice',
+        'noodles': 'Noodles/Pasta',
+        'bread': 'Bread/Rolls',
+        'quinoa': 'Quinoa',
+        'salad': 'Salad',
+        'corn': 'Corn',
+        'peppers': 'Peppers',
+        'green_beans': 'Green beans'
+      };
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('garnishQ')}</h2>
         <div style="margin-bottom:20px;">
@@ -4488,7 +4520,7 @@ function renderManualMealScreen() {
                 padding:12px; border:2px solid var(--b1); border-radius:8px; background:var(--sf); 
                 color:var(--t1); cursor:pointer; font-weight:500; font-size:14px; text-align:center; 
                 transition:all .2s;
-              ">${T('garnish' + g.charAt(0).toUpperCase() + g.slice(1).replace('_', ''))}</button>
+              ">${garnishLabels[g]}</button>
             `).join('')}
           </div>
           ${_manualMealQuestionnaire.garnish.length > 0 ? `
@@ -4620,7 +4652,16 @@ function renderManualMealScreen() {
             style="width:100%; padding:10px; border:1px solid var(--b1); border-radius:6px;
               background:var(--sf); color:var(--t1); box-sizing:border-box; min-height:80px; resize:none;">${_manualMealQuestionnaire.notes}</textarea>
         </div>
-        ${renderManualMealButtons()}
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <button onclick="_manualMealCurrentScreen--; renderManualMealScreen();" style="
+            padding:12px; background:var(--s1); border:1px solid var(--b1); border-radius:8px;
+            color:var(--t1); cursor:pointer; font-weight:500; transition:all .2s;
+          ">← Previous</button>
+          <button onclick="_manualMealCurrentScreen++; renderManualMealScreen();" style="
+            padding:12px; background:var(--ac); border:none; border-radius:8px;
+            color:#fff; cursor:pointer; font-weight:500; transition:all .2s;
+          ">Next →</button>
+        </div>
       `;
       break;
       

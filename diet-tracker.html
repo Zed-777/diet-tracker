@@ -6934,32 +6934,6 @@ function calcCalorieDeviation() {
   return { avgDeviation, deviationPct, daysTracked };
 }
 
-function generateLoggingHeatmap() {
-  const weeks = 12;
-  const today = new Date();
-  let html = '<div style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; max-width:200px;">';
-  
-  for (let i = weeks * 7 - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const dStr = dateStr(d);
-    const log = getLog(dStr);
-    const consumption = calcDayConsumption(log);
-    
-    const intensity = consumption.kcal === 0 ? 0 : (consumption.kcal / S.profile.calories);
-    let color = 'rgba(255,255,255,0.1)';
-    if (intensity >= 0.8 && intensity <= 1.2) color = 'var(--ac)';
-    else if (intensity > 0.6) color = 'rgba(255,193,7,0.6)';
-    else if (intensity > 0) color = 'rgba(255,107,107,0.4)';
-    
-    const dateDisplay = d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
-    const title = `${dateDisplay} · ${consumption.kcal} kcal`;
-    html += `<div style="width:20px;height:20px;border-radius:3px;background:${color};cursor:pointer;border:1px solid rgba(255,255,255,0.1);" title="${title}"></div>`;
-  }
-  
-  html += '</div>';
-  return html;
-}
 
 // ═══════════════════════════════════════════════════════════════
 // PROGRESS VIEW
@@ -7028,7 +7002,6 @@ function renderProgress() {
   const macroAdh = calcMacroAdherence();
   const projection = calcWeightProjection();
   const calDev = calcCalorieDeviation();
-  const heatmap = generateLoggingHeatmap();
   
   const lastWeekWeight = weeklyAn.weekData[0];
   const thisWeekWeight = weeklyAn.weekData[weeklyAn.weekData.length - 1];
@@ -7115,17 +7088,6 @@ function renderProgress() {
     
     <!-- WEIGHT TREND CHART (keep existing) -->
     ${chartHtml}
-    
-    <!-- LOGGING HEATMAP -->
-    <div class="chart-title" style="margin-bottom:12px;">📅 12-Week Logging Heatmap</div>
-    <div style="background:var(--s2); border-radius:12px; padding:16px; margin-bottom:16px;">
-      <div style="margin-bottom:12px; font-size:12px; color:var(--t3);">
-        <span style="display:inline-block; width:14px; height:14px; background:var(--ac); border-radius:3px; vertical-align:middle;"></span> On target (80-120%)
-        <span style="display:inline-block; width:14px; height:14px; background:rgba(255,193,7,0.6); border-radius:3px; vertical-align:middle; margin-left:12px;"></span> Partial (60-80%)
-        <span style="display:inline-block; width:14px; height:14px; background:rgba(255,107,107,0.4); border-radius:3px; vertical-align:middle; margin-left:12px;"></span> Low (&lt;60%)
-      </div>
-      ${heatmap}
-    </div>
     
     <!-- CALORIE TRACKING -->
     <div class="chart-title" style="margin-bottom:12px;">🔥 Calorie Tracking (7-Day Average)</div>

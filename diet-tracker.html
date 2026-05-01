@@ -6803,6 +6803,165 @@ function renderMonth() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// ANALYTICS HELPERS
+// ═══════════════════════════════════════════════════════════════
+function calcWeeklyAnalytics() {
+  const days = 7;
+  const today = new Date();
+  const weekData = [];
+  
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const dStr = dateStr(d);
+    const consumption = calcDayConsumption(dStr);
+    weekData.push({ date: dStr, ...consumption });
+  }
+  
+  const avgKcal = weekData.reduce((s, d) => s + d.kcal, 0) / days;
+  const totalLogged = weekData.reduce((s, d) => s + (d.kcal > 0 ? 1 : 0), 0);
+  const loggingRate = (totalLogged / days * 100).toFixed(0);
+  
+  return { weekData, avgKcal, loggingRate, totalLogged };
+}
+
+function calcDayConsumption(log) {
+  // This should be called with a dateStr, not the log object
+  // The log parameter is actually meant to be dateStr now
+  // For backward compatibility, let me handle both
+  let dateStr;
+  if (typeof log === 'string') {
+    dateStr = log;
+  } else if (log && log.completed !== undefined) {
+    // It's a log object, calculate from it
+    let kcal = 0, protein = 0, carbs = 0, fat = 0;
+    
+    if (log.completed && Array.isArray(log.completed)) {
+      log.completed.forEach(mealId => {
+        const meal = Object.values(MEALS).flat().find(m => m.id === mealId);
+        if (meal) {
+          kcal += meal.kcal || 0;
+          protein += meal.protein || 0;
+          carbs += meal.carbs || 0;
+          fat += meal.fat || 0;
+        }
+      });
+    }
+    
+    return { kcal: Math.round(kcal), protein: Math.round(protein), carbs: Math.round(carbs), fat: Math.round(fat) };
+  } else {
+    return { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+  }
+  
+  // If we have dateStr, use consumption log
+  const consumptionEntry = (S.profile.consumptionLog && S.profile.consumptionLog[dateStr]) || { actual: { kcal: 0, protein: 0, carbs: 0, fat: 0 } };
+  const actual = consumptionEntry.actual || { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+  return {
+    kcal: Math.round(actual.kcal || 0),
+    protein: Math.round(actual.protein || 0),
+    carbs: Math.round(actual.carbs || 0),
+    fat: Math.round(actual.fat || 0)
+  };
+}
+
+function calcMacroAdherence() {
+  const p = S.profile;
+  const { weekData } = calcWeeklyAnalytics();
+  
+  const targetProtein = p.macros?.protein || 0;
+  const targetCarbs = p.macros?.carbs || 0;
+  const targetFat = p.macros?.fat || 0;
+  const tolerance = 0.10; // 10% tolerance
+  
+  let proteinHits = 0, carbsHits = 0, fatHits = 0, daysTracked = 0;
+  
+  weekData.forEach(d => {
+    if (d.kcal > 0) {
+      daysTracked++;
+      if (Math.abs(d.protein - targetProtein) <= targetProtein * tolerance) proteinHits++;
+      if (Math.abs(d.carbs - targetCarbs) <= targetCarbs * tolerance) carbsHits++;
+      if (Math.abs(d.fat - targetFat) <= targetFat * tolerance) fatHits++;
+    }
+  });
+  
+  return {
+    protein: daysTracked > 0 ? (proteinHits / daysTracked * 100).toFixed(0) : 0,
+    carbs: daysTracked > 0 ? (carbsHits / daysTracked * 100).toFixed(0) : 0,
+    fat: daysTracked > 0 ? (fatHits / daysTracked * 100).toFixed(0) : 0,
+    daysTracked
+  };
+}
+
+function calcWeightProjection() {
+  const wEntries = S.weights.slice(-14); // Last 2 weeks
+  if (wEntries.length < 2) return { weeksToGoal: null, weeklyRate: 0 };
+  
+  const firstW = wEntries[0].weight;
+  const lastW = wEntries[wEntries.length - 1].weight;
+  const weeklyChange = (lastW - firstW) / 2; // Change per week over 2 weeks
+  
+  const p = S.profile;
+  const remainingWeight = p.targetWeight - lastW;
+  
+  if (weeklyChange === 0) return { weeksToGoal: null, weeklyRate: 0 };
+  
+  const weeksToGoal = Math.ceil(remainingWeight / weeklyChange);
+  
+  return {
+    weeksToGoal: weeksToGoal > 0 ? weeksToGoal : null,
+    weeklyRate: weeklyChange.toFixed(2),
+    onTrack: Math.abs(weeklyChange) > 0.1
+  };
+}
+
+function calcCalorieDeviation() {
+  const p = S.profile;
+  const { weekData } = calcWeeklyAnalytics();
+  
+  let totalDeviation = 0;
+  let daysTracked = 0;
+  
+  weekData.forEach(d => {
+    if (d.kcal > 0) {
+      daysTracked++;
+      totalDeviation += (d.kcal - p.calories);
+    }
+  });
+  
+  const avgDeviation = daysTracked > 0 ? (totalDeviation / daysTracked).toFixed(0) : 0;
+  const deviationPct = daysTracked > 0 ? (avgDeviation / p.calories * 100).toFixed(1) : 0;
+  
+  return { avgDeviation, deviationPct, daysTracked };
+}
+
+function generateLoggingHeatmap() {
+  const weeks = 12;
+  const today = new Date();
+  let html = '<div style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; max-width:200px;">';
+  
+  for (let i = weeks * 7 - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const dStr = dateStr(d);
+    const log = getLog(dStr);
+    const consumption = calcDayConsumption(log);
+    
+    const intensity = consumption.kcal === 0 ? 0 : (consumption.kcal / S.profile.calories);
+    let color = 'rgba(255,255,255,0.1)';
+    if (intensity >= 0.8 && intensity <= 1.2) color = 'var(--ac)';
+    else if (intensity > 0.6) color = 'rgba(255,193,7,0.6)';
+    else if (intensity > 0) color = 'rgba(255,107,107,0.4)';
+    
+    const dateDisplay = d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+    const title = `${dateDisplay} · ${consumption.kcal} kcal`;
+    html += `<div style="width:20px;height:20px;border-radius:3px;background:${color};cursor:pointer;border:1px solid rgba(255,255,255,0.1);" title="${title}"></div>`;
+  }
+  
+  html += '</div>';
+  return html;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // PROGRESS VIEW
 // ═══════════════════════════════════════════════════════════════
 function renderProgress() {
@@ -6864,9 +7023,73 @@ function renderProgress() {
     ? (S.weights[S.weights.length-1].weight - S.weights[0].weight).toFixed(1)
     : null;
 
+  // Calculate analytics
+  const weeklyAn = calcWeeklyAnalytics();
+  const macroAdh = calcMacroAdherence();
+  const projection = calcWeightProjection();
+  const calDev = calcCalorieDeviation();
+  const heatmap = generateLoggingHeatmap();
+  
+  const lastWeekWeight = weeklyAn.weekData[0];
+  const thisWeekWeight = weeklyAn.weekData[weeklyAn.weekData.length - 1];
+  const weeklyWeightChange = (thisWeekWeight.kcal > 0 || lastWeekWeight.kcal > 0) 
+    ? 'tracking' 
+    : 'no data';
+
   document.getElementById('view').innerHTML = `
     <div class="view-title">📈 ${T('progressTitle').slice(3)}</div>
     <div class="view-sub">${p.name ? p.name + ' · ' : ''}${goalLabels[p.goal]}</div>
+    
+    <!-- WEEKLY SNAPSHOT -->
+    <div class="chart-title" style="margin-top:20px; margin-bottom:12px;">📊 This Week's Snapshot</div>
+    <div style="background:var(--s2); border-radius:12px; padding:16px; display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+      <div style="background:var(--sf); padding:12px; border-radius:8px; border-left:4px solid var(--ac);">
+        <div style="font-size:12px; color:var(--t3);">Weight This Week</div>
+        <div style="font-size:18px; font-weight:bold; color:var(--t1); margin-top:4px;">
+          ${weeklyAn.avgKcal > 0 ? (S.weights.length >= 2 ? parseFloat(S.weights[S.weights.length-1].weight).toFixed(1) : '—') + ' kg' : '—'}
+        </div>
+      </div>
+      <div style="background:var(--sf); padding:12px; border-radius:8px; border-left:4px solid ${projection.weeksToGoal ? 'var(--carb)' : 'var(--t3)'};">
+        <div style="font-size:12px; color:var(--t3);">ETA to Goal</div>
+        <div style="font-size:18px; font-weight:bold; color:var(--t1); margin-top:4px;">
+          ${projection.weeksToGoal ? projection.weeksToGoal + ' weeks' : '—'}
+        </div>
+      </div>
+      <div style="background:var(--sf); padding:12px; border-radius:8px; border-left:4px solid ${macroAdh.daysTracked >= 5 ? 'var(--ac)' : 'var(--t3)'};">
+        <div style="font-size:12px; color:var(--t3);">Logging Rate</div>
+        <div style="font-size:18px; font-weight:bold; color:var(--t1); margin-top:4px;">
+          ${weeklyAn.loggingRate}% (${weeklyAn.totalLogged}/7)
+        </div>
+      </div>
+      <div style="background:var(--sf); padding:12px; border-radius:8px; border-left:4px solid ${Math.abs(parseFloat(calDev.deviationPct)) < 5 ? 'var(--ac)' : 'var(--fat)'};">
+        <div style="font-size:12px; color:var(--t3);">Avg Kcal Deviation</div>
+        <div style="font-size:18px; font-weight:bold; color:var(--t1); margin-top:4px;">
+          ${calDev.daysTracked > 0 ? (calDev.avgDeviation > 0 ? '+' : '') + calDev.avgDeviation + ' (' + calDev.deviationPct + '%)' : '—'}
+        </div>
+      </div>
+    </div>
+    
+    <!-- MACRO ADHERENCE -->
+    <div class="chart-title" style="margin-bottom:12px;">🎯 Macro Adherence (This Week)</div>
+    <div style="background:var(--s2); border-radius:12px; padding:16px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:16px;">
+      <div style="text-align:center;">
+        <div style="font-size:11px; color:var(--t3); text-transform:uppercase; letter-spacing:1px; font-weight:600;">Protein</div>
+        <div style="font-size:28px; font-weight:bold; color:var(--pro); margin:8px 0;">${macroAdh.protein}%</div>
+        <div style="font-size:11px; color:var(--t3);">${macroAdh.daysTracked} days tracked</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:11px; color:var(--t3); text-transform:uppercase; letter-spacing:1px; font-weight:600;">Carbs</div>
+        <div style="font-size:28px; font-weight:bold; color:var(--carb); margin:8px 0;">${macroAdh.carbs}%</div>
+        <div style="font-size:11px; color:var(--t3);">within ±10%</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:11px; color:var(--t3); text-transform:uppercase; letter-spacing:1px; font-weight:600;">Fat</div>
+        <div style="font-size:28px; font-weight:bold; color:var(--fat); margin:8px 0;">${macroAdh.fat}%</div>
+        <div style="font-size:11px; color:var(--t3);">of days</div>
+      </div>
+    </div>
+    
+    <!-- CURRENT STATS (keep existing) -->
     <div class="stat-cards">
       <div class="stat-card">
         <div class="cal-num">${p.weight}<span style="font-size:16px;color:var(--t3)"> kg</span></div>
@@ -6889,9 +7112,48 @@ function renderProgress() {
         <div class="stat-card-sub" style="color:${change===null?'var(--t3)':parseFloat(change)<0?'var(--ac)':'var(--fat)'}">${change!==null?T('kgSinceStart'):T('logMoreWeighins')}</div>
       </div>
     </div>
+    
+    <!-- WEIGHT TREND CHART (keep existing) -->
     ${chartHtml}
+    
+    <!-- LOGGING HEATMAP -->
+    <div class="chart-title" style="margin-bottom:12px;">📅 12-Week Logging Heatmap</div>
+    <div style="background:var(--s2); border-radius:12px; padding:16px; margin-bottom:16px;">
+      <div style="margin-bottom:12px; font-size:12px; color:var(--t3);">
+        <span style="display:inline-block; width:14px; height:14px; background:var(--ac); border-radius:3px; vertical-align:middle;"></span> On target (80-120%)
+        <span style="display:inline-block; width:14px; height:14px; background:rgba(255,193,7,0.6); border-radius:3px; vertical-align:middle; margin-left:12px;"></span> Partial (60-80%)
+        <span style="display:inline-block; width:14px; height:14px; background:rgba(255,107,107,0.4); border-radius:3px; vertical-align:middle; margin-left:12px;"></span> Low (&lt;60%)
+      </div>
+      ${heatmap}
+    </div>
+    
+    <!-- CALORIE TRACKING -->
+    <div class="chart-title" style="margin-bottom:12px;">🔥 Calorie Tracking (7-Day Average)</div>
+    <div style="background:var(--s2); border-radius:12px; padding:16px; margin-bottom:16px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div style="background:var(--sf); padding:12px; border-radius:8px;">
+          <div style="font-size:12px; color:var(--t3);">Target Daily</div>
+          <div style="font-size:20px; font-weight:bold; color:var(--t1); margin-top:4px;">${p.calories} kcal</div>
+        </div>
+        <div style="background:var(--sf); padding:12px; border-radius:8px;">
+          <div style="font-size:12px; color:var(--t3);">Your Average</div>
+          <div style="font-size:20px; font-weight:bold; color:var(--ac); margin-top:4px;">${Math.round(weeklyAn.avgKcal)} kcal</div>
+        </div>
+      </div>
+      <div style="margin-top:12px; padding:12px; background:var(--sf); border-radius:8px; border-left:4px solid ${Math.abs(parseFloat(calDev.deviationPct)) < 5 ? 'var(--ac)' : (parseFloat(calDev.deviationPct) > 0 ? 'var(--fat)' : 'var(--carb)')};">
+        <div style="font-size:12px; color:var(--t3);">Status</div>
+        <div style="font-size:14px; color:var(--t1); margin-top:4px;">
+          ${Math.abs(parseFloat(calDev.deviationPct)) < 5 ? '✓ Perfect' : (parseFloat(calDev.deviationPct) > 0 ? '⚠️ Running high' : '⬇️ Running low')}
+          (${calDev.deviationPct > 0 ? '+' : ''}${calDev.deviationPct}%)
+        </div>
+      </div>
+    </div>
+    
+    <!-- BUTTONS (keep existing) -->
     <button class="add-weight-btn" onclick="openWeightModal()">${T('logTodaysWeight')}</button>
-    ${wList ? `<div class="chart-title" style="margin-bottom:10px">${T('recentWeighins')}</div>${wList}` : ''}`;
+    
+    <!-- RECENT WEIGH-INS (keep existing) -->
+    ${wList ? `<div class="chart-title" style="margin-bottom:10px; margin-top:20px;">${T('recentWeighins')}</div>${wList}` : ''}`;
 }
 
 function openWeightModal() {

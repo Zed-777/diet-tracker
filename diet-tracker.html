@@ -3015,6 +3015,20 @@ const LANG = {
     mealTemplates: 'Meal Templates',
     noTemplates: 'No meal templates yet',
     templatesDesc: 'Manage your saved meal templates',
+    templateNamePrompt: 'Template name:',
+    templateSaved: 'Template saved',
+    selectSize: 'Select portion size',
+    garnishSmall: 'Small',
+    garnishMedium: 'Medium',
+    garnishLarge: 'Large',
+    addButter: 'Butter/Oil',
+    addCheese: 'Cheese',
+    addSauce: 'Sauce (heavy/creamy)',
+    addBacon: 'Bacon/Meat topping',
+    addNuts: 'Nuts',
+    addDressing: 'Dressing/Mayo',
+    addDessert: 'Dessert/Sweet',
+    optional: 'Optional',
     
     // Quote of the Day
     quoteOfDay: 'Quote of the Day',
@@ -3433,6 +3447,20 @@ const LANG = {
     mealTemplates: 'Plantillas de Comidas',
     noTemplates: 'Sin plantillas de comidas aún',
     templatesDesc: 'Gestiona tus plantillas de comidas guardadas',
+    templateNamePrompt: 'Nombre de plantilla:',
+    templateSaved: 'Plantilla guardada',
+    selectSize: 'Selecciona el tamaño de porción',
+    garnishSmall: 'Pequeño',
+    garnishMedium: 'Mediano',
+    garnishLarge: 'Grande',
+    addButter: 'Mantequilla/Aceite',
+    addCheese: 'Queso',
+    addSauce: 'Salsa (pesada/cremosa)',
+    addBacon: 'Tocino/Aderezo de carne',
+    addNuts: 'Frutos secos',
+    addDressing: 'Aderezo/Mayonesa',
+    addDessert: 'Postre/Dulce',
+    optional: 'Opcional',
     
     // Cita del Día
     quoteOfDay: 'Cita del Día',
@@ -3845,9 +3873,9 @@ function estimateMealMacros(questionnaire) {
     });
   }
   
-  // Calculate confidence based on accuracy
-  const confidenceMap = { measured: 0.95, estimate: 0.70 };
-  const confidence = confidenceMap[accuracy] || 0.70;
+  // Calculate confidence based on accuracy (rough, reasonable, accurate)
+  const confidenceMap = { rough: 0.60, reasonable: 0.75, accurate: 0.90 };
+  const confidence = confidenceMap[accuracy] || 0.75;
   
   // Round values
   return {
@@ -4092,7 +4120,7 @@ function renderManualMealScreen() {
       
     case 0: // Screen 1: Meal Type Selection
       html = `
-        <h2 style="color:var(--t1); margin-bottom:20px;">${T('mealTypeLabel')}</h2>
+        <h2 style="color:var(--t1); margin-bottom:20px;">${T('selectMealType') || 'What type of meal?'}</h2>
         <div style="display:grid; gap:10px;">
           <button onclick="updateManualMealQuestionnaire('mealType', 'breakfast');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'breakfast' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'breakfast' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('breakfast')}</button>
           <button onclick="updateManualMealQuestionnaire('mealType', 'morningSnack');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'morningSnack' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'morningSnack' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('morningSnack')}</button>
@@ -4105,7 +4133,21 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 1: // Screen 2: Food Classification
+    case 1: // Screen 2: Meal Name Input
+      html = `
+        <h2 style="color:var(--t1); margin-bottom:20px;">${T('mealNameLabel') || 'Meal Name'}</h2>
+        <div style="margin-bottom:20px;">
+          <input type="text" id="q-mealName" placeholder="e.g., Grilled Chicken with Rice" 
+            value="${_manualMealQuestionnaire.mealName}" 
+            style="width:100%; padding:12px; border:1px solid var(--b1); border-radius:6px; background:var(--sf); color:var(--t1); box-sizing:border-box; font-size:16px;"
+            onchange="_manualMealQuestionnaire.mealName = this.value;">
+          <div style="color:var(--t3); font-size:11px; margin-top:6px;">${T('optional')}</div>
+        </div>
+        ${renderManualMealButtons()}
+      `
+      break;
+      
+    case 2: // Screen 3: Food Classification
       // Show template button if templates exist for this meal type
       const hasTemplates = (S.profile.mealTemplates || []).filter(t => t.mealType === _manualMealQuestionnaire.mealType).length > 0;
       let templateBtn = '';
@@ -4137,7 +4179,7 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 2: // Screen 3: Protein Source
+    case 3: // Screen 4: Protein Source
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('proteinSourceQ')}</h2>
         <div style="display:grid; gap:10px;">
@@ -4183,7 +4225,7 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 3: // Screen 4: Cooking Method
+    case 4: // Screen 5: Cooking Method
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('cookingMethodQ')}</h2>
         <div style="display:grid; gap:10px;">
@@ -4201,7 +4243,7 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 4: // Screen 5: Portion Size
+    case 5: // Screen 6: Portion Size
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('portionSizeQ')}</h2>
         <div style="display:grid; gap:10px;">
@@ -4219,17 +4261,17 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 5: // Screen 6: Additions
+    case 6: // Screen 7: Additions
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('additionsQ')}</h2>
         <div style="display:grid; gap:10px;">
-          ${['butter', 'cheese', 'sauce_heavy', 'bacon', 'nuts', 'dressing', 'dessert'].map(add => `
+          ${['butter', 'cheese', 'sauce', 'bacon', 'nuts', 'dressing', 'dessert'].map(add => `
             <label style="display:flex; align-items:center; padding:12px; border:2px solid ${_manualMealQuestionnaire.additions.includes(add) ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.additions.includes(add) ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
               <input type="checkbox" 
                 ${_manualMealQuestionnaire.additions.includes(add) ? 'checked' : ''}
                 onchange="toggleManualMealAddition('${add}')"
                 style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
-              <span style="color:var(--t1); font-weight:500;">${T('add' + add.replace('_', '').charAt(0).toUpperCase() + add.replace('_', '').slice(1))}</span>
+              <span style="color:var(--t1); font-weight:500;">${T('add' + add.charAt(0).toUpperCase() + add.slice(1))}</span>
             </label>
           `).join('')}
         </div>
@@ -4237,7 +4279,7 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 6: // Screen 7: Garnish/Sides
+    case 7: // Screen 8: Garnish
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('garnishQ')}</h2>
         <div style="margin-bottom:20px;">
@@ -4268,7 +4310,7 @@ function renderManualMealScreen() {
       
 
       
-    case 7: // Screen 8: Confidence & Notes
+    case 8: // Screen 9: Confidence & Notes
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('confidenceQ')}</h2>
         <div style="display:grid; gap:10px; margin-bottom:16px;">
@@ -4304,7 +4346,7 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 8: // Screen 9: Review
+    case 9: // Screen 10: Review
       const estimated = estimateMealMacros(_manualMealQuestionnaire);
       const confidenceLabels = { rough: 'Rough guess (±300 kcal)', reasonable: 'Reasonable estimate (±150 kcal)', accurate: 'Pretty accurate (±50 kcal)' };
       html = `
@@ -4384,7 +4426,7 @@ function renderManualMealScreen() {
 
 function renderManualMealButtons() {
   const isFirstScreen = _manualMealCurrentScreen === 0;
-  const isLastScreen = _manualMealCurrentScreen === 8;
+  const isLastScreen = _manualMealCurrentScreen === 9;
   
   let html = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:24px;">`;
   
@@ -4412,15 +4454,17 @@ function renderManualMealButtons() {
 }
 
 function nextManualMealScreen() {
+  const mealName = document.getElementById('q-mealName');
   const notes = document.getElementById('q-notes');
   const additionalProtein = document.getElementById('q-additionalProtein');
   
+  if (mealName) _manualMealQuestionnaire.mealName = mealName.value;
   if (notes) _manualMealQuestionnaire.notes = notes.value;
   if (additionalProtein && additionalProtein.value) {
     _manualMealQuestionnaire.additionalProteinType = additionalProtein.value;
   }
   
-  if (_manualMealCurrentScreen < 8) {
+  if (_manualMealCurrentScreen < 9) {
     _manualMealCurrentScreen++;
     renderManualMealScreen();
   }
@@ -4449,65 +4493,31 @@ function toggleManualMealAddition(addition) {
 }
 
 function addManualMealGarnish(type) {
-  // Show size selector - default to medium
-  const size = 'medium';
+  // Show size selector
+  showGarnishSizeSelector(type);
+}
+
+function showGarnishSizeSelector(type) {
+  const sizeHtml = `
+    <div style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--sf); padding:20px; border-radius:12px; z-index:10000; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+      <div style="color:var(--t1); font-weight:600; margin-bottom:16px;">${T('garnish' + type.charAt(0).toUpperCase() + type.slice(1))} - ${T('selectSize')}</div>
+      <div style="display:grid; gap:10px;">
+        <button onclick="addGarnishWithSize('${type}', 'small'); document.querySelector('[style*=\"position:fixed\"]').parentElement.removeChild(document.querySelector('[style*=\"position:fixed\"]'));" style="padding:10px; background:var(--ac); border:none; color:#fff; border-radius:6px; cursor:pointer; font-weight:600;">${T('garnishSmall')}</button>
+        <button onclick="addGarnishWithSize('${type}', 'medium'); document.querySelector('[style*=\"position:fixed\"]').parentElement.removeChild(document.querySelector('[style*=\"position:fixed\"]'));" style="padding:10px; background:var(--ac); border:none; color:#fff; border-radius:6px; cursor:pointer; font-weight:600;">${T('garnishMedium')}</button>
+        <button onclick="addGarnishWithSize('${type}', 'large'); document.querySelector('[style*=\"position:fixed\"]').parentElement.removeChild(document.querySelector('[style*=\"position:fixed\"]'));" style="padding:10px; background:var(--ac); border:none; color:#fff; border-radius:6px; cursor:pointer; font-weight:600;">${T('garnishLarge')}</button>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', sizeHtml);
+}
+
+function addGarnishWithSize(type, size) {
   _manualMealQuestionnaire.garnish.push({ type, size });
   renderManualMealScreen();
 }
 
 function removeManualMealGarnish(idx) {
   _manualMealQuestionnaire.garnish.splice(idx, 1);
-  renderManualMealScreen();
-}
-
-function saveMealAsTemplate() {
-  const templateName = prompt('Template name:', _manualMealQuestionnaire.mealName);
-  if (!templateName || !templateName.trim()) return;
-  
-  if (!S.profile.mealTemplates) S.profile.mealTemplates = [];
-  
-  const template = {
-    id: `template_${Date.now()}`,
-    name: templateName.trim(),
-    mealType: _manualMealQuestionnaire.mealType,
-    foodType: _manualMealQuestionnaire.foodType,
-    protein: _manualMealQuestionnaire.protein,
-    additionalProteinType: _manualMealQuestionnaire.additionalProteinType,
-    cookingMethod: _manualMealQuestionnaire.cookingMethod,
-    portionSize: _manualMealQuestionnaire.portionSize,
-    additions: [..._manualMealQuestionnaire.additions],
-    garnish: [..._manualMealQuestionnaire.garnish],
-    accuracy: _manualMealQuestionnaire.accuracy,
-    notes: _manualMealQuestionnaire.notes
-  };
-  
-  S.profile.mealTemplates.push(template);
-  DB.set('profile', S.profile);
-  flash(`Template '${templateName}' saved!`, 'success');
-}
-
-function loadMealTemplate(templateId) {
-  if (!S.profile.mealTemplates) return;
-  const template = S.profile.mealTemplates.find(t => t.id === templateId);
-  if (!template) return;
-  
-  // Load template data into questionnaire
-  _manualMealQuestionnaire.mealName = template.name;
-  _manualMealQuestionnaire.mealType = template.mealType;
-  _manualMealQuestionnaire.foodType = template.foodType;
-  _manualMealQuestionnaire.protein = template.protein;
-  _manualMealQuestionnaire.additionalProteinType = template.additionalProteinType;
-  _manualMealQuestionnaire.cookingMethod = template.cookingMethod;
-  _manualMealQuestionnaire.portionSize = template.portionSize;
-  _manualMealQuestionnaire.additions = [...(template.additions || [])];
-  _manualMealQuestionnaire.garnish = [...(template.garnish || [])];
-  _manualMealQuestionnaire.accuracy = template.accuracy;
-  _manualMealQuestionnaire.notes = template.notes;
-  _manualMealQuestionnaire.isFromTemplate = true;
-  _manualMealQuestionnaire.templateId = templateId;
-  
-  // Skip to review screen
-  _manualMealCurrentScreen = 8;
   renderManualMealScreen();
 }
 
@@ -4521,17 +4531,15 @@ async function finalizeManualMeal() {
   const notes = document.getElementById('q-notes');
   if (notes) _manualMealQuestionnaire.notes = notes.value;
   
-  if (!_manualMealQuestionnaire.mealName.trim()) {
-    flash('Please enter a meal name', 'error');
-    return;
-  }
+  // Use mealType as fallback if mealName is not provided
+  const finalMealName = (_manualMealQuestionnaire.mealName || '').trim() || _manualMealQuestionnaire.mealType;
   
   // Calculate macros
   const macros = estimateMealMacros(_manualMealQuestionnaire);
   
   // Create meal object
   const meal = {
-    mealName: _manualMealQuestionnaire.mealName,
+    mealName: finalMealName,
     mealType: _manualMealQuestionnaire.mealType,
     questionnaire: {
       foodType: _manualMealQuestionnaire.foodType,
@@ -4587,15 +4595,27 @@ async function finalizeManualMeal() {
   }
 }
 
-function saveMealAsTemplate() {
-  const templateName = prompt('Template name:', _manualMealQuestionnaire.mealName);
+async function saveMealAsTemplate() {
+  let templateName = prompt(T('templateNamePrompt') || 'Template name:', _manualMealQuestionnaire.mealName);
   if (!templateName || !templateName.trim()) return;
+  
+  templateName = templateName.trim();
   
   if (!S.profile.mealTemplates) S.profile.mealTemplates = [];
   
+  // Check if template with this name already exists
+  const existingIndex = S.profile.mealTemplates.findIndex(t => t.name === templateName);
+  if (existingIndex !== -1) {
+    const overwrite = confirm(`Template "${templateName}" already exists. Overwrite?`);
+    if (!overwrite) return;
+  }
+  
+  // Calculate and store macros for reference
+  const macros = estimateMealMacros(_manualMealQuestionnaire);
+  
   const template = {
-    id: `template_${Date.now()}`,
-    name: templateName.trim(),
+    id: existingIndex !== -1 ? S.profile.mealTemplates[existingIndex].id : `template_${Date.now()}`,
+    name: templateName,
     mealType: _manualMealQuestionnaire.mealType,
     foodType: _manualMealQuestionnaire.foodType,
     protein: _manualMealQuestionnaire.protein,
@@ -4605,12 +4625,24 @@ function saveMealAsTemplate() {
     additions: [..._manualMealQuestionnaire.additions],
     garnish: [..._manualMealQuestionnaire.garnish],
     accuracy: _manualMealQuestionnaire.accuracy,
-    notes: _manualMealQuestionnaire.notes
+    notes: _manualMealQuestionnaire.notes,
+    cal: macros.kcal
   };
   
-  S.profile.mealTemplates.push(template);
-  DB.set('profile', S.profile);
-  flash(`Template '${templateName}' saved!`, 'success');
+  try {
+    if (existingIndex !== -1) {
+      // Update existing template
+      S.profile.mealTemplates[existingIndex] = template;
+    } else {
+      // Add new template
+      S.profile.mealTemplates.push(template);
+    }
+    await DB.set('profile', S.profile);
+    flash(`✓ Template saved!`, 'success');
+  } catch (err) {
+    console.error('Error saving template:', err);
+    flash('Error saving template', 'error');
+  }
 }
 
 function loadMealTemplate(templateId) {
@@ -4633,8 +4665,8 @@ function loadMealTemplate(templateId) {
   _manualMealQuestionnaire.isFromTemplate = true;
   _manualMealQuestionnaire.templateId = templateId;
   
-  // Skip to review screen
-  _manualMealCurrentScreen = 8;
+  // Skip to review screen (now screen 9)
+  _manualMealCurrentScreen = 9;
   renderManualMealScreen();
 }
 

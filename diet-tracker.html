@@ -2494,6 +2494,8 @@ const PLAN = {
 // DATE UTILITIES
 // ═══════════════════════════════════════════════════════════════
 function dateStr(d) {
+  // Handle both string dates (e.g., '2026-05-01') and Date objects
+  if (typeof d === 'string') return d;
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,'0');
   const day = String(d.getDate()).padStart(2,'0');

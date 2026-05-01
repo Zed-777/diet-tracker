@@ -7042,6 +7042,49 @@ function renderProgress() {
       </div>
     </div>
     
+    <!-- CALORIE TRACKING -->
+    <div class="chart-title" style="margin-bottom:12px;">🔥 Calorie Tracking (7-Day Average)</div>
+    <div style="background:var(--s2); border-radius:12px; padding:16px; margin-bottom:16px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div style="background:var(--sf); padding:12px; border-radius:8px;">
+          <div style="font-size:12px; color:var(--t3);">Target Daily</div>
+          <div style="font-size:20px; font-weight:bold; color:var(--t1); margin-top:4px;">${p.calories} kcal</div>
+        </div>
+        <div style="background:var(--sf); padding:12px; border-radius:8px;">
+          <div style="font-size:12px; color:var(--t3);">Your Average</div>
+          <div style="font-size:20px; font-weight:bold; color:var(--ac); margin-top:4px;">${Math.round(weeklyAn.avgKcal)} kcal</div>
+        </div>
+      </div>
+      <div style="margin-top:12px; padding:12px; background:var(--sf); border-radius:8px; border-left:4px solid ${Math.abs(parseFloat(calDev.deviationPct)) < 5 ? 'var(--ac)' : (parseFloat(calDev.deviationPct) > 0 ? 'var(--fat)' : 'var(--carb)')};"><div style="font-size:12px; color:var(--t3);">Status</div>
+        <div style="font-size:14px; color:var(--t1); margin-top:4px;">
+          ${Math.abs(parseFloat(calDev.deviationPct)) < 5 ? '✓ Perfect' : (parseFloat(calDev.deviationPct) > 0 ? '⚠️ Running high' : '⬇️ Running low')}
+          (${calDev.deviationPct > 0 ? '+' : ''}${calDev.deviationPct}%)
+        </div>
+      </div>
+    </div>
+    
+    <!-- CALORIE TRACKING -->
+    <div class="chart-title" style="margin-bottom:12px;">🔥 Calorie Tracking (7-Day Average)</div>
+    <div style="background:var(--s2); border-radius:12px; padding:16px; margin-bottom:16px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div style="background:var(--sf); padding:12px; border-radius:8px;">
+          <div style="font-size:12px; color:var(--t3);">Target Daily</div>
+          <div style="font-size:20px; font-weight:bold; color:var(--t1); margin-top:4px;">${p.calories} kcal</div>
+        </div>
+        <div style="background:var(--sf); padding:12px; border-radius:8px;">
+          <div style="font-size:12px; color:var(--t3);">Your Average</div>
+          <div style="font-size:20px; font-weight:bold; color:var(--ac); margin-top:4px;">${Math.round(weeklyAn.avgKcal)} kcal</div>
+        </div>
+      </div>
+      <div style="margin-top:12px; padding:12px; background:var(--sf); border-radius:8px; border-left:4px solid ${Math.abs(parseFloat(calDev.deviationPct)) < 5 ? 'var(--ac)' : (parseFloat(calDev.deviationPct) > 0 ? 'var(--fat)' : 'var(--carb)')};">
+        <div style="font-size:12px; color:var(--t3);">Status</div>
+        <div style="font-size:14px; color:var(--t1); margin-top:4px;">
+          ${Math.abs(parseFloat(calDev.deviationPct)) < 5 ? '✓ Perfect' : (parseFloat(calDev.deviationPct) > 0 ? '⚠️ Running high' : '⬇️ Running low')}
+          (${calDev.deviationPct > 0 ? '+' : ''}${calDev.deviationPct}%)
+        </div>
+      </div>
+    </div>
+    
     <!-- MACRO ADHERENCE -->
     <div class="chart-title" style="margin-bottom:12px;">🎯 Macro Adherence (This Week)</div>
     <div style="background:var(--s2); border-radius:12px; padding:16px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:16px;">
@@ -7088,28 +7131,6 @@ function renderProgress() {
     
     <!-- WEIGHT TREND CHART (keep existing) -->
     ${chartHtml}
-    
-    <!-- CALORIE TRACKING -->
-    <div class="chart-title" style="margin-bottom:12px;">🔥 Calorie Tracking (7-Day Average)</div>
-    <div style="background:var(--s2); border-radius:12px; padding:16px; margin-bottom:16px;">
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-        <div style="background:var(--sf); padding:12px; border-radius:8px;">
-          <div style="font-size:12px; color:var(--t3);">Target Daily</div>
-          <div style="font-size:20px; font-weight:bold; color:var(--t1); margin-top:4px;">${p.calories} kcal</div>
-        </div>
-        <div style="background:var(--sf); padding:12px; border-radius:8px;">
-          <div style="font-size:12px; color:var(--t3);">Your Average</div>
-          <div style="font-size:20px; font-weight:bold; color:var(--ac); margin-top:4px;">${Math.round(weeklyAn.avgKcal)} kcal</div>
-        </div>
-      </div>
-      <div style="margin-top:12px; padding:12px; background:var(--sf); border-radius:8px; border-left:4px solid ${Math.abs(parseFloat(calDev.deviationPct)) < 5 ? 'var(--ac)' : (parseFloat(calDev.deviationPct) > 0 ? 'var(--fat)' : 'var(--carb)')};">
-        <div style="font-size:12px; color:var(--t3);">Status</div>
-        <div style="font-size:14px; color:var(--t1); margin-top:4px;">
-          ${Math.abs(parseFloat(calDev.deviationPct)) < 5 ? '✓ Perfect' : (parseFloat(calDev.deviationPct) > 0 ? '⚠️ Running high' : '⬇️ Running low')}
-          (${calDev.deviationPct > 0 ? '+' : ''}${calDev.deviationPct}%)
-        </div>
-      </div>
-    </div>
     
     <!-- BUTTONS (keep existing) -->
     <button class="add-weight-btn" onclick="openWeightModal()">${T('logTodaysWeight')}</button>

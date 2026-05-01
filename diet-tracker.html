@@ -2936,9 +2936,18 @@ const LANG = {
     dairy: 'Dairy',
     other: 'Other',
     proteinSourceQ: 'Does it have additional protein?',
-    proteinSourceYes: 'Yes',
-    proteinSourceNo: 'No (just the main ingredient)',
-    proteinSourceMixed: 'Mixed (multiple proteins)',
+    proteinSourceNo: 'No additional protein',
+    proteinSourceSeparate: 'Added as a separate item',
+    proteinSourceMixed: 'Mixed throughout the meal',
+    proteinTypeQ: 'What type of additional protein?',
+    chicken: 'Chicken',
+    beef: 'Beef',
+    fish: 'Fish/Seafood',
+    pork: 'Pork',
+    eggs: 'Eggs',
+    tofu: 'Tofu',
+    legumes: 'Legumes/Beans',
+    dairy: 'Dairy/Cheese',
     cookingMethodQ: 'How was it cooked?',
     raw: 'Raw',
     boiledSteamed: 'Boiled/Steamed',
@@ -3334,9 +3343,18 @@ const LANG = {
     dairy: 'Lácteos',
     other: 'Otro',
     proteinSourceQ: '¿Tiene proteína adicional?',
-    proteinSourceYes: 'Sí',
-    proteinSourceNo: 'No (solo el ingrediente principal)',
-    proteinSourceMixed: 'Mixto (múltiples proteínas)',
+    proteinSourceNo: 'Sin proteína adicional',
+    proteinSourceSeparate: 'Se añadió como elemento separado',
+    proteinSourceMixed: 'Mezclado en toda la comida',
+    proteinTypeQ: '¿Qué tipo de proteína adicional?',
+    chicken: 'Pollo',
+    beef: 'Res',
+    fish: 'Pescado/Mariscos',
+    pork: 'Cerdo',
+    eggs: 'Huevos',
+    tofu: 'Tofu',
+    legumes: 'Legumbres/Frijoles',
+    dairy: 'Lácteos/Queso',
     cookingMethodQ: '¿Cómo se preparó?',
     raw: 'Crudo',
     boiledSteamed: 'Hervido/Al vapor',
@@ -3956,6 +3974,7 @@ function openManualMealModal() {
     mealType: 'lunch',
     foodType: 'chicken',
     protein: null,
+    additionalProteinType: '',
     cookingMethod: 'grilled',
     portionSize: 'medium',
     additions: [],
@@ -4031,21 +4050,21 @@ function renderManualMealScreen() {
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('proteinSourceQ')}</h2>
         <div style="display:grid; gap:10px;">
-          <label style="display:flex; align-items:center; padding:12px; border:2px solid ${_manualMealQuestionnaire.protein === null ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.protein === null ? 'var(--s1)' : 'transparent'};">
+          <label style="display:flex; align-items:center; padding:14px; border:2px solid ${_manualMealQuestionnaire.protein === null ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.protein === null ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
             <input type="radio" name="protein" value="none" 
               ${_manualMealQuestionnaire.protein === null ? 'checked' : ''}
               onclick="updateManualMealQuestionnaire('protein', null)"
               style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
             <span style="color:var(--t1); font-weight:500;">${T('proteinSourceNo')}</span>
           </label>
-          <label style="display:flex; align-items:center; padding:12px; border:2px solid ${_manualMealQuestionnaire.protein === 'additional' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.protein === 'additional' ? 'var(--s1)' : 'transparent'};">
-            <input type="radio" name="protein" value="additional" 
-              ${_manualMealQuestionnaire.protein === 'additional' ? 'checked' : ''}
-              onclick="updateManualMealQuestionnaire('protein', 'additional')"
+          <label style="display:flex; align-items:center; padding:14px; border:2px solid ${_manualMealQuestionnaire.protein === 'separate' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.protein === 'separate' ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
+            <input type="radio" name="protein" value="separate" 
+              ${_manualMealQuestionnaire.protein === 'separate' ? 'checked' : ''}
+              onclick="updateManualMealQuestionnaire('protein', 'separate')"
               style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
-            <span style="color:var(--t1); font-weight:500;">${T('proteinSourceYes')}</span>
+            <span style="color:var(--t1); font-weight:500;">${T('proteinSourceSeparate')}</span>
           </label>
-          <label style="display:flex; align-items:center; padding:12px; border:2px solid ${_manualMealQuestionnaire.protein === 'mixed' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.protein === 'mixed' ? 'var(--s1)' : 'transparent'};">
+          <label style="display:flex; align-items:center; padding:14px; border:2px solid ${_manualMealQuestionnaire.protein === 'mixed' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.protein === 'mixed' ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
             <input type="radio" name="protein" value="mixed" 
               ${_manualMealQuestionnaire.protein === 'mixed' ? 'checked' : ''}
               onclick="updateManualMealQuestionnaire('protein', 'mixed')"
@@ -4053,6 +4072,22 @@ function renderManualMealScreen() {
             <span style="color:var(--t1); font-weight:500;">${T('proteinSourceMixed')}</span>
           </label>
         </div>
+        ${_manualMealQuestionnaire.protein ? `
+          <div style="margin-top:16px; padding:12px; background:var(--s2); border-radius:8px;">
+            <label style="color:var(--t2); display:block; margin-bottom:8px; font-weight:500; font-size:13px;">${T('proteinTypeQ')}</label>
+            <select id="q-additionalProtein" style="width:100%; padding:10px; border:1px solid var(--b1); border-radius:6px; background:var(--sf); color:var(--t1); box-sizing:border-box;">
+              <option value="">Select additional protein...</option>
+              <option value="chicken" ${_manualMealQuestionnaire.additionalProteinType === 'chicken' ? 'selected' : ''}>Chicken</option>
+              <option value="beef" ${_manualMealQuestionnaire.additionalProteinType === 'beef' ? 'selected' : ''}>Beef</option>
+              <option value="fish" ${_manualMealQuestionnaire.additionalProteinType === 'fish' ? 'selected' : ''}>Fish/Seafood</option>
+              <option value="pork" ${_manualMealQuestionnaire.additionalProteinType === 'pork' ? 'selected' : ''}>Pork</option>
+              <option value="eggs" ${_manualMealQuestionnaire.additionalProteinType === 'eggs' ? 'selected' : ''}>Eggs</option>
+              <option value="tofu" ${_manualMealQuestionnaire.additionalProteinType === 'tofu' ? 'selected' : ''}>Tofu</option>
+              <option value="legumes" ${_manualMealQuestionnaire.additionalProteinType === 'legumes' ? 'selected' : ''}>Legumes/Beans</option>
+              <option value="dairy" ${_manualMealQuestionnaire.additionalProteinType === 'dairy' ? 'selected' : ''}>Dairy/Cheese</option>
+            </select>
+          </div>
+        ` : ''}
         ${renderManualMealButtons()}
       `;
       break;
@@ -4196,6 +4231,11 @@ function renderManualMealScreen() {
               ${_manualMealQuestionnaire.garnish.map(g => `${T('garnish' + g.type.charAt(0).toUpperCase() + g.type.slice(1))} (${T('garnish' + g.size.charAt(0).toUpperCase() + g.size.slice(1))})`).join(', ')}
             </div>
           ` : ''}
+          ${_manualMealQuestionnaire.additionalProteinType ? `
+            <div style="color:var(--t2); font-size:14px; margin-bottom:12px;">
+              <strong>Additional Protein:</strong> ${T(_manualMealQuestionnaire.additionalProteinType)}
+            </div>
+          ` : ''}
           <div style="color:var(--t2); font-size:14px; margin-bottom:12px;">
             <strong>${T('estimatedMacros')}</strong>
           </div>
@@ -4274,17 +4314,15 @@ function renderManualMealButtons() {
 }
 
 function nextManualMealScreen() {
-  const mealName = document.getElementById('q-mealName');
-  const mealType = document.getElementById('q-mealType');
-  const mealTime = document.getElementById('q-mealTime');
   const notes = document.getElementById('q-notes');
+  const additionalProtein = document.getElementById('q-additionalProtein');
   
-  if (mealName) _manualMealQuestionnaire.mealName = mealName.value;
-  if (mealType) _manualMealQuestionnaire.mealType = mealType.value;
-  if (mealTime) _manualMealQuestionnaire.mealTime = mealTime.value;
   if (notes) _manualMealQuestionnaire.notes = notes.value;
+  if (additionalProtein && additionalProtein.value) {
+    _manualMealQuestionnaire.additionalProteinType = additionalProtein.value;
+  }
   
-  if (_manualMealCurrentScreen < 7) {
+  if (_manualMealCurrentScreen < 8) {
     _manualMealCurrentScreen++;
     renderManualMealScreen();
   }

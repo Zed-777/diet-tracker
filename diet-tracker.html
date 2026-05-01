@@ -3836,7 +3836,13 @@ function initManualMealData() {
 }
 
 function estimateMealMacros(questionnaire) {
-  const { foodType, protein, cookingMethod, portionSize, additions, accuracy } = questionnaire;
+  const { foodType, protein, cookingMethod, portionSize, additions, garnish, accuracy } = questionnaire;
+  
+  // Validate required fields
+  if (!foodType) {
+    console.warn('No food type selected');
+    return { kcal: 0, protein: 0, carbs: 0, fat: 0, confidence: 0.3 };
+  }
   
   // Start with base food (per 100g)
   let macros = { ...MACRO_ESTIMATES.foods[foodType] } || { kcal: 200, protein: 10, carbs: 20, fat: 5 };
@@ -3873,6 +3879,18 @@ function estimateMealMacros(questionnaire) {
       if (addMacros) {
         Object.keys(addMacros).forEach(key => {
           macros[key] = (macros[key] || 0) + (addMacros[key] || 0);
+        });
+      }
+    });
+  }
+  
+  // Add garnish macros (new)
+  if (garnish && garnish.length > 0) {
+    garnish.forEach(g => {
+      const garnishMacros = MACRO_ESTIMATES.garnish[g.type]?.[g.size];
+      if (garnishMacros) {
+        Object.keys(garnishMacros).forEach(key => {
+          macros[key] = (macros[key] || 0) + (garnishMacros[key] || 0);
         });
       }
     });
@@ -4474,10 +4492,35 @@ function nextManualMealScreen() {
     _manualMealQuestionnaire.additionalProteinType = additionalProtein.value;
   }
   
+  // Validate current screen before advancing
+  const validationMsg = validateManualMealScreen(_manualMealCurrentScreen);
+  if (validationMsg) {
+    flash(validationMsg, 'error');
+    return;
+  }
+  
   if (_manualMealCurrentScreen < 9) {
     _manualMealCurrentScreen++;
     renderManualMealScreen();
   }
+}
+
+function validateManualMealScreen(screen) {
+  switch(screen) {
+    case 0: // Meal type selection
+      if (!_manualMealQuestionnaire.mealType) {
+        return 'Please select a meal type';
+      }
+      break;
+    case 2: // Food classification
+      if (!_manualMealQuestionnaire.foodType) {
+        return 'Please select a main ingredient';
+      }
+      break;
+    case 5: // Garnish (optional but if added, validate)
+      break;
+  }
+  return null;
 }
 
 function prevManualMealScreen() {
@@ -5242,10 +5285,15 @@ const MACRO_ESTIMATES = {
     pork: { kcal: 242, protein: 27, carbs: 0, fat: 14 },
     pasta: { kcal: 131, protein: 5, carbs: 25, fat: 1.1 },
     rice: { kcal: 130, protein: 2.7, carbs: 28, fat: 0.3 },
+    noodles: { kcal: 138, protein: 4.5, carbs: 25, fat: 1.2 },
+    bread: { kcal: 265, protein: 9, carbs: 49, fat: 3.3 },
     vegetables: { kcal: 35, protein: 2, carbs: 7, fat: 0.4 },
+    salad: { kcal: 15, protein: 1, carbs: 3, fat: 0.2 },
+    corn: { kcal: 86, protein: 3.3, carbs: 19, fat: 1.2 },
     eggs: { kcal: 155, protein: 13, carbs: 1.1, fat: 11 },
     dairy: { kcal: 100, protein: 7, carbs: 5, fat: 7 },
-    tofu: { kcal: 76, protein: 8, carbs: 2, fat: 4.8 }
+    tofu: { kcal: 76, protein: 8, carbs: 2, fat: 4.8 },
+    other: { kcal: 200, protein: 10, carbs: 20, fat: 5 }
   },
   
   cookingMethods: {
@@ -5262,9 +5310,22 @@ const MACRO_ESTIMATES = {
     oil: { kcal: 180, fat: 20 },
     cheese: { kcal: 110, protein: 7, fat: 9 },
     bacon: { kcal: 80, protein: 6, fat: 6 },
-    sauce_heavy: { kcal: 150, carbs: 5, fat: 12 },
+    sauce: { kcal: 150, carbs: 5, fat: 12 },
     nuts: { kcal: 200, protein: 7, fat: 14 },
-    dressing: { kcal: 140, fat: 15 }
+    dressing: { kcal: 140, fat: 15 },
+    dessert: { kcal: 250, carbs: 40, fat: 8 }
+  },
+  
+  // Garnish macro contributions per portion
+  garnish: {
+    broccoli: { small: { kcal: 30, protein: 2.5, carbs: 5, fat: 0.3 }, medium: { kcal: 60, protein: 5, carbs: 10, fat: 0.6 }, large: { kcal: 90, protein: 7.5, carbs: 15, fat: 0.9 } },
+    potatoes: { small: { kcal: 60, protein: 1.3, carbs: 13, fat: 0.1 }, medium: { kcal: 120, protein: 2.6, carbs: 26, fat: 0.2 }, large: { kcal: 180, protein: 3.9, carbs: 39, fat: 0.3 } },
+    rice: { small: { kcal: 78, protein: 1.6, carbs: 17, fat: 0.2 }, medium: { kcal: 156, protein: 3.2, carbs: 34, fat: 0.4 }, large: { kcal: 234, protein: 4.8, carbs: 51, fat: 0.6 } },
+    noodles: { small: { kcal: 83, protein: 2.7, carbs: 15, fat: 0.7 }, medium: { kcal: 166, protein: 5.4, carbs: 30, fat: 1.4 }, large: { kcal: 249, protein: 8.1, carbs: 45, fat: 2.1 } },
+    bread: { small: { kcal: 80, protein: 2.7, carbs: 15, fat: 1 }, medium: { kcal: 160, protein: 5.4, carbs: 30, fat: 2 }, large: { kcal: 240, protein: 8.1, carbs: 45, fat: 3 } },
+    salad: { small: { kcal: 9, protein: 0.6, carbs: 2, fat: 0.1 }, medium: { kcal: 18, protein: 1.2, carbs: 4, fat: 0.2 }, large: { kcal: 27, protein: 1.8, carbs: 6, fat: 0.3 } },
+    corn: { small: { kcal: 52, protein: 2, carbs: 11, fat: 0.7 }, medium: { kcal: 104, protein: 4, carbs: 22, fat: 1.4 }, large: { kcal: 156, protein: 6, carbs: 33, fat: 2.1 } },
+    other: { small: { kcal: 50, protein: 2, carbs: 8, fat: 1 }, medium: { kcal: 100, protein: 4, carbs: 16, fat: 2 }, large: { kcal: 150, protein: 6, carbs: 24, fat: 3 } }
   },
   
   portions: {

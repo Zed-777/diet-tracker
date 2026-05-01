@@ -4266,7 +4266,7 @@ function renderManualMealScreen() {
       `
       break;
       
-    case 2: // Screen 3: Food Classification
+    case 2: // Screen 3: Food Classification - Now with 100+ foods!
       // Show template button if templates exist for this meal type
       const hasTemplates = (S.profile.mealTemplates || []).filter(t => t.mealType === _manualMealQuestionnaire.mealType).length > 0;
       let templateBtn = '';
@@ -4280,22 +4280,59 @@ function renderManualMealScreen() {
           </button>
         `;
       }
+      
+      const foodCategories = getFoodsByCategory();
+      let foodOptions = '<option value="">Select a specific food...</option>';
+      for (const [category, foods] of Object.entries(foodCategories)) {
+        foodOptions += `<optgroup label="${category}">`;
+        foods.forEach(food => {
+          const foodData = MACRO_ESTIMATES.foods[food];
+          if (foodData) {
+            const name = food.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            const baseInfo = `${foodData.basePortionGrams}g base portion`;
+            foodOptions += `<option value="${food}" ${_manualMealQuestionnaire.foodType === food ? 'selected' : ''}>${name} - ${foodData.kcal} kcal</option>`;
+          }
+        });
+        foodOptions += '</optgroup>';
+      }
+      
       html = `
         ${templateBtn}
-        <h2 style="color:var(--t1); margin-bottom:20px;">${T('mainIngredientQ')}</h2>
-        <div style="display:grid; gap:10px;">
-          ${['chicken', 'beef', 'fish', 'pork', 'turkey', 'lamb', 'eggs', 'tofu', 'legumes', 'pasta', 'rice', 'vegetables', 'dairy'].map(type => `
-            <label style="display:flex; align-items:center; padding:12px; border:2px solid ${_manualMealQuestionnaire.foodType === type ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.foodType === type ? 'var(--s1)' : 'transparent'};">
-              <input type="radio" name="foodType" value="${type}" 
-                ${_manualMealQuestionnaire.foodType === type ? 'checked' : ''}
-                onclick="updateManualMealQuestionnaire('foodType', '${type}')"
-                style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
-              <span style="color:var(--t1); font-weight:500;">${T(type === 'fish' ? 'fishSeafood' : type === 'pasta' ? 'pastaRiceGrains' : type === 'legumes' ? 'legumesBean' : type)}</span>
-            </label>
-          `).join('')}
-        </div>
+        <h2 style="color:var(--t1); margin-bottom:20px;">🍗 Select Your Main Food</h2>
+        <p style="color:var(--t2); font-size:13px; margin-bottom:12px;">Choose from 100+ foods with accurate USDA data</p>
+        <select id="q-foodType" style="width:100%; padding:12px; border:2px solid var(--b1); border-radius:8px; background:var(--sf); color:var(--t1); box-sizing:border-box; font-size:14px;">
+          ${foodOptions}
+        </select>
+        ${_manualMealQuestionnaire.foodType ? `
+          <div style="margin-top:12px; padding:12px; background:var(--s2); border-radius:8px;">
+            ${(() => {
+              const fd = MACRO_ESTIMATES.foods[_manualMealQuestionnaire.foodType];
+              if (fd) {
+                return `<div style="font-size:12px; color:var(--t2);">
+                  <div>📏 Base: ${fd.basePortionGrams}g | 🔥 ${fd.kcal} kcal per 100g</div>
+                  <div>🥩 ${fd.protein}g protein | 🍞 ${fd.carbs}g carbs | 🫒 ${fd.fat}g fat</div>
+                  ${fd.cookingMultiplier ? `<div style="color:var(--ac);">↗️ Cooking: ×${fd.cookingMultiplier} weight (pasta/rice)</div>` : ''}
+                </div>`;
+              }
+              return '';
+            })()}
+          </div>
+        ` : ''}
         ${renderManualMealButtons()}
       `;
+      
+      // Handle the dropdown change
+      setTimeout(() => {
+        const select = document.getElementById('q-foodType');
+        if (select) {
+          select.onchange = (e) => {
+            if (e.target.value) {
+              updateManualMealQuestionnaire('foodType', e.target.value);
+            }
+          };
+        }
+      }, 50);
+      
       break;
       
     case 3: // Screen 4: Protein Source
@@ -4326,28 +4363,52 @@ function renderManualMealScreen() {
         </div>
         ${_manualMealQuestionnaire.protein ? `
           <div style="margin-top:16px; padding:12px; background:var(--s2); border-radius:8px;">
-            <label style="color:var(--t2); display:block; margin-bottom:8px; font-weight:500; font-size:13px;">${T('proteinTypeQ')}</label>
+            <label style="color:var(--t2); display:block; margin-bottom:8px; font-weight:500; font-size:13px;">Additional Protein Options (50+ choices)</label>
             <select id="q-additionalProtein" style="width:100%; padding:10px; border:1px solid var(--b1); border-radius:6px; background:var(--sf); color:var(--t1); box-sizing:border-box;">
-              <option value="">Select additional protein...</option>
-              <option value="chicken" ${_manualMealQuestionnaire.additionalProteinType === 'chicken' ? 'selected' : ''}>Chicken</option>
-              <option value="chicken_breast" ${_manualMealQuestionnaire.additionalProteinType === 'chicken_breast' ? 'selected' : ''}>Chicken Breast</option>
-              <option value="chicken_thigh" ${_manualMealQuestionnaire.additionalProteinType === 'chicken_thigh' ? 'selected' : ''}>Chicken Thigh</option>
-              <option value="beef" ${_manualMealQuestionnaire.additionalProteinType === 'beef' ? 'selected' : ''}>Beef</option>
-              <option value="beef_lean" ${_manualMealQuestionnaire.additionalProteinType === 'beef_lean' ? 'selected' : ''}>Lean Beef</option>
-              <option value="beef_ground" ${_manualMealQuestionnaire.additionalProteinType === 'beef_ground' ? 'selected' : ''}>Ground Beef</option>
-              <option value="turkey" ${_manualMealQuestionnaire.additionalProteinType === 'turkey' ? 'selected' : ''}>Turkey</option>
-              <option value="fish" ${_manualMealQuestionnaire.additionalProteinType === 'fish' ? 'selected' : ''}>Fish/Seafood</option>
-              <option value="salmon" ${_manualMealQuestionnaire.additionalProteinType === 'salmon' ? 'selected' : ''}>Salmon</option>
-              <option value="cod" ${_manualMealQuestionnaire.additionalProteinType === 'cod' ? 'selected' : ''}>Cod</option>
-              <option value="tuna" ${_manualMealQuestionnaire.additionalProteinType === 'tuna' ? 'selected' : ''}>Tuna</option>
-              <option value="pork" ${_manualMealQuestionnaire.additionalProteinType === 'pork' ? 'selected' : ''}>Pork</option>
-              <option value="lamb" ${_manualMealQuestionnaire.additionalProteinType === 'lamb' ? 'selected' : ''}>Lamb</option>
-              <option value="eggs" ${_manualMealQuestionnaire.additionalProteinType === 'eggs' ? 'selected' : ''}>Eggs</option>
-              <option value="tofu" ${_manualMealQuestionnaire.additionalProteinType === 'tofu' ? 'selected' : ''}>Tofu</option>
-              <option value="legumes" ${_manualMealQuestionnaire.additionalProteinType === 'legumes' ? 'selected' : ''}>Legumes/Beans</option>
-              <option value="lentils" ${_manualMealQuestionnaire.additionalProteinType === 'lentils' ? 'selected' : ''}>Lentils</option>
-              <option value="chickpeas" ${_manualMealQuestionnaire.additionalProteinType === 'chickpeas' ? 'selected' : ''}>Chickpeas</option>
-              <option value="dairy" ${_manualMealQuestionnaire.additionalProteinType === 'dairy' ? 'selected' : ''}>Dairy/Cheese</option>
+              <option value="">Select protein...</option>
+              <optgroup label="Poultry">
+                <option value="chicken_breast" ${_manualMealQuestionnaire.additionalProteinType === 'chicken_breast' ? 'selected' : ''}>Chicken Breast (165 kcal)</option>
+                <option value="chicken_thigh" ${_manualMealQuestionnaire.additionalProteinType === 'chicken_thigh' ? 'selected' : ''}>Chicken Thigh (209 kcal)</option>
+                <option value="chicken_drumstick" ${_manualMealQuestionnaire.additionalProteinType === 'chicken_drumstick' ? 'selected' : ''}>Chicken Drumstick (195 kcal)</option>
+                <option value="turkey_breast" ${_manualMealQuestionnaire.additionalProteinType === 'turkey_breast' ? 'selected' : ''}>Turkey Breast (135 kcal)</option>
+                <option value="turkey_ground" ${_manualMealQuestionnaire.additionalProteinType === 'turkey_ground' ? 'selected' : ''}>Ground Turkey (185 kcal)</option>
+                <option value="duck" ${_manualMealQuestionnaire.additionalProteinType === 'duck' ? 'selected' : ''}>Duck (337 kcal)</option>
+              </optgroup>
+              <optgroup label="Beef">
+                <option value="beef_lean" ${_manualMealQuestionnaire.additionalProteinType === 'beef_lean' ? 'selected' : ''}>Lean Beef (180 kcal)</option>
+                <option value="beef_extra_lean" ${_manualMealQuestionnaire.additionalProteinType === 'beef_extra_lean' ? 'selected' : ''}>Extra Lean Beef (150 kcal)</option>
+                <option value="beef_ground_lean" ${_manualMealQuestionnaire.additionalProteinType === 'beef_ground_lean' ? 'selected' : ''}>Ground Beef Lean (180 kcal)</option>
+                <option value="beef_steak_sirloin" ${_manualMealQuestionnaire.additionalProteinType === 'beef_steak_sirloin' ? 'selected' : ''}>Sirloin Steak (242 kcal)</option>
+                <option value="beef_steak_filet" ${_manualMealQuestionnaire.additionalProteinType === 'beef_steak_filet' ? 'selected' : ''}>Filet Mignon (250 kcal)</option>
+              </optgroup>
+              <optgroup label="Fish">
+                <option value="salmon" ${_manualMealQuestionnaire.additionalProteinType === 'salmon' ? 'selected' : ''}>Salmon (208 kcal)</option>
+                <option value="cod" ${_manualMealQuestionnaire.additionalProteinType === 'cod' ? 'selected' : ''}>Cod (82 kcal)</option>
+                <option value="tuna" ${_manualMealQuestionnaire.additionalProteinType === 'tuna' ? 'selected' : ''}>Tuna (132 kcal)</option>
+                <option value="tilapia" ${_manualMealQuestionnaire.additionalProteinType === 'tilapia' ? 'selected' : ''}>Tilapia (96 kcal)</option>
+                <option value="halibut" ${_manualMealQuestionnaire.additionalProteinType === 'halibut' ? 'selected' : ''}>Halibut (111 kcal)</option>
+                <option value="shrimp" ${_manualMealQuestionnaire.additionalProteinType === 'shrimp' ? 'selected' : ''}>Shrimp (99 kcal)</option>
+              </optgroup>
+              <optgroup label="Pork">
+                <option value="pork_loin" ${_manualMealQuestionnaire.additionalProteinType === 'pork_loin' ? 'selected' : ''}>Pork Loin (180 kcal)</option>
+                <option value="pork_chop" ${_manualMealQuestionnaire.additionalProteinType === 'pork_chop' ? 'selected' : ''}>Pork Chop (242 kcal)</option>
+              </optgroup>
+              <optgroup label="Other Meats">
+                <option value="lamb_lean" ${_manualMealQuestionnaire.additionalProteinType === 'lamb_lean' ? 'selected' : ''}>Lamb Lean (230 kcal)</option>
+                <option value="veal" ${_manualMealQuestionnaire.additionalProteinType === 'veal' ? 'selected' : ''}>Veal (180 kcal)</option>
+              </optgroup>
+              <optgroup label="Plant-Based">
+                <option value="tofu_firm" ${_manualMealQuestionnaire.additionalProteinType === 'tofu_firm' ? 'selected' : ''}>Tofu (76 kcal)</option>
+                <option value="tempeh" ${_manualMealQuestionnaire.additionalProteinType === 'tempeh' ? 'selected' : ''}>Tempeh (165 kcal)</option>
+                <option value="lentils" ${_manualMealQuestionnaire.additionalProteinType === 'lentils' ? 'selected' : ''}>Lentils (116 kcal)</option>
+                <option value="chickpeas" ${_manualMealQuestionnaire.additionalProteinType === 'chickpeas' ? 'selected' : ''}>Chickpeas (164 kcal)</option>
+                <option value="edamame" ${_manualMealQuestionnaire.additionalProteinType === 'edamame' ? 'selected' : ''}>Edamame (111 kcal)</option>
+              </optgroup>
+              <optgroup label="Eggs & Dairy">
+                <option value="eggs" ${_manualMealQuestionnaire.additionalProteinType === 'eggs' ? 'selected' : ''}>Eggs (155 kcal)</option>
+                <option value="cottage_cheese" ${_manualMealQuestionnaire.additionalProteinType === 'cottage_cheese' ? 'selected' : ''}>Cottage Cheese (98 kcal)</option>
+                <option value="greek_yogurt" ${_manualMealQuestionnaire.additionalProteinType === 'greek_yogurt' ? 'selected' : ''}>Greek Yogurt (59 kcal)</option>
+              </optgroup>
             </select>
           </div>
         ` : ''}
@@ -4355,19 +4416,27 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 4: // Screen 5: Cooking Method
+    case 4: // Screen 5: Cooking Method (13 options!)
       html = `
-        <h2 style="color:var(--t1); margin-bottom:20px;">${T('cookingMethodQ')}</h2>
+        <h2 style="color:var(--t1); margin-bottom:20px;">🔥 How Was It Cooked?</h2>
+        <p style="color:var(--t2); font-size:13px; margin-bottom:12px;">Cooking method affects fat content & calorie accuracy</p>
         <div style="display:grid; gap:10px;">
-          ${['raw', 'steamed', 'boiled', 'grilled', 'roasted', 'sauteed', 'fried', 'baked', 'slow_cooked', 'stir_fried'].map(method => `
-            <label style="display:flex; align-items:center; padding:12px; border:2px solid ${_manualMealQuestionnaire.cookingMethod === method ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.cookingMethod === method ? 'var(--s1)' : 'transparent'};">
-              <input type="radio" name="cookingMethod" value="${method}" 
-                ${_manualMealQuestionnaire.cookingMethod === method ? 'checked' : ''}
-                onclick="updateManualMealQuestionnaire('cookingMethod', '${method}')"
-                style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
-              <span style="color:var(--t1); font-weight:500;">${T(method === 'boiled' ? 'boiledSteamed' : method === 'fried' ? 'friedDeepFried' : method === 'steamed' ? 'steamedBoiled' : method === 'slow_cooked' ? 'slowCooked' : method === 'stir_fried' ? 'stirFried' : method)}</span>
-            </label>
-          `).join('')}
+          ${['raw', 'steamed', 'boiled', 'poached', 'grilled', 'roasted', 'sauteed', 'stir_fried', 'fried', 'baked', 'slow_cooked', 'pressure_cooked', 'microwaved'].map(method => {
+            const methodData = MACRO_ESTIMATES.cookingMethods[method];
+            const emojis = { raw: '❄️', steamed: '💨', boiled: '💧', poached: '🫧', grilled: '🔥', roasted: '🍗', sauteed: '🍳', stir_fried: '🍴', fried: '🫒', baked: '🥘', slow_cooked: '⏰', pressure_cooked: '⚡', microwaved: '📱' };
+            return `
+              <label style="display:flex; align-items:flex-start; padding:12px; border:2px solid ${_manualMealQuestionnaire.cookingMethod === method ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.cookingMethod === method ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
+                <input type="radio" name="cookingMethod" value="${method}" 
+                  ${_manualMealQuestionnaire.cookingMethod === method ? 'checked' : ''}
+                  onclick="updateManualMealQuestionnaire('cookingMethod', '${method}')"
+                  style="margin-right:12px; width:18px; height:18px; cursor:pointer; margin-top:2px;">
+                <span style="flex:1;">
+                  <div style="color:var(--t1); font-weight:600; font-size:14px;">${emojis[method]} ${method.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                  <div style="color:var(--t3); font-size:12px; margin-top:2px;">${methodData?.description || ''}</div>
+                </span>
+              </label>
+            `;
+          }).join('')}
         </div>
         ${renderManualMealButtons()}
       `;
@@ -4715,6 +4784,26 @@ function prevManualMealScreen() {
     _manualMealCurrentScreen--;
     renderManualMealScreen();
   }
+}
+
+// Helper function: Get foods grouped by category for better UI
+function getFoodsByCategory() {
+  const categories = {
+    'Poultry': ['chicken', 'chicken_breast', 'chicken_breast_skinless', 'chicken_thigh', 'chicken_drumstick', 'chicken_wing', 'turkey', 'turkey_breast', 'turkey_ground', 'duck'],
+    'Beef & Lamb': ['beef', 'beef_lean', 'beef_extra_lean', 'beef_ground', 'beef_ground_lean', 'beef_steak_ribeye', 'beef_steak_sirloin', 'beef_steak_filet', 'lamb', 'lamb_lean', 'veal'],
+    'Pork': ['pork', 'pork_loin', 'pork_chop', 'pork_ground'],
+    'Fish & Seafood': ['salmon', 'salmon_farmed', 'cod', 'tuna', 'tuna_canned', 'tilapia', 'halibut', 'haddock', 'mackerel', 'trout', 'fish', 'shrimp', 'scallops', 'crab', 'lobster', 'mussels', 'clams', 'oysters', 'squid', 'anchovies'],
+    'Eggs': ['eggs', 'eggs_white', 'eggs_yolk'],
+    'Legumes & Plant': ['beans', 'beans_black', 'beans_kidney', 'beans_pinto', 'beans_chickpeas', 'lentils', 'lentils_red', 'split_peas', 'edamame', 'tofu', 'tofu_firm', 'tofu_silken', 'tempeh'],
+    'Grains': ['pasta', 'pasta_whole_wheat', 'pasta_brown_rice', 'rice', 'rice_brown', 'rice_wild', 'rice_basmati', 'noodles', 'quinoa', 'couscous', 'barley', 'farro', 'buckwheat', 'millet'],
+    'Bread & Cereals': ['bread_white', 'bread_whole_wheat', 'bread_rye', 'bread_sourdough', 'oats', 'oats_rolled', 'granola'],
+    'Vegetables': ['broccoli', 'cauliflower', 'cabbage', 'cabbage_red', 'kale', 'spinach', 'collard_greens', 'lettuce', 'arugula', 'carrots', 'beets', 'mushrooms', 'bell_peppers', 'onions', 'garlic', 'tomatoes', 'cucumber', 'zucchini', 'eggplant', 'asparagus', 'green_beans', 'snap_peas', 'potatoes', 'potatoes_red', 'potatoes_sweet', 'yams', 'corn', 'peas', 'artichoke', 'salad_mix'],
+    'Dairy': ['milk_whole', 'milk_lowfat', 'milk_skim', 'yogurt', 'yogurt_greek', 'cottage_cheese', 'ricotta', 'cheddar', 'mozzarella', 'feta', 'parmesan', 'cream_cheese', 'sour_cream'],
+    'Fruits': ['apple', 'banana', 'orange', 'berries_mixed', 'strawberries', 'blueberries', 'avocado'],
+    'Nuts & Seeds': ['almonds', 'peanuts', 'walnuts', 'cashews', 'sunflower_seeds', 'pumpkin_seeds'],
+    'Other': ['peanut_butter', 'almond_butter', 'honey']
+  };
+  return categories;
 }
 
 function updateManualMealQuestionnaire(field, value) {

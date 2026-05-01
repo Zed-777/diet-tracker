@@ -4322,11 +4322,13 @@ function renderManualMealScreen() {
           </div>
           ${_manualMealQuestionnaire.notes ? `<div style="color:var(--t3); font-size:12px; margin-top:8px;"><strong>${T('notesLabel')}:</strong> ${_manualMealQuestionnaire.notes}</div>` : ''}
         </div>
+        ${!_manualMealQuestionnaire.isFromTemplate ? `
         <button onclick="saveMealAsTemplate()" style="
           width:100%; padding:10px; background:rgba(139,92,246,.12); border:1px solid var(--pro); 
           border-radius:8px; color:var(--pro); cursor:pointer; font-weight:600; font-size:13px; 
           margin-bottom:12px;
         ">💾 Save as Template</button>
+        ` : ''}
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
           <button onclick="closeManualMealModal()" style="
             padding:12px; background:var(--s1); border:1px solid var(--b1); border-radius:8px;
@@ -4537,6 +4539,8 @@ async function finalizeManualMeal() {
       // Mark as completed if not already and slot exists
       if (log && slot && !log.completed.includes(slot)) {
         log.completed.push(slot);
+        // Ensure log object exists
+        if (!S.profile.log) S.profile.log = {};
         S.profile.log[dateStr] = log;
         updateConsumptionLog(dateStr);
         await DB.set('profile', S.profile);

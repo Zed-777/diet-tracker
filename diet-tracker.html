@@ -3856,10 +3856,19 @@ function estimateMealMacros(questionnaire) {
     macros[key] = (macros[key] || 0) * (portionGrams / baseGrams);
   });
   
-  // Apply cooking method fat multiplier
+  // Apply cooking method fat multiplier ONLY if cooking method adds fat
   if (cookingMethod && MACRO_ESTIMATES.cookingMethods[cookingMethod]) {
     const fatMult = MACRO_ESTIMATES.cookingMethods[cookingMethod].fatMult;
-    macros.fat = (macros.fat || 0) * fatMult;
+    // Only add fat if cooking method isn't raw or boiled
+    if (fatMult > 1.15) {
+      const extraFat = (fatMult - 1) * 5; // 5g base fat per cooking method
+      macros.fat = (macros.fat || 0) + extraFat;
+    } else if (fatMult < 1.1) {
+      // For raw/steamed, slight fat reduction
+      macros.fat = (macros.fat || 0) * fatMult;
+    } else {
+      macros.fat = (macros.fat || 0) * fatMult;
+    }
     // Recalculate kcal based on macros: (protein*4) + (carbs*4) + (fat*9)
     macros.kcal = Math.round((macros.protein || 0) * 4 + (macros.carbs || 0) * 4 + (macros.fat || 0) * 9);
   }
@@ -3884,7 +3893,7 @@ function estimateMealMacros(questionnaire) {
     });
   }
   
-  // Add garnish macros (new)
+  // Add garnish macros
   if (garnish && garnish.length > 0) {
     garnish.forEach(g => {
       const garnishMacros = MACRO_ESTIMATES.garnish[g.type]?.[g.size];
@@ -3896,11 +3905,22 @@ function estimateMealMacros(questionnaire) {
     });
   }
   
-  // Calculate confidence based on accuracy (rough, reasonable, accurate)
-  const confidenceMap = { rough: 0.60, reasonable: 0.75, accurate: 0.90 };
-  const confidence = confidenceMap[accuracy] || 0.75;
+  // Map accuracy to confidence with expanded levels
+  const confidenceMap = {
+    guess: 0.55,      // Just a guess: ±350 kcal uncertainty
+    rough: 0.68,      // Rough estimate: ±250 kcal uncertainty
+    reasonable: 0.78, // Reasonable: ±150 kcal uncertainty
+    careful: 0.88,    // Careful: ±75 kcal uncertainty
+    precise: 0.95     // Very precise: ±40 kcal uncertainty
+  };
+  const confidence = confidenceMap[accuracy] || 0.78;
   
-  // Round values
+  // Ensure all macros are non-negative
+  Object.keys(macros).forEach(key => {
+    macros[key] = Math.max(0, macros[key] || 0);
+  });
+  
+  // Round values appropriately
   return {
     kcal: Math.round(macros.kcal || 0),
     protein: Math.round((macros.protein || 0) * 10) / 10,
@@ -4155,7 +4175,6 @@ function renderManualMealScreen() {
           <button onclick="updateManualMealQuestionnaire('mealType', 'lunch');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'lunch' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'lunch' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('lunch')}</button>
           <button onclick="updateManualMealQuestionnaire('mealType', 'afternoonSnack');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'afternoonSnack' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'afternoonSnack' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('afternoonSnack')}</button>
           <button onclick="updateManualMealQuestionnaire('mealType', 'dinner');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'dinner' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'dinner' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('dinner')}</button>
-          <button onclick="updateManualMealQuestionnaire('mealType', 'other');" style="padding:14px; border:2px solid ${_manualMealQuestionnaire.mealType === 'other' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealQuestionnaire.mealType === 'other' ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:15px; text-align:center; transition:all .2s;">${T('otherMeal')}</button>
         </div>
         ${renderManualMealButtons()}
       `;
@@ -4193,13 +4212,13 @@ function renderManualMealScreen() {
         ${templateBtn}
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('mainIngredientQ')}</h2>
         <div style="display:grid; gap:10px;">
-          ${['chicken', 'beef', 'fish', 'pork', 'pasta', 'vegetables', 'eggs', 'dairy', 'other'].map(type => `
+          ${['chicken', 'beef', 'fish', 'pork', 'turkey', 'lamb', 'eggs', 'tofu', 'legumes', 'pasta', 'rice', 'vegetables', 'dairy'].map(type => `
             <label style="display:flex; align-items:center; padding:12px; border:2px solid ${_manualMealQuestionnaire.foodType === type ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.foodType === type ? 'var(--s1)' : 'transparent'};">
               <input type="radio" name="foodType" value="${type}" 
                 ${_manualMealQuestionnaire.foodType === type ? 'checked' : ''}
                 onclick="updateManualMealQuestionnaire('foodType', '${type}')"
                 style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
-              <span style="color:var(--t1); font-weight:500;">${T(type === 'fish' ? 'fishSeafood' : type === 'pasta' ? 'pastaRiceGrains' : type)}</span>
+              <span style="color:var(--t1); font-weight:500;">${T(type === 'fish' ? 'fishSeafood' : type === 'pasta' ? 'pastaRiceGrains' : type === 'legumes' ? 'legumesBean' : type)}</span>
             </label>
           `).join('')}
         </div>
@@ -4239,12 +4258,23 @@ function renderManualMealScreen() {
             <select id="q-additionalProtein" style="width:100%; padding:10px; border:1px solid var(--b1); border-radius:6px; background:var(--sf); color:var(--t1); box-sizing:border-box;">
               <option value="">Select additional protein...</option>
               <option value="chicken" ${_manualMealQuestionnaire.additionalProteinType === 'chicken' ? 'selected' : ''}>Chicken</option>
+              <option value="chicken_breast" ${_manualMealQuestionnaire.additionalProteinType === 'chicken_breast' ? 'selected' : ''}>Chicken Breast</option>
+              <option value="chicken_thigh" ${_manualMealQuestionnaire.additionalProteinType === 'chicken_thigh' ? 'selected' : ''}>Chicken Thigh</option>
               <option value="beef" ${_manualMealQuestionnaire.additionalProteinType === 'beef' ? 'selected' : ''}>Beef</option>
+              <option value="beef_lean" ${_manualMealQuestionnaire.additionalProteinType === 'beef_lean' ? 'selected' : ''}>Lean Beef</option>
+              <option value="beef_ground" ${_manualMealQuestionnaire.additionalProteinType === 'beef_ground' ? 'selected' : ''}>Ground Beef</option>
+              <option value="turkey" ${_manualMealQuestionnaire.additionalProteinType === 'turkey' ? 'selected' : ''}>Turkey</option>
               <option value="fish" ${_manualMealQuestionnaire.additionalProteinType === 'fish' ? 'selected' : ''}>Fish/Seafood</option>
+              <option value="salmon" ${_manualMealQuestionnaire.additionalProteinType === 'salmon' ? 'selected' : ''}>Salmon</option>
+              <option value="cod" ${_manualMealQuestionnaire.additionalProteinType === 'cod' ? 'selected' : ''}>Cod</option>
+              <option value="tuna" ${_manualMealQuestionnaire.additionalProteinType === 'tuna' ? 'selected' : ''}>Tuna</option>
               <option value="pork" ${_manualMealQuestionnaire.additionalProteinType === 'pork' ? 'selected' : ''}>Pork</option>
+              <option value="lamb" ${_manualMealQuestionnaire.additionalProteinType === 'lamb' ? 'selected' : ''}>Lamb</option>
               <option value="eggs" ${_manualMealQuestionnaire.additionalProteinType === 'eggs' ? 'selected' : ''}>Eggs</option>
               <option value="tofu" ${_manualMealQuestionnaire.additionalProteinType === 'tofu' ? 'selected' : ''}>Tofu</option>
               <option value="legumes" ${_manualMealQuestionnaire.additionalProteinType === 'legumes' ? 'selected' : ''}>Legumes/Beans</option>
+              <option value="lentils" ${_manualMealQuestionnaire.additionalProteinType === 'lentils' ? 'selected' : ''}>Lentils</option>
+              <option value="chickpeas" ${_manualMealQuestionnaire.additionalProteinType === 'chickpeas' ? 'selected' : ''}>Chickpeas</option>
               <option value="dairy" ${_manualMealQuestionnaire.additionalProteinType === 'dairy' ? 'selected' : ''}>Dairy/Cheese</option>
             </select>
           </div>
@@ -4257,13 +4287,13 @@ function renderManualMealScreen() {
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('cookingMethodQ')}</h2>
         <div style="display:grid; gap:10px;">
-          ${['raw', 'boiled', 'grilled', 'sauteed', 'fried', 'baked'].map(method => `
+          ${['raw', 'steamed', 'boiled', 'grilled', 'roasted', 'sauteed', 'fried', 'baked', 'slow_cooked', 'stir_fried'].map(method => `
             <label style="display:flex; align-items:center; padding:12px; border:2px solid ${_manualMealQuestionnaire.cookingMethod === method ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.cookingMethod === method ? 'var(--s1)' : 'transparent'};">
               <input type="radio" name="cookingMethod" value="${method}" 
                 ${_manualMealQuestionnaire.cookingMethod === method ? 'checked' : ''}
                 onclick="updateManualMealQuestionnaire('cookingMethod', '${method}')"
                 style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
-              <span style="color:var(--t1); font-weight:500;">${T(method === 'boiled' ? 'boiledSteamed' : method === 'fried' ? 'friedDeepFried' : method)}</span>
+              <span style="color:var(--t1); font-weight:500;">${T(method === 'boiled' ? 'boiledSteamed' : method === 'fried' ? 'friedDeepFried' : method === 'steamed' ? 'steamedBoiled' : method === 'slow_cooked' ? 'slowCooked' : method === 'stir_fried' ? 'stirFried' : method)}</span>
             </label>
           `).join('')}
         </div>
@@ -4307,17 +4337,17 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 7: // Screen 8: Garnish
+    case 7: // Screen 8: Garnish & Vegetables
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('garnishQ')}</h2>
         <div style="margin-bottom:20px;">
           <div style="display:grid; gap:8px; margin-bottom:16px;">
-            ${['broccoli', 'potatoes', 'rice', 'noodles', 'bread', 'salad', 'corn', 'other'].map(g => `
+            ${['broccoli', 'carrots', 'spinach', 'mushrooms', 'onions', 'tomatoes', 'potatoes', 'sweet_potato', 'rice', 'noodles', 'bread', 'quinoa', 'salad', 'corn', 'peppers', 'green_beans'].map(g => `
               <button onclick="addManualMealGarnish('${g}')" style="
                 padding:12px; border:2px solid var(--b1); border-radius:8px; background:var(--sf); 
                 color:var(--t1); cursor:pointer; font-weight:500; font-size:14px; text-align:center; 
                 transition:all .2s;
-              ">${T('garnish' + g.charAt(0).toUpperCase() + g.slice(1))}</button>
+              ">${T('garnish' + g.charAt(0).toUpperCase() + g.slice(1).replace('_', ''))}</button>
             `).join('')}
           </div>
           ${_manualMealQuestionnaire.garnish.length > 0 ? `
@@ -4342,26 +4372,40 @@ function renderManualMealScreen() {
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('confidenceQ')}</h2>
         <div style="display:grid; gap:10px; margin-bottom:16px;">
+          <label style="display:flex; align-items:center; padding:14px; border:2px solid ${_manualMealQuestionnaire.accuracy === 'guess' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.accuracy === 'guess' ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
+            <input type="radio" name="accuracy" value="guess" 
+              ${_manualMealQuestionnaire.accuracy === 'guess' ? 'checked' : ''}
+              onclick="updateManualMealQuestionnaire('accuracy', 'guess')"
+              style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
+            <span style="color:var(--t1); font-weight:500;">🎲 Just a guess (±350 kcal)</span>
+          </label>
           <label style="display:flex; align-items:center; padding:14px; border:2px solid ${_manualMealQuestionnaire.accuracy === 'rough' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.accuracy === 'rough' ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
             <input type="radio" name="accuracy" value="rough" 
               ${_manualMealQuestionnaire.accuracy === 'rough' ? 'checked' : ''}
               onclick="updateManualMealQuestionnaire('accuracy', 'rough')"
               style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
-            <span style="color:var(--t1); font-weight:500;">${T('confRoughGuess')}</span>
+            <span style="color:var(--t1); font-weight:500;">📋 Rough estimate (±250 kcal)</span>
           </label>
           <label style="display:flex; align-items:center; padding:14px; border:2px solid ${_manualMealQuestionnaire.accuracy === 'reasonable' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.accuracy === 'reasonable' ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
             <input type="radio" name="accuracy" value="reasonable" 
               ${_manualMealQuestionnaire.accuracy === 'reasonable' ? 'checked' : ''}
               onclick="updateManualMealQuestionnaire('accuracy', 'reasonable')"
               style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
-            <span style="color:var(--t1); font-weight:500;">${T('confReasonable')}</span>
+            <span style="color:var(--t1); font-weight:500;">👁️ Reasonable (±150 kcal)</span>
           </label>
-          <label style="display:flex; align-items:center; padding:14px; border:2px solid ${_manualMealQuestionnaire.accuracy === 'accurate' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.accuracy === 'accurate' ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
-            <input type="radio" name="accuracy" value="accurate" 
-              ${_manualMealQuestionnaire.accuracy === 'accurate' ? 'checked' : ''}
-              onclick="updateManualMealQuestionnaire('accuracy', 'accurate')"
+          <label style="display:flex; align-items:center; padding:14px; border:2px solid ${_manualMealQuestionnaire.accuracy === 'careful' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.accuracy === 'careful' ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
+            <input type="radio" name="accuracy" value="careful" 
+              ${_manualMealQuestionnaire.accuracy === 'careful' ? 'checked' : ''}
+              onclick="updateManualMealQuestionnaire('accuracy', 'careful')"
               style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
-            <span style="color:var(--t1); font-weight:500;">${T('confPrettyAccurate')}</span>
+            <span style="color:var(--t1); font-weight:500;">⚖️ Careful estimate (±75 kcal)</span>
+          </label>
+          <label style="display:flex; align-items:center; padding:14px; border:2px solid ${_manualMealQuestionnaire.accuracy === 'precise' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.accuracy === 'precise' ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
+            <input type="radio" name="accuracy" value="precise" 
+              ${_manualMealQuestionnaire.accuracy === 'precise' ? 'checked' : ''}
+              onclick="updateManualMealQuestionnaire('accuracy', 'precise')"
+              style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
+            <span style="color:var(--t1); font-weight:500;">🎯 Very precise (±40 kcal)</span>
           </label>
         </div>
         <div style="margin-bottom:16px;">
@@ -4376,7 +4420,13 @@ function renderManualMealScreen() {
       
     case 9: // Screen 10: Review
       const estimated = estimateMealMacros(_manualMealQuestionnaire);
-      const confidenceLabels = { rough: 'Rough guess (±300 kcal)', reasonable: 'Reasonable estimate (±150 kcal)', accurate: 'Pretty accurate (±50 kcal)' };
+      const confidenceLabels = { 
+        guess: '🎲 Just a guess (±350 kcal)', 
+        rough: '📋 Rough estimate (±250 kcal)', 
+        reasonable: '👁️ Reasonable (±150 kcal)', 
+        careful: '⚖️ Careful estimate (±75 kcal)', 
+        precise: '🎯 Very precise (±40 kcal)' 
+      };
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('questReview')}</h2>
         <div style="background:var(--sf); padding:16px; border-radius:8px; margin-bottom:16px;">
@@ -5279,53 +5329,176 @@ const ACUPRESSURE_POINTS = [
 // MACRO ESTIMATES DATABASE (for manual meal questionnaire)
 const MACRO_ESTIMATES = {
   foods: {
+    // Proteins
     chicken: { kcal: 165, protein: 31, carbs: 0, fat: 3.6 },
+    chicken_breast: { kcal: 165, protein: 31, carbs: 0, fat: 3.6 },
+    chicken_thigh: { kcal: 209, protein: 26, carbs: 0, fat: 11 },
     beef: { kcal: 250, protein: 26, carbs: 0, fat: 17 },
+    beef_lean: { kcal: 180, protein: 28, carbs: 0, fat: 8 },
+    beef_ground: { kcal: 215, protein: 23, carbs: 0, fat: 13 },
     fish: { kcal: 130, protein: 22, carbs: 0, fat: 5 },
+    salmon: { kcal: 208, protein: 20, carbs: 0, fat: 13 },
+    cod: { kcal: 82, protein: 18, carbs: 0, fat: 0.7 },
+    tuna: { kcal: 132, protein: 29, carbs: 0, fat: 1 },
     pork: { kcal: 242, protein: 27, carbs: 0, fat: 14 },
+    turkey: { kcal: 135, protein: 29, carbs: 0, fat: 1 },
+    lamb: { kcal: 294, protein: 25, carbs: 0, fat: 21 },
+    eggs: { kcal: 155, protein: 13, carbs: 1.1, fat: 11 },
+    tofu: { kcal: 76, protein: 8, carbs: 2, fat: 4.8 },
+    legumes: { kcal: 127, protein: 9, carbs: 20, fat: 0.4 },
+    lentils: { kcal: 116, protein: 9, carbs: 20, fat: 0.4 },
+    chickpeas: { kcal: 164, protein: 9, carbs: 27, fat: 3 },
+    beans: { kcal: 127, protein: 8, carbs: 23, fat: 0.3 },
+    
+    // Carbs & Grains
     pasta: { kcal: 131, protein: 5, carbs: 25, fat: 1.1 },
+    pasta_whole_wheat: { kcal: 124, protein: 7, carbs: 24, fat: 1 },
     rice: { kcal: 130, protein: 2.7, carbs: 28, fat: 0.3 },
+    rice_brown: { kcal: 112, protein: 2.6, carbs: 24, fat: 0.9 },
+    rice_wild: { kcal: 101, protein: 3.99, carbs: 35, fat: 0.3 },
     noodles: { kcal: 138, protein: 4.5, carbs: 25, fat: 1.2 },
     bread: { kcal: 265, protein: 9, carbs: 49, fat: 3.3 },
+    bread_whole_wheat: { kcal: 247, protein: 11, carbs: 43, fat: 3 },
+    quinoa: { kcal: 120, protein: 4.4, carbs: 21, fat: 2.4 },
+    oats: { kcal: 389, protein: 17, carbs: 66, fat: 7 },
+    
+    // Vegetables
     vegetables: { kcal: 35, protein: 2, carbs: 7, fat: 0.4 },
+    broccoli: { kcal: 34, protein: 2.8, carbs: 7, fat: 0.4 },
+    carrots: { kcal: 41, protein: 0.9, carbs: 10, fat: 0.2 },
+    spinach: { kcal: 23, protein: 2.9, carbs: 3.6, fat: 0.4 },
+    mushrooms: { kcal: 22, protein: 3.1, carbs: 3.3, fat: 0.3 },
+    onions: { kcal: 40, protein: 1.1, carbs: 9, fat: 0.1 },
+    tomatoes: { kcal: 18, protein: 0.9, carbs: 3.9, fat: 0.2 },
+    potatoes: { kcal: 77, protein: 1.7, carbs: 17, fat: 0.1 },
+    sweet_potato: { kcal: 86, protein: 1.6, carbs: 20, fat: 0.1 },
+    peppers: { kcal: 31, protein: 1, carbs: 6, fat: 0.3 },
+    green_beans: { kcal: 31, protein: 1.8, carbs: 7, fat: 0.1 },
     salad: { kcal: 15, protein: 1, carbs: 3, fat: 0.2 },
     corn: { kcal: 86, protein: 3.3, carbs: 19, fat: 1.2 },
-    eggs: { kcal: 155, protein: 13, carbs: 1.1, fat: 11 },
+    
+    // Dairy
     dairy: { kcal: 100, protein: 7, carbs: 5, fat: 7 },
-    tofu: { kcal: 76, protein: 8, carbs: 2, fat: 4.8 },
+    milk: { kcal: 61, protein: 3.2, carbs: 4.8, fat: 3.3 },
+    yogurt: { kcal: 59, protein: 10, carbs: 3.6, fat: 0.4 },
+    cottage_cheese: { kcal: 98, protein: 11, carbs: 3.9, fat: 5 },
+    
+    // Fallback
     other: { kcal: 200, protein: 10, carbs: 20, fat: 5 }
   },
   
   cookingMethods: {
     raw: { fatMult: 1.0 },
+    steamed: { fatMult: 1.05 },
     boiled: { fatMult: 1.1 },
     grilled: { fatMult: 1.3 },
+    roasted: { fatMult: 1.4 },
     sauteed: { fatMult: 1.8 },
     fried: { fatMult: 2.5 },
-    baked: { fatMult: 1.4 }
+    baked: { fatMult: 1.4 },
+    slow_cooked: { fatMult: 1.2 },
+    stir_fried: { fatMult: 2.0 }
   },
   
   additions: {
-    butter: { kcal: 180, fat: 20 },
-    oil: { kcal: 180, fat: 20 },
-    cheese: { kcal: 110, protein: 7, fat: 9 },
-    bacon: { kcal: 80, protein: 6, fat: 6 },
-    sauce: { kcal: 150, carbs: 5, fat: 12 },
-    nuts: { kcal: 200, protein: 7, fat: 14 },
-    dressing: { kcal: 140, fat: 15 },
-    dessert: { kcal: 250, carbs: 40, fat: 8 }
+    butter: { kcal: 180, protein: 0, carbs: 0, fat: 20 },
+    oil: { kcal: 180, protein: 0, carbs: 0, fat: 20 },
+    cheese: { kcal: 110, protein: 7, carbs: 0, fat: 9 },
+    bacon: { kcal: 80, protein: 6, carbs: 0, fat: 6 },
+    sauce: { kcal: 150, protein: 1, carbs: 5, fat: 12 },
+    nuts: { kcal: 200, protein: 7, carbs: 7, fat: 14 },
+    dressing: { kcal: 140, protein: 0, carbs: 1, fat: 15 },
+    dessert: { kcal: 250, protein: 2, carbs: 40, fat: 8 },
+    honey: { kcal: 64, protein: 0.1, carbs: 17, fat: 0 },
+    jam: { kcal: 52, protein: 0, carbs: 13, fat: 0 },
+    avocado: { kcal: 160, protein: 2, carbs: 9, fat: 15 },
+    mayo: { kcal: 190, protein: 0, carbs: 0, fat: 21 },
+    olive: { kcal: 180, protein: 0, carbs: 0, fat: 20 },
+    soy_sauce: { kcal: 16, protein: 2.2, carbs: 1.5, fat: 0 }
   },
   
-  // Garnish macro contributions per portion
+  // Garnish macro contributions per portion (per 100g equivalent)
   garnish: {
-    broccoli: { small: { kcal: 30, protein: 2.5, carbs: 5, fat: 0.3 }, medium: { kcal: 60, protein: 5, carbs: 10, fat: 0.6 }, large: { kcal: 90, protein: 7.5, carbs: 15, fat: 0.9 } },
-    potatoes: { small: { kcal: 60, protein: 1.3, carbs: 13, fat: 0.1 }, medium: { kcal: 120, protein: 2.6, carbs: 26, fat: 0.2 }, large: { kcal: 180, protein: 3.9, carbs: 39, fat: 0.3 } },
-    rice: { small: { kcal: 78, protein: 1.6, carbs: 17, fat: 0.2 }, medium: { kcal: 156, protein: 3.2, carbs: 34, fat: 0.4 }, large: { kcal: 234, protein: 4.8, carbs: 51, fat: 0.6 } },
-    noodles: { small: { kcal: 83, protein: 2.7, carbs: 15, fat: 0.7 }, medium: { kcal: 166, protein: 5.4, carbs: 30, fat: 1.4 }, large: { kcal: 249, protein: 8.1, carbs: 45, fat: 2.1 } },
-    bread: { small: { kcal: 80, protein: 2.7, carbs: 15, fat: 1 }, medium: { kcal: 160, protein: 5.4, carbs: 30, fat: 2 }, large: { kcal: 240, protein: 8.1, carbs: 45, fat: 3 } },
-    salad: { small: { kcal: 9, protein: 0.6, carbs: 2, fat: 0.1 }, medium: { kcal: 18, protein: 1.2, carbs: 4, fat: 0.2 }, large: { kcal: 27, protein: 1.8, carbs: 6, fat: 0.3 } },
-    corn: { small: { kcal: 52, protein: 2, carbs: 11, fat: 0.7 }, medium: { kcal: 104, protein: 4, carbs: 22, fat: 1.4 }, large: { kcal: 156, protein: 6, carbs: 33, fat: 2.1 } },
-    other: { small: { kcal: 50, protein: 2, carbs: 8, fat: 1 }, medium: { kcal: 100, protein: 4, carbs: 16, fat: 2 }, large: { kcal: 150, protein: 6, carbs: 24, fat: 3 } }
+    broccoli: { 
+      small: { kcal: 30, protein: 2.5, carbs: 5, fat: 0.3 }, 
+      medium: { kcal: 60, protein: 5, carbs: 10, fat: 0.6 }, 
+      large: { kcal: 90, protein: 7.5, carbs: 15, fat: 0.9 } 
+    },
+    carrots: { 
+      small: { kcal: 20, protein: 0.5, carbs: 5, fat: 0.1 }, 
+      medium: { kcal: 41, protein: 1, carbs: 10, fat: 0.2 }, 
+      large: { kcal: 82, protein: 2, carbs: 20, fat: 0.4 } 
+    },
+    spinach: { 
+      small: { kcal: 11, protein: 1.5, carbs: 2, fat: 0.2 }, 
+      medium: { kcal: 23, protein: 3, carbs: 4, fat: 0.4 }, 
+      large: { kcal: 46, protein: 6, carbs: 8, fat: 0.8 } 
+    },
+    mushrooms: { 
+      small: { kcal: 11, protein: 1.5, carbs: 1.5, fat: 0.15 }, 
+      medium: { kcal: 22, protein: 3, carbs: 3, fat: 0.3 }, 
+      large: { kcal: 44, protein: 6, carbs: 6, fat: 0.6 } 
+    },
+    onions: { 
+      small: { kcal: 20, protein: 0.5, carbs: 4.5, fat: 0 }, 
+      medium: { kcal: 40, protein: 1, carbs: 9, fat: 0 }, 
+      large: { kcal: 80, protein: 2, carbs: 18, fat: 0 } 
+    },
+    tomatoes: { 
+      small: { kcal: 9, protein: 0.5, carbs: 2, fat: 0.1 }, 
+      medium: { kcal: 18, protein: 1, carbs: 4, fat: 0.2 }, 
+      large: { kcal: 36, protein: 2, carbs: 8, fat: 0.4 } 
+    },
+    potatoes: { 
+      small: { kcal: 54, protein: 1.2, carbs: 12, fat: 0.1 }, 
+      medium: { kcal: 108, protein: 2.4, carbs: 24, fat: 0.2 }, 
+      large: { kcal: 216, protein: 4.8, carbs: 48, fat: 0.4 } 
+    },
+    sweet_potato: { 
+      small: { kcal: 60, protein: 1.1, carbs: 14, fat: 0.1 }, 
+      medium: { kcal: 120, protein: 2.2, carbs: 28, fat: 0.2 }, 
+      large: { kcal: 240, protein: 4.4, carbs: 56, fat: 0.4 } 
+    },
+    rice: { 
+      small: { kcal: 78, protein: 1.6, carbs: 17, fat: 0.2 }, 
+      medium: { kcal: 156, protein: 3.2, carbs: 34, fat: 0.4 }, 
+      large: { kcal: 312, protein: 6.4, carbs: 68, fat: 0.8 } 
+    },
+    noodles: { 
+      small: { kcal: 83, protein: 2.7, carbs: 15, fat: 0.7 }, 
+      medium: { kcal: 166, protein: 5.4, carbs: 30, fat: 1.4 }, 
+      large: { kcal: 332, protein: 10.8, carbs: 60, fat: 2.8 } 
+    },
+    bread: { 
+      small: { kcal: 80, protein: 2.7, carbs: 15, fat: 1 }, 
+      medium: { kcal: 160, protein: 5.4, carbs: 30, fat: 2 }, 
+      large: { kcal: 320, protein: 10.8, carbs: 60, fat: 4 } 
+    },
+    quinoa: { 
+      small: { kcal: 60, protein: 2.2, carbs: 10.5, fat: 1.2 }, 
+      medium: { kcal: 120, protein: 4.4, carbs: 21, fat: 2.4 }, 
+      large: { kcal: 240, protein: 8.8, carbs: 42, fat: 4.8 } 
+    },
+    salad: { 
+      small: { kcal: 7, protein: 0.5, carbs: 1.5, fat: 0.1 }, 
+      medium: { kcal: 15, protein: 1, carbs: 3, fat: 0.2 }, 
+      large: { kcal: 30, protein: 2, carbs: 6, fat: 0.4 } 
+    },
+    corn: { 
+      small: { kcal: 52, protein: 2, carbs: 11, fat: 0.7 }, 
+      medium: { kcal: 104, protein: 4, carbs: 22, fat: 1.4 }, 
+      large: { kcal: 208, protein: 8, carbs: 44, fat: 2.8 } 
+    },
+    peppers: { 
+      small: { kcal: 15, protein: 0.5, carbs: 3, fat: 0.15 }, 
+      medium: { kcal: 31, protein: 1, carbs: 6, fat: 0.3 }, 
+      large: { kcal: 62, protein: 2, carbs: 12, fat: 0.6 } 
+    },
+    green_beans: { 
+      small: { kcal: 15, protein: 0.9, carbs: 3.5, fat: 0.05 }, 
+      medium: { kcal: 31, protein: 1.8, carbs: 7, fat: 0.1 }, 
+      large: { kcal: 62, protein: 3.6, carbs: 14, fat: 0.2 } 
+    }
   },
   
   portions: {

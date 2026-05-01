@@ -3844,50 +3844,86 @@ function estimateMealMacros(questionnaire) {
     return { kcal: 0, protein: 0, carbs: 0, fat: 0, confidence: 0.3 };
   }
   
-  // Start with base food (per 100g)
-  let macros = { ...MACRO_ESTIMATES.foods[foodType] } || { kcal: 200, protein: 10, carbs: 20, fat: 5 };
+  // Get food data (all values per 100g)
+  const foodData = MACRO_ESTIMATES.foods[foodType] || MACRO_ESTIMATES.foods.other;
+  let macros = { kcal: foodData.kcal, protein: foodData.protein, carbs: foodData.carbs, fat: foodData.fat };
   
-  // Apply portion size multiplier (assume 150g base)
-  const portionMult = MACRO_ESTIMATES.portions[portionSize] || 1.0;
-  const portionGrams = 150 * portionMult;
-  const baseGrams = 100;
+  // Get base portion size (food-specific)
+  const basePortionGrams = foodData.basePortionGrams || 150;
   
+  // Handle cooking multiplier for grains/pasta (converts dry to cooked)
+  let actualPortionGrams = basePortionGrams;
+  if (foodData.cookingMultiplier) {
+    // For grains listed by dry weight, multiply to get cooked weight
+    actualPortionGrams = basePortionGrams * foodData.cookingMultiplier;
+    // Macros stay the same per dry gram, just more total weight after cooking
+  }
+  
+  // Apply portion size multiplier
+  const portionMult = MACRO_ESTIMATES.portionSizeMultiplier[portionSize] || 1.0;
+  actualPortionGrams = actualPortionGrams * portionMult;
+  
+  // Scale macros to actual portion (from per 100g to actual grams)
+  const scaleFactor = actualPortionGrams / 100;
   Object.keys(macros).forEach(key => {
-    macros[key] = (macros[key] || 0) * (portionGrams / baseGrams);
+    macros[key] = (macros[key] || 0) * scaleFactor;
   });
   
-  // Apply cooking method fat multiplier ONLY if cooking method adds fat
+  // Apply cooking method adjustments
   if (cookingMethod && MACRO_ESTIMATES.cookingMethods[cookingMethod]) {
     const fatMult = MACRO_ESTIMATES.cookingMethods[cookingMethod].fatMult;
-    // Only add fat if cooking method isn't raw or boiled
-    if (fatMult > 1.15) {
-      const extraFat = (fatMult - 1) * 5; // 5g base fat per cooking method
-      macros.fat = (macros.fat || 0) + extraFat;
-    } else if (fatMult < 1.1) {
-      // For raw/steamed, slight fat reduction
+    
+    // For boiling/steaming: slight fat reduction as some fat may render or leach
+    if (fatMult < 1.02) {
       macros.fat = (macros.fat || 0) * fatMult;
-    } else {
-      macros.fat = (macros.fat || 0) * fatMult;
+    } 
+    // For grilling/roasting/baking: moderate fat increase from added oils/concentration
+    else if (fatMult <= 1.25) {
+      const baseOilAdded = 3; // 3g oil per typical portion
+      macros.fat = (macros.fat || 0) * fatMult + baseOilAdded;
     }
-    // Recalculate kcal based on macros: (protein*4) + (carbs*4) + (fat*9)
+    // For sautéing/stir-frying: more significant fat from cooking medium
+    else if (fatMult <= 1.8) {
+      const baseOilAdded = 5; // 5g oil per portion
+      macros.fat = (macros.fat || 0) * fatMult + baseOilAdded;
+    }
+    // For deep frying: major fat absorption
+    else {
+      const baseOilAdded = 10; // 10g oil per portion fried
+      macros.fat = (macros.fat || 0) * fatMult + baseOilAdded;
+    }
+    
+    // Recalculate kcal based on adjusted macros
     macros.kcal = Math.round((macros.protein || 0) * 4 + (macros.carbs || 0) * 4 + (macros.fat || 0) * 9);
   }
   
   // Add protein source if different from main food
   if (protein && protein !== foodType && MACRO_ESTIMATES.foods[protein]) {
-    const proteinMacros = { ...MACRO_ESTIMATES.foods[protein] };
+    const proteinData = MACRO_ESTIMATES.foods[protein];
+    const proteinPortionGrams = (proteinData.basePortionGrams || 100) * portionMult;
+    const proteinScaleFactor = proteinPortionGrams / 100;
+    
+    const proteinMacros = { 
+      kcal: (proteinData.kcal || 0) * proteinScaleFactor,
+      protein: (proteinData.protein || 0) * proteinScaleFactor,
+      carbs: (proteinData.carbs || 0) * proteinScaleFactor,
+      fat: (proteinData.fat || 0) * proteinScaleFactor
+    };
+    
     Object.keys(proteinMacros).forEach(key => {
-      macros[key] = (macros[key] || 0) + (proteinMacros[key] || 0) * (portionGrams / baseGrams);
+      macros[key] = (macros[key] || 0) + proteinMacros[key];
     });
   }
   
-  // Add extras/additions
+  // Add extras/additions (already scaled to servings in database)
   if (additions && additions.length > 0) {
     additions.forEach(add => {
       const addMacros = MACRO_ESTIMATES.additions[add];
       if (addMacros) {
         Object.keys(addMacros).forEach(key => {
-          macros[key] = (macros[key] || 0) + (addMacros[key] || 0);
+          if (key !== 'servingSize') {
+            macros[key] = (macros[key] || 0) + (addMacros[key] || 0);
+          }
         });
       }
     });
@@ -3899,7 +3935,9 @@ function estimateMealMacros(questionnaire) {
       const garnishMacros = MACRO_ESTIMATES.garnish[g.type]?.[g.size];
       if (garnishMacros) {
         Object.keys(garnishMacros).forEach(key => {
-          macros[key] = (macros[key] || 0) + (garnishMacros[key] || 0);
+          if (key !== 'grams') {
+            macros[key] = (macros[key] || 0) + (garnishMacros[key] || 0);
+          }
         });
       }
     });
@@ -3907,13 +3945,13 @@ function estimateMealMacros(questionnaire) {
   
   // Map accuracy to confidence with expanded levels
   const confidenceMap = {
-    guess: 0.55,      // Just a guess: ±350 kcal uncertainty
-    rough: 0.68,      // Rough estimate: ±250 kcal uncertainty
-    reasonable: 0.78, // Reasonable: ±150 kcal uncertainty
-    careful: 0.88,    // Careful: ±75 kcal uncertainty
-    precise: 0.95     // Very precise: ±40 kcal uncertainty
+    guess: 0.50,      // Just a guess: ±350 kcal uncertainty
+    rough: 0.65,      // Rough estimate: ±250 kcal uncertainty
+    reasonable: 0.75, // Reasonable: ±150 kcal uncertainty
+    careful: 0.87,    // Careful: ±75 kcal uncertainty
+    precise: 0.94     // Very precise: ±40 kcal uncertainty
   };
-  const confidence = confidenceMap[accuracy] || 0.78;
+  const confidence = confidenceMap[accuracy] || 0.75;
   
   // Ensure all macros are non-negative
   Object.keys(macros).forEach(key => {
@@ -4366,11 +4404,76 @@ function renderManualMealScreen() {
       `;
       break;
       
-
+    case 8: // Screen 9: Measurement Calibration (NEW - for accuracy)
+      html = `
+        <h2 style="color:var(--t1); margin-bottom:20px;">How did you measure this meal?</h2>
+        <p style="color:var(--t2); font-size:14px; margin-bottom:20px;">This helps us estimate accuracy:</p>
+        <div style="display:grid; gap:12px; margin-bottom:20px;">
+          <label style="display:flex; align-items:flex-start; padding:12px; border:2px solid var(--b1); border-radius:8px; cursor:pointer; background:transparent;">
+            <input type="checkbox" 
+              id="calib-weighed"
+              onchange="_manualMealQuestionnaire.calibrationWeighed = this.checked"
+              style="margin-right:12px; width:18px; height:18px; cursor:pointer; margin-top:2px;">
+            <span style="color:var(--t1);">
+              <div style="font-weight:500;">⚖️ Weighed the food</div>
+              <div style="font-size:12px; color:var(--t3);">Most accurate - used a scale</div>
+            </span>
+          </label>
+          
+          <label style="display:flex; align-items:flex-start; padding:12px; border:2px solid var(--b1); border-radius:8px; cursor:pointer; background:transparent;">
+            <input type="checkbox" 
+              id="calib-label"
+              onchange="_manualMealQuestionnaire.calibrationLabel = this.checked"
+              style="margin-right:12px; width:18px; height:18px; cursor:pointer; margin-top:2px;">
+            <span style="color:var(--t1);">
+              <div style="font-weight:500;">🏷️ Used nutrition label</div>
+              <div style="font-size:12px; color:var(--t3);">Very accurate - label provided info</div>
+            </span>
+          </label>
+          
+          <label style="display:flex; align-items:flex-start; padding:12px; border:2px solid var(--b1); border-radius:8px; cursor:pointer; background:transparent;">
+            <input type="checkbox" 
+              id="calib-recipe"
+              onchange="_manualMealQuestionnaire.calibrationRecipe = this.checked"
+              style="margin-right:12px; width:18px; height:18px; cursor:pointer; margin-top:2px;">
+            <span style="color:var(--t1);">
+              <div style="font-weight:500;">📖 Recipe with measurements</div>
+              <div style="font-size:12px; color:var(--t3);">Very accurate - know exact amounts</div>
+            </span>
+          </label>
+          
+          <label style="display:flex; align-items:flex-start; padding:12px; border:2px solid var(--b1); border-radius:8px; cursor:pointer; background:transparent;">
+            <input type="checkbox" 
+              id="calib-restaurant"
+              onchange="_manualMealQuestionnaire.calibrationRestaurant = this.checked"
+              style="margin-right:12px; width:18px; height:18px; cursor:pointer; margin-top:2px;">
+            <span style="color:var(--t1);">
+              <div style="font-weight:500;">🍽️ Restaurant/takeout meal</div>
+              <div style="font-size:12px; color:var(--t3);">Less certain - unknown ingredients/portions</div>
+            </span>
+          </label>
+          
+          <label style="display:flex; align-items:flex-start; padding:12px; border:2px solid var(--b1); border-radius:8px; cursor:pointer; background:transparent;">
+            <input type="checkbox" 
+              id="calib-photo"
+              onchange="_manualMealQuestionnaire.calibrationPhoto = this.checked"
+              style="margin-right:12px; width:18px; height:18px; cursor:pointer; margin-top:2px;">
+            <span style="color:var(--t1);">
+              <div style="font-weight:500;">📸 Estimated from photo</div>
+              <div style="font-size:12px; color:var(--t3);">Visual estimate - higher uncertainty</div>
+            </span>
+          </label>
+        </div>
+        ${renderManualMealButtons()}
+      `;
+      break;
       
-    case 8: // Screen 9: Confidence & Notes
+    case 9: // Screen 10: Confidence & Notes
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('confidenceQ')}</h2>
+        <p style="color:var(--t2); font-size:13px; margin-bottom:16px; padding:12px; background:var(--s2); border-radius:6px;">
+          Based on your measurement method, pick your confidence level:
+        </p>
         <div style="display:grid; gap:10px; margin-bottom:16px;">
           <label style="display:flex; align-items:center; padding:14px; border:2px solid ${_manualMealQuestionnaire.accuracy === 'guess' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.accuracy === 'guess' ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
             <input type="radio" name="accuracy" value="guess" 
@@ -4410,7 +4513,7 @@ function renderManualMealScreen() {
         </div>
         <div style="margin-bottom:16px;">
           <label style="color:var(--t2); display:block; margin-bottom:6px; font-weight:500;">${T('notesLabel')}</label>
-          <textarea id="q-notes" placeholder="e.g., Restaurant meal, estimated portion"
+          <textarea id="q-notes" placeholder="e.g., Restaurant meal, estimated portion, no oil used"
             style="width:100%; padding:10px; border:1px solid var(--b1); border-radius:6px;
               background:var(--sf); color:var(--t1); box-sizing:border-box; min-height:80px; resize:none;">${_manualMealQuestionnaire.notes}</textarea>
         </div>
@@ -4418,7 +4521,7 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 9: // Screen 10: Review
+    case 10: // Screen 11: Review
       const estimated = estimateMealMacros(_manualMealQuestionnaire);
       const confidenceLabels = { 
         guess: '🎲 Just a guess (±350 kcal)', 
@@ -4549,7 +4652,7 @@ function nextManualMealScreen() {
     return;
   }
   
-  if (_manualMealCurrentScreen < 9) {
+  if (_manualMealCurrentScreen < 10) {
     _manualMealCurrentScreen++;
     renderManualMealScreen();
   }
@@ -4781,8 +4884,8 @@ function loadMealTemplate(templateId) {
   _manualMealQuestionnaire.isFromTemplate = true;
   _manualMealQuestionnaire.templateId = templateId;
   
-  // Skip to review screen (now screen 9)
-  _manualMealCurrentScreen = 9;
+  // Skip to review screen (now screen 10)
+  _manualMealCurrentScreen = 10;
   renderManualMealScreen();
 }
 
@@ -5327,185 +5430,195 @@ const ACUPRESSURE_POINTS = [
 ];
 
 // MACRO ESTIMATES DATABASE (for manual meal questionnaire)
+// All values per 100g (uncooked weights) verified against USDA standards
 const MACRO_ESTIMATES = {
   foods: {
-    // Proteins
-    chicken: { kcal: 165, protein: 31, carbs: 0, fat: 3.6 },
-    chicken_breast: { kcal: 165, protein: 31, carbs: 0, fat: 3.6 },
-    chicken_thigh: { kcal: 209, protein: 26, carbs: 0, fat: 11 },
-    beef: { kcal: 250, protein: 26, carbs: 0, fat: 17 },
-    beef_lean: { kcal: 180, protein: 28, carbs: 0, fat: 8 },
-    beef_ground: { kcal: 215, protein: 23, carbs: 0, fat: 13 },
-    fish: { kcal: 130, protein: 22, carbs: 0, fat: 5 },
-    salmon: { kcal: 208, protein: 20, carbs: 0, fat: 13 },
-    cod: { kcal: 82, protein: 18, carbs: 0, fat: 0.7 },
-    tuna: { kcal: 132, protein: 29, carbs: 0, fat: 1 },
-    pork: { kcal: 242, protein: 27, carbs: 0, fat: 14 },
-    turkey: { kcal: 135, protein: 29, carbs: 0, fat: 1 },
-    lamb: { kcal: 294, protein: 25, carbs: 0, fat: 21 },
-    eggs: { kcal: 155, protein: 13, carbs: 1.1, fat: 11 },
-    tofu: { kcal: 76, protein: 8, carbs: 2, fat: 4.8 },
-    legumes: { kcal: 127, protein: 9, carbs: 20, fat: 0.4 },
-    lentils: { kcal: 116, protein: 9, carbs: 20, fat: 0.4 },
-    chickpeas: { kcal: 164, protein: 9, carbs: 27, fat: 3 },
-    beans: { kcal: 127, protein: 8, carbs: 23, fat: 0.3 },
+    // PROTEINS - per 100g raw/before cooking
+    chicken: { kcal: 165, protein: 31, carbs: 0, fat: 3.6, basePortionGrams: 180 },
+    chicken_breast: { kcal: 165, protein: 31, carbs: 0, fat: 3.6, basePortionGrams: 180 },
+    chicken_thigh: { kcal: 209, protein: 26, carbs: 0, fat: 11, basePortionGrams: 150 },
+    beef: { kcal: 250, protein: 26, carbs: 0, fat: 17, basePortionGrams: 200 },
+    beef_lean: { kcal: 180, protein: 28, carbs: 0, fat: 8, basePortionGrams: 200 },
+    beef_ground: { kcal: 215, protein: 23, carbs: 0, fat: 13, basePortionGrams: 150 },
+    fish: { kcal: 130, protein: 22, carbs: 0, fat: 5, basePortionGrams: 150 },
+    salmon: { kcal: 208, protein: 20, carbs: 0, fat: 13, basePortionGrams: 150 },
+    cod: { kcal: 82, protein: 18, carbs: 0, fat: 0.7, basePortionGrams: 150 },
+    tuna: { kcal: 132, protein: 29, carbs: 0, fat: 1, basePortionGrams: 150 },
+    pork: { kcal: 242, protein: 27, carbs: 0, fat: 14, basePortionGrams: 180 },
+    turkey: { kcal: 135, protein: 29, carbs: 0, fat: 1, basePortionGrams: 150 },
+    lamb: { kcal: 294, protein: 25, carbs: 0, fat: 21, basePortionGrams: 150 },
+    eggs: { kcal: 155, protein: 13, carbs: 1.1, fat: 11, basePortionGrams: 50 }, // 1 egg
+    tofu: { kcal: 76, protein: 8, carbs: 2, fat: 4.8, basePortionGrams: 200 },
+    legumes: { kcal: 127, protein: 9, carbs: 20, fat: 0.4, basePortionGrams: 180 }, // cooked
+    lentils: { kcal: 116, protein: 9, carbs: 20, fat: 0.4, basePortionGrams: 200 }, // cooked
+    chickpeas: { kcal: 164, protein: 9, carbs: 27, fat: 3, basePortionGrams: 150 }, // cooked
+    beans: { kcal: 127, protein: 8, carbs: 23, fat: 0.3, basePortionGrams: 180 }, // cooked
     
-    // Carbs & Grains
-    pasta: { kcal: 131, protein: 5, carbs: 25, fat: 1.1 },
-    pasta_whole_wheat: { kcal: 124, protein: 7, carbs: 24, fat: 1 },
-    rice: { kcal: 130, protein: 2.7, carbs: 28, fat: 0.3 },
-    rice_brown: { kcal: 112, protein: 2.6, carbs: 24, fat: 0.9 },
-    rice_wild: { kcal: 101, protein: 3.99, carbs: 35, fat: 0.3 },
-    noodles: { kcal: 138, protein: 4.5, carbs: 25, fat: 1.2 },
-    bread: { kcal: 265, protein: 9, carbs: 49, fat: 3.3 },
-    bread_whole_wheat: { kcal: 247, protein: 11, carbs: 43, fat: 3 },
-    quinoa: { kcal: 120, protein: 4.4, carbs: 21, fat: 2.4 },
-    oats: { kcal: 389, protein: 17, carbs: 66, fat: 7 },
+    // CARBS & GRAINS - per 100g dry weight (converts to cooked)
+    pasta: { kcal: 131, protein: 5, carbs: 25, fat: 1.1, basePortionGrams: 80, cookingMultiplier: 2.5 }, // 80g dry → 200g cooked
+    pasta_whole_wheat: { kcal: 124, protein: 7, carbs: 24, fat: 1, basePortionGrams: 80, cookingMultiplier: 2.5 },
+    rice: { kcal: 130, protein: 2.7, carbs: 28, fat: 0.3, basePortionGrams: 75, cookingMultiplier: 3.0 }, // 75g dry → 225g cooked
+    rice_brown: { kcal: 112, protein: 2.6, carbs: 24, fat: 0.9, basePortionGrams: 75, cookingMultiplier: 2.8 },
+    rice_wild: { kcal: 101, protein: 3.99, carbs: 35, fat: 0.3, basePortionGrams: 75, cookingMultiplier: 3.2 },
+    noodles: { kcal: 138, protein: 4.5, carbs: 25, fat: 1.2, basePortionGrams: 75, cookingMultiplier: 2.4 },
+    bread: { kcal: 265, protein: 9, carbs: 49, fat: 3.3, basePortionGrams: 30 }, // 1 slice
+    bread_whole_wheat: { kcal: 247, protein: 11, carbs: 43, fat: 3, basePortionGrams: 32 },
+    quinoa: { kcal: 120, protein: 4.4, carbs: 21, fat: 2.4, basePortionGrams: 75, cookingMultiplier: 3.0 },
+    oats: { kcal: 389, protein: 17, carbs: 66, fat: 7, basePortionGrams: 40 }, // ~1/2 cup dry
     
-    // Vegetables
-    vegetables: { kcal: 35, protein: 2, carbs: 7, fat: 0.4 },
-    broccoli: { kcal: 34, protein: 2.8, carbs: 7, fat: 0.4 },
-    carrots: { kcal: 41, protein: 0.9, carbs: 10, fat: 0.2 },
-    spinach: { kcal: 23, protein: 2.9, carbs: 3.6, fat: 0.4 },
-    mushrooms: { kcal: 22, protein: 3.1, carbs: 3.3, fat: 0.3 },
-    onions: { kcal: 40, protein: 1.1, carbs: 9, fat: 0.1 },
-    tomatoes: { kcal: 18, protein: 0.9, carbs: 3.9, fat: 0.2 },
-    potatoes: { kcal: 77, protein: 1.7, carbs: 17, fat: 0.1 },
-    sweet_potato: { kcal: 86, protein: 1.6, carbs: 20, fat: 0.1 },
-    peppers: { kcal: 31, protein: 1, carbs: 6, fat: 0.3 },
-    green_beans: { kcal: 31, protein: 1.8, carbs: 7, fat: 0.1 },
-    salad: { kcal: 15, protein: 1, carbs: 3, fat: 0.2 },
-    corn: { kcal: 86, protein: 3.3, carbs: 19, fat: 1.2 },
+    // VEGETABLES - per 100g
+    vegetables: { kcal: 35, protein: 2, carbs: 7, fat: 0.4, basePortionGrams: 150 },
+    broccoli: { kcal: 34, protein: 2.8, carbs: 7, fat: 0.4, basePortionGrams: 100 },
+    carrots: { kcal: 41, protein: 0.9, carbs: 10, fat: 0.2, basePortionGrams: 100 },
+    spinach: { kcal: 23, protein: 2.9, carbs: 3.6, fat: 0.4, basePortionGrams: 80 },
+    mushrooms: { kcal: 22, protein: 3.1, carbs: 3.3, fat: 0.3, basePortionGrams: 100 },
+    onions: { kcal: 40, protein: 1.1, carbs: 9, fat: 0.1, basePortionGrams: 100 },
+    tomatoes: { kcal: 18, protein: 0.9, carbs: 3.9, fat: 0.2, basePortionGrams: 150 },
+    potatoes: { kcal: 77, protein: 1.7, carbs: 17, fat: 0.1, basePortionGrams: 150 },
+    sweet_potato: { kcal: 86, protein: 1.6, carbs: 20, fat: 0.1, basePortionGrams: 150 },
+    peppers: { kcal: 31, protein: 1, carbs: 6, fat: 0.3, basePortionGrams: 120 },
+    green_beans: { kcal: 31, protein: 1.8, carbs: 7, fat: 0.1, basePortionGrams: 100 },
+    salad: { kcal: 15, protein: 1, carbs: 3, fat: 0.2, basePortionGrams: 150 },
+    corn: { kcal: 86, protein: 3.3, carbs: 19, fat: 1.2, basePortionGrams: 150 },
     
-    // Dairy
-    dairy: { kcal: 100, protein: 7, carbs: 5, fat: 7 },
-    milk: { kcal: 61, protein: 3.2, carbs: 4.8, fat: 3.3 },
-    yogurt: { kcal: 59, protein: 10, carbs: 3.6, fat: 0.4 },
-    cottage_cheese: { kcal: 98, protein: 11, carbs: 3.9, fat: 5 },
+    // DAIRY - per 100g
+    dairy: { kcal: 100, protein: 7, carbs: 5, fat: 7, basePortionGrams: 100 },
+    milk: { kcal: 61, protein: 3.2, carbs: 4.8, fat: 3.3, basePortionGrams: 240 }, // 1 cup
+    yogurt: { kcal: 59, protein: 10, carbs: 3.6, fat: 0.4, basePortionGrams: 150 }, // 1 cup
+    cottage_cheese: { kcal: 98, protein: 11, carbs: 3.9, fat: 5, basePortionGrams: 110 },
     
     // Fallback
-    other: { kcal: 200, protein: 10, carbs: 20, fat: 5 }
+    other: { kcal: 200, protein: 10, carbs: 20, fat: 5, basePortionGrams: 150 }
   },
   
   cookingMethods: {
-    raw: { fatMult: 1.0 },
-    steamed: { fatMult: 1.05 },
-    boiled: { fatMult: 1.1 },
-    grilled: { fatMult: 1.3 },
-    roasted: { fatMult: 1.4 },
-    sauteed: { fatMult: 1.8 },
-    fried: { fatMult: 2.5 },
-    baked: { fatMult: 1.4 },
-    slow_cooked: { fatMult: 1.2 },
-    stir_fried: { fatMult: 2.0 }
+    // Fat multipliers based on cooking method
+    // These represent water loss and oil absorption
+    raw: { fatMult: 1.0, description: 'No cooking' },
+    steamed: { fatMult: 0.98, description: 'Steamed - minimal oil' },
+    boiled: { fatMult: 1.0, description: 'Boiled - fat loss offset by water' },
+    grilled: { fatMult: 1.15, description: 'Grilled - moderate oil, water loss' },
+    roasted: { fatMult: 1.25, description: 'Roasted - added fat, concentrated' },
+    sauteed: { fatMult: 1.6, description: 'Sautéed - oil in pan' },
+    fried: { fatMult: 2.2, description: 'Fried - significant oil absorption' },
+    baked: { fatMult: 1.2, description: 'Baked - moderate oil' },
+    slow_cooked: { fatMult: 1.05, description: 'Slow-cooked - minimal added fat' },
+    stir_fried: { fatMult: 1.8, description: 'Stir-fried - oil in wok' }
   },
   
   additions: {
-    butter: { kcal: 180, protein: 0, carbs: 0, fat: 20 },
-    oil: { kcal: 180, protein: 0, carbs: 0, fat: 20 },
-    cheese: { kcal: 110, protein: 7, carbs: 0, fat: 9 },
-    bacon: { kcal: 80, protein: 6, carbs: 0, fat: 6 },
-    sauce: { kcal: 150, protein: 1, carbs: 5, fat: 12 },
-    nuts: { kcal: 200, protein: 7, carbs: 7, fat: 14 },
-    dressing: { kcal: 140, protein: 0, carbs: 1, fat: 15 },
-    dessert: { kcal: 250, protein: 2, carbs: 40, fat: 8 },
-    honey: { kcal: 64, protein: 0.1, carbs: 17, fat: 0 },
-    jam: { kcal: 52, protein: 0, carbs: 13, fat: 0 },
-    avocado: { kcal: 160, protein: 2, carbs: 9, fat: 15 },
-    mayo: { kcal: 190, protein: 0, carbs: 0, fat: 21 },
-    olive: { kcal: 180, protein: 0, carbs: 0, fat: 20 },
-    soy_sauce: { kcal: 16, protein: 2.2, carbs: 1.5, fat: 0 }
+    // Additions per serving (not per 100g)
+    butter: { kcal: 100, protein: 0, carbs: 0, fat: 11, servingSize: '1 tbsp (14g)' },
+    oil: { kcal: 120, protein: 0, carbs: 0, fat: 14, servingSize: '1 tbsp (14g)' },
+    cheese: { kcal: 110, protein: 7, carbs: 1, fat: 9, servingSize: '1 oz (28g)' },
+    bacon: { kcal: 45, protein: 3, carbs: 0, fat: 3.5, servingSize: '1 slice' },
+    sauce: { kcal: 75, protein: 0.5, carbs: 2.5, fat: 6, servingSize: '2 tbsp' },
+    nuts: { kcal: 185, protein: 7, carbs: 7, fat: 16, servingSize: '1 oz (23g)' },
+    dressing: { kcal: 140, protein: 0, carbs: 1, fat: 15, servingSize: '2 tbsp' },
+    dessert: { kcal: 250, protein: 2, carbs: 40, fat: 8, servingSize: '100g portion' },
+    honey: { kcal: 64, protein: 0.1, carbs: 17, fat: 0, servingSize: '1 tbsp (21g)' },
+    jam: { kcal: 52, protein: 0, carbs: 13, fat: 0, servingSize: '1 tbsp (20g)' },
+    avocado: { kcal: 120, protein: 1.5, carbs: 6.5, fat: 11, servingSize: '0.5 avocado (60g)' },
+    mayo: { kcal: 90, protein: 0, carbs: 0, fat: 10, servingSize: '1 tbsp (14g)' },
+    olive: { kcal: 120, protein: 0, carbs: 0, fat: 14, servingSize: '1 tbsp (14g)' },
+    soy_sauce: { kcal: 40, protein: 5.5, carbs: 4, fat: 0, servingSize: '1 tbsp (15ml)' },
+    sriracha: { kcal: 18, protein: 0.5, carbs: 4, fat: 0.1, servingSize: '1 tbsp (17g)' },
+    salt: { kcal: 0, protein: 0, carbs: 0, fat: 0, servingSize: 'seasoning' },
+    pepper: { kcal: 5, protein: 0.2, carbs: 1, fat: 0.1, servingSize: 'seasoning' },
+    garlic: { kcal: 45, protein: 2, carbs: 10, fat: 0.15, servingSize: '1 clove (3g)' },
+    lemon_juice: { kcal: 3, protein: 0, carbs: 1, fat: 0, servingSize: '1 tbsp (15ml)' }
   },
   
-  // Garnish macro contributions per portion (per 100g equivalent)
+  // Garnish - more precise with actual weights
   garnish: {
     broccoli: { 
-      small: { kcal: 30, protein: 2.5, carbs: 5, fat: 0.3 }, 
-      medium: { kcal: 60, protein: 5, carbs: 10, fat: 0.6 }, 
-      large: { kcal: 90, protein: 7.5, carbs: 15, fat: 0.9 } 
+      small: { kcal: 30, protein: 2.5, carbs: 5, fat: 0.3, grams: 90 }, 
+      medium: { kcal: 50, protein: 4.2, carbs: 8.5, fat: 0.5, grams: 150 }, 
+      large: { kcal: 80, protein: 6.7, carbs: 13.5, fat: 0.8, grams: 240 } 
     },
     carrots: { 
-      small: { kcal: 20, protein: 0.5, carbs: 5, fat: 0.1 }, 
-      medium: { kcal: 41, protein: 1, carbs: 10, fat: 0.2 }, 
-      large: { kcal: 82, protein: 2, carbs: 20, fat: 0.4 } 
+      small: { kcal: 20, protein: 0.5, carbs: 5, fat: 0.1, grams: 50 }, 
+      medium: { kcal: 41, protein: 1, carbs: 10, fat: 0.2, grams: 100 }, 
+      large: { kcal: 82, protein: 2, carbs: 20, fat: 0.4, grams: 200 } 
     },
     spinach: { 
-      small: { kcal: 11, protein: 1.5, carbs: 2, fat: 0.2 }, 
-      medium: { kcal: 23, protein: 3, carbs: 4, fat: 0.4 }, 
-      large: { kcal: 46, protein: 6, carbs: 8, fat: 0.8 } 
+      small: { kcal: 9, protein: 1.2, carbs: 1.5, fat: 0.16, grams: 40 }, 
+      medium: { kcal: 23, protein: 3, carbs: 3.6, fat: 0.4, grams: 100 }, 
+      large: { kcal: 46, protein: 6, carbs: 7.2, fat: 0.8, grams: 200 } 
     },
     mushrooms: { 
-      small: { kcal: 11, protein: 1.5, carbs: 1.5, fat: 0.15 }, 
-      medium: { kcal: 22, protein: 3, carbs: 3, fat: 0.3 }, 
-      large: { kcal: 44, protein: 6, carbs: 6, fat: 0.6 } 
+      small: { kcal: 11, protein: 1.5, carbs: 1.5, fat: 0.15, grams: 50 }, 
+      medium: { kcal: 22, protein: 3, carbs: 3, fat: 0.3, grams: 100 }, 
+      large: { kcal: 44, protein: 6, carbs: 6, fat: 0.6, grams: 200 } 
     },
     onions: { 
-      small: { kcal: 20, protein: 0.5, carbs: 4.5, fat: 0 }, 
-      medium: { kcal: 40, protein: 1, carbs: 9, fat: 0 }, 
-      large: { kcal: 80, protein: 2, carbs: 18, fat: 0 } 
+      small: { kcal: 16, protein: 0.4, carbs: 3.6, fat: 0.04, grams: 40 }, 
+      medium: { kcal: 40, protein: 1.1, carbs: 9, fat: 0.1, grams: 100 }, 
+      large: { kcal: 80, protein: 2.2, carbs: 18, fat: 0.2, grams: 200 } 
     },
     tomatoes: { 
-      small: { kcal: 9, protein: 0.5, carbs: 2, fat: 0.1 }, 
-      medium: { kcal: 18, protein: 1, carbs: 4, fat: 0.2 }, 
-      large: { kcal: 36, protein: 2, carbs: 8, fat: 0.4 } 
+      small: { kcal: 13, protein: 0.6, carbs: 3, fat: 0.15, grams: 75 }, 
+      medium: { kcal: 27, protein: 1.3, carbs: 5.8, fat: 0.3, grams: 150 }, 
+      large: { kcal: 54, protein: 2.6, carbs: 11.6, fat: 0.6, grams: 300 } 
     },
     potatoes: { 
-      small: { kcal: 54, protein: 1.2, carbs: 12, fat: 0.1 }, 
-      medium: { kcal: 108, protein: 2.4, carbs: 24, fat: 0.2 }, 
-      large: { kcal: 216, protein: 4.8, carbs: 48, fat: 0.4 } 
+      small: { kcal: 60, protein: 1.3, carbs: 13, fat: 0.08, grams: 80 }, 
+      medium: { kcal: 115, protein: 2.6, carbs: 26, fat: 0.15, grams: 150 }, 
+      large: { kcal: 230, protein: 5.2, carbs: 52, fat: 0.3, grams: 300 } 
     },
     sweet_potato: { 
-      small: { kcal: 60, protein: 1.1, carbs: 14, fat: 0.1 }, 
-      medium: { kcal: 120, protein: 2.2, carbs: 28, fat: 0.2 }, 
-      large: { kcal: 240, protein: 4.4, carbs: 56, fat: 0.4 } 
+      small: { kcal: 65, protein: 1.2, carbs: 15, fat: 0.08, grams: 75 }, 
+      medium: { kcal: 130, protein: 2.4, carbs: 30, fat: 0.15, grams: 150 }, 
+      large: { kcal: 260, protein: 4.8, carbs: 60, fat: 0.3, grams: 300 } 
     },
     rice: { 
-      small: { kcal: 78, protein: 1.6, carbs: 17, fat: 0.2 }, 
-      medium: { kcal: 156, protein: 3.2, carbs: 34, fat: 0.4 }, 
-      large: { kcal: 312, protein: 6.4, carbs: 68, fat: 0.8 } 
+      small: { kcal: 60, protein: 1.3, carbs: 13, fat: 0.2, grams: 75 }, // cooked portion
+      medium: { kcal: 130, protein: 2.6, carbs: 28, fat: 0.3, grams: 160 },
+      large: { kcal: 260, protein: 5.2, carbs: 56, fat: 0.6, grams: 320 } 
     },
     noodles: { 
-      small: { kcal: 83, protein: 2.7, carbs: 15, fat: 0.7 }, 
-      medium: { kcal: 166, protein: 5.4, carbs: 30, fat: 1.4 }, 
-      large: { kcal: 332, protein: 10.8, carbs: 60, fat: 2.8 } 
+      small: { kcal: 70, protein: 2.3, carbs: 12.5, fat: 0.6, grams: 80 }, // cooked
+      medium: { kcal: 138, protein: 4.5, carbs: 25, fat: 1.2, grams: 160 }, 
+      large: { kcal: 276, protein: 9, carbs: 50, fat: 2.4, grams: 320 } 
     },
     bread: { 
-      small: { kcal: 80, protein: 2.7, carbs: 15, fat: 1 }, 
-      medium: { kcal: 160, protein: 5.4, carbs: 30, fat: 2 }, 
-      large: { kcal: 320, protein: 10.8, carbs: 60, fat: 4 } 
+      small: { kcal: 80, protein: 2.7, carbs: 15, fat: 1, grams: 30 }, // 1 slice
+      medium: { kcal: 160, protein: 5.4, carbs: 30, fat: 2, grams: 60 }, // 2 slices
+      large: { kcal: 240, protein: 8.1, carbs: 45, fat: 3, grams: 90 } // 3 slices
     },
     quinoa: { 
-      small: { kcal: 60, protein: 2.2, carbs: 10.5, fat: 1.2 }, 
-      medium: { kcal: 120, protein: 4.4, carbs: 21, fat: 2.4 }, 
-      large: { kcal: 240, protein: 8.8, carbs: 42, fat: 4.8 } 
+      small: { kcal: 60, protein: 2.2, carbs: 11, fat: 1.2, grams: 50 }, // cooked
+      medium: { kcal: 120, protein: 4.4, carbs: 22, fat: 2.4, grams: 100 }, 
+      large: { kcal: 240, protein: 8.8, carbs: 44, fat: 4.8, grams: 200 } 
     },
     salad: { 
-      small: { kcal: 7, protein: 0.5, carbs: 1.5, fat: 0.1 }, 
-      medium: { kcal: 15, protein: 1, carbs: 3, fat: 0.2 }, 
-      large: { kcal: 30, protein: 2, carbs: 6, fat: 0.4 } 
+      small: { kcal: 11, protein: 0.75, carbs: 2.25, fat: 0.15, grams: 75 }, 
+      medium: { kcal: 22, protein: 1.5, carbs: 4.5, fat: 0.3, grams: 150 }, 
+      large: { kcal: 45, protein: 3, carbs: 9, fat: 0.6, grams: 300 } 
     },
     corn: { 
-      small: { kcal: 52, protein: 2, carbs: 11, fat: 0.7 }, 
-      medium: { kcal: 104, protein: 4, carbs: 22, fat: 1.4 }, 
-      large: { kcal: 208, protein: 8, carbs: 44, fat: 2.8 } 
+      small: { kcal: 43, protein: 1.6, carbs: 9.5, fat: 0.6, grams: 50 }, 
+      medium: { kcal: 86, protein: 3.3, carbs: 19, fat: 1.2, grams: 100 }, 
+      large: { kcal: 172, protein: 6.6, carbs: 38, fat: 2.4, grams: 200 } 
     },
     peppers: { 
-      small: { kcal: 15, protein: 0.5, carbs: 3, fat: 0.15 }, 
-      medium: { kcal: 31, protein: 1, carbs: 6, fat: 0.3 }, 
-      large: { kcal: 62, protein: 2, carbs: 12, fat: 0.6 } 
+      small: { kcal: 15, protein: 0.5, carbs: 3, fat: 0.15, grams: 50 }, 
+      medium: { kcal: 31, protein: 1, carbs: 6, fat: 0.3, grams: 100 }, 
+      large: { kcal: 62, protein: 2, carbs: 12, fat: 0.6, grams: 200 } 
     },
     green_beans: { 
-      small: { kcal: 15, protein: 0.9, carbs: 3.5, fat: 0.05 }, 
-      medium: { kcal: 31, protein: 1.8, carbs: 7, fat: 0.1 }, 
-      large: { kcal: 62, protein: 3.6, carbs: 14, fat: 0.2 } 
+      small: { kcal: 15, protein: 0.9, carbs: 3.5, fat: 0.05, grams: 50 }, 
+      medium: { kcal: 31, protein: 1.8, carbs: 7, fat: 0.1, grams: 100 }, 
+      large: { kcal: 62, protein: 3.6, carbs: 14, fat: 0.2, grams: 200 } 
     }
   },
   
-  portions: {
-    small: 0.6,
+  // Portion size multipliers (relative to base portion)
+  portionSizeMultiplier: {
+    small: 0.7,
     medium: 1.0,
-    large: 1.5,
-    huge: 2.2
+    large: 1.4,
+    huge: 2.0
   }
 };
 

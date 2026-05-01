@@ -4970,8 +4970,37 @@ async function toggleMeal(key, dt) {
   try {
     const log = { ...getLog(dt) };
     const idx = log.completed.indexOf(key);
-    if (idx >= 0) log.completed.splice(idx, 1);
-    else log.completed.push(key);
+    
+    // When marking meal as completed, store the meal data in the log
+    if (idx >= 0) {
+      // Unchecking: remove from completed and clear meal data
+      log.completed.splice(idx, 1);
+      delete log[key];
+    } else {
+      // Checking: add to completed and store meal data with macros
+      log.completed.push(key);
+      
+      // Get the day plan and find this meal to store its data
+      const day = PLAN.generateDay(dt, S.profile.goal, S.profile.favourites || []);
+      const slots = PLAN.mealSlots(day);
+      const slot = slots.find(s => s.key === key);
+      
+      if (slot && slot.meal) {
+        // Store meal with macros so updateConsumptionLog can find it
+        log[key] = {
+          id: slot.meal.id,
+          name: slot.meal.name,
+          cal: slot.meal.cal,
+          macros: {
+            kcal: slot.meal.cal,
+            protein: slot.meal.protein || 0,
+            carbs: slot.meal.carbs || 0,
+            fat: slot.meal.fat || 0
+          }
+        };
+      }
+    }
+    
     await saveLog(dt, log);
     renderView();
   } catch(e) {

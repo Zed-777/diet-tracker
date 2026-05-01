@@ -88,7 +88,7 @@
 
 **Status:** Feature code complete, rendering bug needs debug  
 **Issue:** Selecting Body Scan shows timer instead of region guidance UI  
-**Hypothesis:** 
+**Hypothesis:**
 
 - showBodyScanRegion() not rendering to #view container
 - Possible cache issue (user should try Ctrl+Shift+R)
@@ -223,7 +223,7 @@
 1. ✅ **Daily Cost Only Showed Completed Meals**
    - Fix: Changed to sum ALL 5 slots regardless of completion
    - Commit: 902e210
-   
+
 2. ✅ **Mindfulness Sessions Lost on Refresh**
    - Cause: _meditationSessions was memory-only array
    - Fix: Moved to S.profile.mindfulness.sessions (persisted to Supabase)
@@ -249,13 +249,19 @@
 
 ---
 
-## 🎯 Phase 3: Real-World Meal Tracking + Analytics (UPCOMING)
+## 🎯 Phase 3: Real-World Meal Tracking + Analytics (IN PROGRESS)
 
 ### Feature: Manual Meal Logger + Consumption Analytics
 
-**Status:** 🟢 PLANNING  
+**Status:** 🟡 PHASE 1 COMPLETE (Commit 61e56aa)  
 **Priority:** HIGH (Revolutionary feature)  
 **Complexity:** HIGH (substantial implementation)
+
+**Progress:**
+- ✅ Phase 1: Data structures + Questionnaire Modal UI (DONE)
+- ⏸️ Phase 2: Macro estimation engine refinement (NEXT)
+- ⏸️ Phase 3: Storage & display integration (PENDING)
+- ⏸️ Phase 4: Analytics + PROGRESS tab (PENDING)
 
 ---
 
@@ -264,6 +270,7 @@
 ### 1. PROBLEM STATEMENT
 
 Current limitation: App only tracks **planned meals** (selected/completed). Real-world scenario:
+
 - User goes out for dinner with friends
 - Can't follow planned meal
 - No way to log what they actually ate
@@ -275,7 +282,7 @@ Current limitation: App only tracks **planned meals** (selected/completed). Real
 
 ## 2. DATA STRUCTURES
 
-### New Profile Fields
+### New Profile Fields (✅ IMPLEMENTED)
 
 ```javascript
 // In S.profile:
@@ -355,6 +362,7 @@ Current limitation: App only tracks **planned meals** (selected/completed). Real
 ### 3.1 Manual Meal Input Button (TODAY Tab)
 
 **Location:** Below meal cards, above quote
+
 ```
 ┌─────────────────────────────────┐
 │ [+ Add Manual Meal]             │
@@ -368,6 +376,7 @@ Current limitation: App only tracks **planned meals** (selected/completed). Real
 ### 3.2 Questionnaire Modal
 
 **Screen 1: Basic Info**
+
 ```
 What did you eat today?
 ├─ Meal name: [text input] "Restaurant Pasta"
@@ -376,6 +385,7 @@ What did you eat today?
 ```
 
 **Screen 2: Food Classification**
+
 ```
 What's the main ingredient?
 ├─ [Radio buttons]
@@ -392,6 +402,7 @@ What's the main ingredient?
 ```
 
 **Screen 3: Protein Source (if applicable)**
+
 ```
 Does it have additional protein?
 ├─ ○ Yes: [dropdown] Chicken / Beef / Fish / Eggs / Tofu / Beans
@@ -400,6 +411,7 @@ Does it have additional protein?
 ```
 
 **Screen 4: Cooking Method**
+
 ```
 How was it cooked?
 ├─ ○ Raw
@@ -412,6 +424,7 @@ How was it cooked?
 ```
 
 **Screen 5: Portion Size**
+
 ```
 How much did you eat?
 ├─ ○ Small (appetizer/side)
@@ -422,6 +435,7 @@ How much did you eat?
 ```
 
 **Screen 6: Additions/Extras**
+
 ```
 What else did you add?
 ├─ ☐ Butter/Oil
@@ -434,6 +448,7 @@ What else did you add?
 ```
 
 **Screen 7: Confidence**
+
 ```
 How confident are you about this estimate?
 ├─ ○ Rough guess (±300 kcal)
@@ -443,6 +458,7 @@ How confident are you about this estimate?
 ```
 
 **Final:** Review + Save
+
 ```
 Estimated macros:
 ├─ 850 kcal
@@ -461,6 +477,7 @@ Estimated macros:
 ### 4.1 Calculation Logic
 
 Based on questionnaire answers, calculate macros using:
+
 - **Base nutrition database** (simplified, ~30 common foods)
 - **Multipliers** for cooking method (fat changes based on frying vs grilling)
 - **Portion adjustments** (small/medium/large = ×0.6 / ×1.0 / ×1.5)
@@ -571,32 +588,43 @@ function calculateKcal(macros) {
 
 ## 5. IMPLEMENTATION PHASES
 
-### Phase 1: Data Structure & UI Foundation
+### Phase 1: Data Structure & UI Foundation (✅ COMPLETE - Commit 61e56aa)
+
 - ✅ Add S.profile.manualMeals structure
 - ✅ Add S.profile.consumptionLog structure
 - ✅ Create "Add Manual Meal" button (TODAY tab)
 - ✅ Build questionnaire modal UI (7 screens)
-- ⏳ Wire button to modal
+- ✅ Wire button to modal
+- ✅ Add 50+ translation keys (EN/ES)
+- ✅ Implement all UI components
+- ✅ Add delete functionality
+
+**Status:** READY FOR TESTING
 
 ### Phase 2: Macro Estimation Engine
+
 - ✅ Build MACRO_ESTIMATES database
 - ✅ Implement estimateMealMacros() function
 - ✅ Add calculation logic with all multipliers
 - ✅ Integrate questionnaire → macros pipeline
 - ⏳ Test accuracy with real food examples
+- ⏳ Fine-tune portion size multipliers
 
 ### Phase 3: Manual Meal Storage & Display
+
 - ✅ Save manual meals to S.profile.manualMeals
 - ✅ Persist to Supabase
 - ✅ Display manual meals on TODAY tab (separate section)
 - ✅ Add edit/delete functionality for manual meals
-- ⏳ Show actual consumption card (planned + manual totals)
+- ✅ Show actual consumption card (planned + manual totals)
+- ⏳ Render consumption comparison UI
 
 ### Phase 4: Consumption Analytics
+
 - ✅ Build consumptionLog auto-calculator
 - ✅ Track planned vs actual daily comparison
-- ✅ Update WEEK/MONTH views with consumption data
-- ✅ Add PROGRESS tab analytics section
+- ⏳ Update WEEK/MONTH views with consumption data
+- ⏳ Add PROGRESS tab analytics section
   - Charts: Kcal over time (planned vs actual)
   - Charts: Macro breakdown (planned vs actual)
   - Variance analysis (how often user hits macros)
@@ -605,24 +633,32 @@ function calculateKcal(macros) {
 
 ---
 
-## 6. KEY FUNCTIONS TO IMPLEMENT
+## 6. KEY FUNCTIONS IMPLEMENTED
 
-### Data Management
+### Data Management (✅ DONE)
+
 ```javascript
 // Save manual meal
-async function saveManualMeal(date, mealData) { }
+async function saveManualMeal(date, mealData) ✅
 
 // Delete manual meal
-async function deleteManualMeal(date, mealId) { }
+async function deleteManualMeal(date, mealId) ✅
 
 // Get all manual meals for date
-function getManualMeals(date) { }
+function getManualMeals(date) ✅
 
 // Calculate actual consumption (planned + manual)
-function calculateActualConsumption(date) { }
+function updateConsumptionLog(date) ✅
+
+// Initialize data structures
+function initManualMealData() ✅
+
+// Estimate macros from questionnaire
+function estimateMealMacros(questionnaire) ✅
 ```
 
-### UI Components
+### UI Components (✅ DONE)
+
 ```javascript
 // Open questionnaire modal
 function openManualMealModal() { }
@@ -638,6 +674,7 @@ function renderActualConsumptionCard() { }
 ```
 
 ### Analytics
+
 ```javascript
 // Get consumption history (last 30 days)
 function getConsumptionHistory(days = 30) { }
@@ -654,6 +691,7 @@ function generateConsumptionAnalytics() { }
 ## 7. UI PLACEMENT & INTEGRATION
 
 ### TODAY Tab
+
 ```
 ┌─────────────────────────────────────────┐
 │ TODAY                                   │
@@ -686,6 +724,7 @@ function generateConsumptionAnalytics() { }
 ```
 
 ### PROGRESS Tab (NEW SECTION)
+
 ```
 ┌─────────────────────────────────────────┐
 │ CONSUMPTION ANALYTICS                   │
@@ -746,22 +785,26 @@ function generateConsumptionAnalytics() { }
 ## 9. TECHNICAL CONSIDERATIONS
 
 ### Performance
+
 - Manual meals stored in profile (not separate DB calls)
 - Consumption calculations cached (recalculate on meal add/delete only)
 - Questionnaire screens lazy-load (not all at once)
 
 ### Data Integrity
+
 - Validate macro estimates (no negative values)
 - Confidence scoring to flag unreliable estimates
 - Manual meals separated from planned (clear distinction)
 
 ### User Experience
+
 - Questionnaire can be skipped (simplified mode: just name + estimated kcal)
 - Manual meal editing (not just delete)
 - Clear visual distinction between planned and actual meals
 - Undo functionality (within same session)
 
 ### Backward Compatibility
+
 - Old profiles without manualMeals field won't break
 - Initialize on first manual meal save
 - No impact on existing planned meal tracking

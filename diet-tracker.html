@@ -5164,7 +5164,7 @@ function renderToday() {
   <div class="water-card">
     <div class="water-header">
       <div class="water-title">${T('waterIntake')}</div>
-      <div class="water-count">${waterLitres}L / ${CALC.waterTarget(p.weight)}L ${T('ok')}</div>
+      <div class="water-count">${waterLitres}L / ${CALC.waterTarget(p.weight)}L</div>
     </div>
     <div class="water-cups">
       ${Array.from({length:Math.max(waterTarget,8)},(_,i) => `

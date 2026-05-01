@@ -3735,7 +3735,6 @@ function renderToday() {
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
-          <div class="meal-cost-badge">💰 €${COST.getMealCost(m).toFixed(2)}</div>
           <div class="meal-cal">${m.cal} kcal</div>
         </div>
         <div class="meal-expand-btn">⌄</div>
@@ -3767,13 +3766,59 @@ function renderToday() {
           </button>
           <button class="meal-action-btn" onclick="openSwap('${slot.key}','${dt}')">${T('swap')}</button>
         </div>
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--b1);display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
-          <div><span style="color:var(--t3)">💰 ${T('costPerMeal')}:</span> <strong style="color:var(--ac)">€${COST.getMealCost(m).toFixed(2)}</strong></div>
-          <div><span style="color:var(--t3)">📊 ${T('totalCost')}:</span> <strong style="color:var(--t1)">€${COST.getMealCost(m).toFixed(2)}</strong></div>
-        </div>
       </div>
     </div>`;
   });
+
+  // Calculate weekly cost (all meals for this week, not just completed)
+  const ws = weekStart(new Date(dt + 'T00:00'));
+  const we = new Date(ws);
+  we.setDate(we.getDate() + 6);
+  let weekCost = 0;
+  let currentDate = new Date(ws);
+  while (currentDate <= we) {
+    const dateStr_loop = dateStr(currentDate);
+    const daySlots = PLAN.mealSlots(PLAN.generateDay(dateStr_loop, p.goal, p.favourites || []));
+    daySlots.forEach(slot => {
+      weekCost += COST.getMealCost(slot.meal);
+    });
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  // Calculate monthly cost (all meals for this month, not just completed)
+  const { y, m } = { y: parseInt(dt.slice(0,4)), m: parseInt(dt.slice(5,7)) - 1 };
+  const firstDay = new Date(y, m, 1);
+  const lastDay = new Date(y, m + 1, 0);
+  let monthlyCost = 0;
+  let currentDate_month = new Date(firstDay);
+  while (currentDate_month <= lastDay) {
+    const dateStr_loop = dateStr(currentDate_month);
+    const daySlots = PLAN.mealSlots(PLAN.generateDay(dateStr_loop, p.goal, p.favourites || []));
+    daySlots.forEach(slot => {
+      monthlyCost += COST.getMealCost(slot.meal);
+    });
+    currentDate_month.setDate(currentDate_month.getDate() + 1);
+  }
+
+  // Add estimated grocery cost summary
+  html += `
+  <div style="margin-top:20px;margin-bottom:14px">
+    <div class="view-sub" style="margin-bottom:12px">💰 ${T('estimatedGroceryCost')}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div style="background:var(--sf);border:1px solid var(--b1);border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:600">${isToday ? 'Today' : fmtDate(dt)}</div>
+        <div style="font-size:20px;font-weight:900;color:var(--ac)">€${dailyCost.toFixed(2)}</div>
+      </div>
+      <div style="background:var(--sf);border:1px solid var(--b1);border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:600">${T('weeklyCost')}</div>
+        <div style="font-size:20px;font-weight:900;color:var(--ac)">€${weekCost.toFixed(2)}</div>
+      </div>
+      <div style="background:var(--sf);border:1px solid var(--b1);border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:600">${T('monthlyCost')}</div>
+        <div style="font-size:20px;font-weight:900;color:var(--ac)">€${monthlyCost.toFixed(2)}</div>
+      </div>
+    </div>
+  </div>`;
 
   // Add daily quote at the bottom (only on today's view)
   if (isToday) {

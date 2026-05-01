@@ -3779,7 +3779,7 @@ function estimateMealMacros(questionnaire) {
 
 async function saveManualMeal(date, mealData) {
   initManualMealData();
-  const dateStr = date.toISOString().split('T')[0];
+  const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
   
   if (!S.profile.manualMeals[dateStr]) {
     S.profile.manualMeals[dateStr] = [];
@@ -3795,7 +3795,7 @@ async function saveManualMeal(date, mealData) {
   S.profile.manualMeals[dateStr].push(meal);
   
   // Update consumption log
-  updateConsumptionLog(date);
+  updateConsumptionLog(dateStr);
   
   // Save to DB
   try {
@@ -3809,16 +3809,26 @@ async function saveManualMeal(date, mealData) {
   }
 }
 
-async function deleteManualMeal(date, mealId) {
+async function deleteManualMeal(dateOrMealId, mealIdOrUndefined) {
   initManualMealData();
-  const dateStr = date.toISOString ? date.toISOString().split('T')[0] : date;
+  // Handle both calling styles: deleteManualMeal(dateStr, mealId) and deleteManualMeal(mealId)
+  let dateStr, mealId;
+  if (typeof dateOrMealId === 'string' && dateOrMealId.includes('-')) {
+    // Called as deleteManualMeal(dateStr, mealId)
+    dateStr = dateOrMealId;
+    mealId = mealIdOrUndefined;
+  } else {
+    // Called as deleteManualMeal(mealId) - use viewDate
+    dateStr = typeof S.viewDate === 'string' ? S.viewDate : dateStr(S.viewDate);
+    mealId = dateOrMealId;
+  }
   
   if (S.profile.manualMeals[dateStr]) {
     S.profile.manualMeals[dateStr] = S.profile.manualMeals[dateStr].filter(m => m.id !== mealId);
   }
   
   // Update consumption log
-  updateConsumptionLog(new Date(dateStr + 'T00:00'));
+  updateConsumptionLog(dateStr);
   
   // Save to DB
   try {
@@ -3834,14 +3844,15 @@ async function deleteManualMeal(date, mealId) {
 
 function getManualMeals(date) {
   initManualMealData();
-  const dateStr = date.toISOString().split('T')[0];
+  const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
   return S.profile.manualMeals[dateStr] || [];
 }
 
 function updateConsumptionLog(date) {
   initManualMealData();
-  const dateStr = date.toISOString().split('T')[0];
-  const log = getLog(date);
+  const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+  const dateObj = typeof date === 'string' ? new Date(date + 'T00:00') : date;
+  const log = getLog(dateObj);
   const manualMeals = getManualMeals(date);
   
   // Get planned meal totals (from completed meals)

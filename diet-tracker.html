@@ -3801,11 +3801,14 @@ async function saveLog(dateStr, log) {
   if (OFFLINE.isOnline()) {
     try {
       await DB.set('log_' + dateStr, log);
+      // Also save updated profile (consumption log is stored there)
+      await DB.set('profile', S.profile);
     } catch(e) {
       console.error('Failed to save log, queueing for retry:', e);
       // Queue for retry
       OFFLINE.queueOperation(async () => {
         await DB.set('log_' + dateStr, log);
+        await DB.set('profile', S.profile);
       });
       flash('Meal logged (offline — will sync)', 'info');
     }
@@ -3813,6 +3816,7 @@ async function saveLog(dateStr, log) {
     // Offline: queue the operation
     OFFLINE.queueOperation(async () => {
       await DB.set('log_' + dateStr, log);
+      await DB.set('profile', S.profile);
     });
     flash('Offline mode — meal saved locally', 'info');
   }

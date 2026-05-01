@@ -3795,6 +3795,7 @@ function getLog(dateStr) {
 async function saveLog(dateStr, log) {
   // Always update local state first
   S.logs[dateStr] = log;
+  updateConsumptionLog(dateStr);
   
   // Try to save to database
   if (OFFLINE.isOnline()) {
@@ -3976,18 +3977,19 @@ async function deleteTemplate(templateId) {
 function updateConsumptionLog(date) {
   initManualMealData();
   const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
-  const dateObj = typeof date === 'string' ? new Date(date + 'T00:00') : date;
-  const log = getLog(dateObj);
+  const log = getLog(dateStr);
   const manualMeals = getManualMeals(date);
   
   // Get planned meal totals (from completed meals)
-  let planned = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+  let planned = { kcal: 0, cal: 0, protein: 0, carbs: 0, fat: 0 };
   if (log && log.completed) {
     log.completed.forEach(slot => {
       if (log[slot]) {
         const meal = log[slot];
         if (meal && meal.macros) {
-          planned.kcal += meal.macros.kcal || 0;
+          const kcal = meal.macros.kcal || 0;
+          planned.kcal += kcal;
+          planned.cal += kcal;
           planned.protein += meal.macros.protein || 0;
           planned.carbs += meal.macros.carbs || 0;
           planned.fat += meal.macros.fat || 0;
@@ -3997,10 +3999,12 @@ function updateConsumptionLog(date) {
   }
   
   // Get manual meals totals
-  let manual = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+  let manual = { kcal: 0, cal: 0, protein: 0, carbs: 0, fat: 0 };
   manualMeals.forEach(meal => {
     if (meal.macros) {
-      manual.kcal += meal.macros.kcal || 0;
+      const kcal = meal.macros.kcal || 0;
+      manual.kcal += kcal;
+      manual.cal += kcal;
       manual.protein += meal.macros.protein || 0;
       manual.carbs += meal.macros.carbs || 0;
       manual.fat += meal.macros.fat || 0;
@@ -4010,6 +4014,7 @@ function updateConsumptionLog(date) {
   // Calculate actual (planned + manual)
   const actual = {
     kcal: planned.kcal + manual.kcal,
+    cal: planned.cal + manual.cal,
     protein: planned.protein + manual.protein,
     carbs: planned.carbs + manual.carbs,
     fat: planned.fat + manual.fat
@@ -4018,6 +4023,7 @@ function updateConsumptionLog(date) {
   // Calculate variance
   const variance = {
     kcal: actual.kcal - planned.kcal,
+    cal: actual.cal - planned.cal,
     protein: actual.protein - planned.protein,
     carbs: actual.carbs - planned.carbs,
     fat: actual.fat - planned.fat
@@ -4580,8 +4586,7 @@ async function finalizeManualMeal() {
     if (result) {
       // Mark this meal type as completed in the log for week view
       const dateStr = typeof S.viewDate === 'string' ? S.viewDate : S.viewDate.toISOString().split('T')[0];
-      const dateObj = typeof S.viewDate === 'string' ? new Date(S.viewDate + 'T00:00') : S.viewDate;
-      const log = getLog(dateObj);
+      const log = getLog(dateStr);
       
       // Map meal type to meal slot
       const mealTypeToSlot = {
@@ -4596,11 +4601,7 @@ async function finalizeManualMeal() {
       // Mark as completed if not already and slot exists
       if (log && slot && !log.completed.includes(slot)) {
         log.completed.push(slot);
-        // Ensure log object exists
-        if (!S.profile.log) S.profile.log = {};
-        S.profile.log[dateStr] = log;
-        updateConsumptionLog(dateStr);
-        await DB.set('profile', S.profile);
+        await saveLog(dateStr, log);
       }
       
       closeManualMealModal();
@@ -4710,11 +4711,12 @@ function renderToday() {
 
   // Use consumption log actual totals (includes manual meals) for macro ring
   const consumptionLogData = S.profile.consumptionLog?.[dateStr(dt)];
-  const consumed = consumptionLogData?.actual || {
-    cal: 0,
-    protein: 0,
-    carbs: 0,
-    fat: 0
+  const actualData = consumptionLogData?.actual || {};
+  const consumed = {
+    cal: actualData.cal ?? actualData.kcal ?? 0,
+    protein: actualData.protein || 0,
+    carbs: actualData.carbs || 0,
+    fat: actualData.fat || 0
   };
 
   const tgt = p.macros;

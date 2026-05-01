@@ -5091,7 +5091,7 @@ function renderToday() {
 
   const waterTarget = Math.round(CALC.waterTarget(p.weight) / 0.25); // glasses of 250ml
   const wGlasses = Math.min(log.water || 0, 12);
-  const waterLitres = ((log.water || 0) * 0.25).toFixed(1);
+  const waterLitres = ((log.water || 0) * 0.25).toFixed(2);
 
   // Date navigation
   const prev = new Date(dt + 'T00:00');

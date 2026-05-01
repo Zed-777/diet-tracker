@@ -4627,14 +4627,14 @@ function renderToday() {
     }
   });
 
-  const consumed = slots
-    .filter(s => log.completed.includes(s.key))
-    .reduce((acc, s) => ({
-      cal: acc.cal + s.meal.cal,
-      protein: acc.protein + s.meal.protein,
-      carbs: acc.carbs + s.meal.carbs,
-      fat: acc.fat + s.meal.fat
-    }), {cal:0,protein:0,carbs:0,fat:0});
+  // Use consumption log actual totals (includes manual meals) for macro ring
+  const consumptionLogData = S.profile.consumptionLog?.[dateStr(dt)];
+  const consumed = consumptionLogData?.actual || {
+    cal: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0
+  };
 
   const tgt = p.macros;
   const tCal = p.calories;
@@ -4810,7 +4810,10 @@ function renderToday() {
       <div class="meal-card" style="background:var(--s1); border:1px solid var(--ac);">
         <div style="padding:12px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <div style="font-weight:600; color:var(--t1);">${meal.mealName}</div>
+            <div>
+              <div style="font-weight:600; color:var(--t1);">${meal.mealName}</div>
+              <div style="font-size:11px; color:var(--ac); font-weight:600; margin-top:2px;">${T(meal.mealType || 'lunch')}</div>
+            </div>
             <div style="display:flex; gap:8px;">
               <button onclick="deleteManualMeal('${dateStr(S.viewDate)}', '${meal.id}')" style="
                 padding:4px 8px; background:#EF4444; border:none; border-radius:4px;

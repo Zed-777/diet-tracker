@@ -2960,6 +2960,21 @@ const LANG = {
     addNuts: 'Nuts',
     addDressing: 'Dressing/Mayo',
     addDessert: 'Dessert/Sweet',
+    garnishQ: 'What sides or vegetables came with it?',
+    addGarnish: 'Add a garnish or side',
+    garnishBroccoli: 'Broccoli/Green vegetables',
+    garnishPotatoes: 'Potatoes/Fries',
+    garnishRice: 'Rice',
+    garnishNoodles: 'Noodles/Pasta',
+    garnishBread: 'Bread/Rolls',
+    garnishSalad: 'Salad',
+    garnishCorn: 'Corn',
+    garnishOther: 'Other vegetables',
+    garnishQuantity: 'How much?',
+    garnishSmall: 'Small side',
+    garnishMedium: 'Medium side',
+    garnishLarge: 'Large side',
+    garnishRemove: 'Remove',
     confidenceQ: 'How confident are you about this estimate?',
     confRoughGuess: 'Rough guess (±300 kcal)',
     confReasonable: 'Reasonable estimate (±150 kcal)',
@@ -3343,6 +3358,21 @@ const LANG = {
     addNuts: 'Nueces',
     addDressing: 'Aderezo/Mayo',
     addDessert: 'Postre/Dulce',
+    garnishQ: '¿Qué acompañamientos o verduras vinieron con él?',
+    addGarnish: 'Añadir un acompañamiento o guarnición',
+    garnishBroccoli: 'Brócoli/Verduras verdes',
+    garnishPotatoes: 'Papas/Papas fritas',
+    garnishRice: 'Arroz',
+    garnishNoodles: 'Fideos/Pasta',
+    garnishBread: 'Pan/Bolillos',
+    garnishSalad: 'Ensalada',
+    garnishCorn: 'Maíz',
+    garnishOther: 'Otras verduras',
+    garnishQuantity: '¿Cuánto?',
+    garnishSmall: 'Guarnición pequeña',
+    garnishMedium: 'Guarnición mediana',
+    garnishLarge: 'Guarnición grande',
+    garnishRemove: 'Eliminar',
     confidenceQ: '¿Qué tan confiado estás en esta estimación?',
     confRoughGuess: 'Aproximación aproximada (±300 kcal)',
     confReasonable: 'Estimación razonable (±150 kcal)',
@@ -3929,6 +3959,7 @@ function openManualMealModal() {
     cookingMethod: 'grilled',
     portionSize: 'medium',
     additions: [],
+    garnish: [],
     accuracy: 'reasonable',
     notes: ''
   };
@@ -4067,8 +4098,8 @@ function renderManualMealScreen() {
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('additionsQ')}</h2>
         <div style="display:grid; gap:10px;">
           ${['butter', 'cheese', 'sauce_heavy', 'bacon', 'nuts', 'dressing', 'dessert'].map(add => `
-            <label style="display:flex; align-items:center; padding:12px; border:2px solid var(--b1); border-radius:8px; cursor:pointer; background:transparent;">
-              <input type="checkbox" value="${add}" 
+            <label style="display:flex; align-items:center; padding:12px; border:2px solid ${_manualMealQuestionnaire.additions.includes(add) ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.additions.includes(add) ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
+              <input type="checkbox" 
                 ${_manualMealQuestionnaire.additions.includes(add) ? 'checked' : ''}
                 onchange="toggleManualMealAddition('${add}')"
                 style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
@@ -4080,46 +4111,91 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 6: // Screen 7: Confidence & Notes
+    case 6: // Screen 7: Garnish/Sides
       html = `
-        <h2 style="color:var(--t1); margin-bottom:20px;">${T('confidenceQ')}</h2>
-        <div style="display:grid; gap:10px; margin-bottom:16px;">
-          ${['rough', 'reasonable', 'accurate'].map((conf, i) => {
-            const values = ['rough', 'reasonable', 'accurate'];
-            return `
-              <label style="display:flex; align-items:center; padding:12px; border:2px solid ${_manualMealQuestionnaire.accuracy === values[i] ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.accuracy === values[i] ? 'var(--s1)' : 'transparent'};">
-                <input type="radio" name="accuracy" value="${values[i]}" 
-                  ${_manualMealQuestionnaire.accuracy === values[i] ? 'checked' : ''}
-                  onclick="updateManualMealQuestionnaire('accuracy', '${values[i]}')"
-                  style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
-                <span style="color:var(--t1); font-weight:500;">${T('conf' + conf.charAt(0).toUpperCase() + conf.slice(1))}</span>
-              </label>
-            `;
-          }).join('')}
-        </div>
-        <div style="margin-bottom:16px;">
-          <label style="color:var(--t2); display:block; margin-bottom:6px; font-weight:500;">${T('notesLabel')}</label>
-          <textarea id="q-notes" value="${_manualMealQuestionnaire.notes}"
-            placeholder="e.g., Restaurant meal, best guess"
-            style="width:100%; padding:10px; border:1px solid var(--b1); border-radius:6px;
-              background:var(--sf); color:var(--t1); box-sizing:border-box; min-height:80px; resize:none;">
-          </textarea>
+        <h2 style="color:var(--t1); margin-bottom:20px;">${T('garnishQ')}</h2>
+        <div style="margin-bottom:20px;">
+          <div style="display:grid; gap:8px; margin-bottom:16px;">
+            ${['broccoli', 'potatoes', 'rice', 'noodles', 'bread', 'salad', 'corn', 'other'].map(g => `
+              <button onclick="addManualMealGarnish('${g}')" style="
+                padding:12px; border:2px solid var(--b1); border-radius:8px; background:var(--sf); 
+                color:var(--t1); cursor:pointer; font-weight:500; font-size:14px; text-align:center; 
+                transition:all .2s;
+              ">${T('garnish' + g.charAt(0).toUpperCase() + g.slice(1))}</button>
+            `).join('')}
+          </div>
+          ${_manualMealQuestionnaire.garnish.length > 0 ? `
+            <div style="background:var(--s2); padding:12px; border-radius:8px; margin-bottom:12px;">
+              <div style="font-size:12px; color:var(--t2); margin-bottom:10px; font-weight:600;">Added garnish:</div>
+              ${_manualMealQuestionnaire.garnish.map((g, idx) => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--b1);">
+                  <span style="color:var(--t1);">${T('garnish' + g.type.charAt(0).toUpperCase() + g.type.slice(1))} (${T('garnish' + g.size.charAt(0).toUpperCase() + g.size.slice(1))})</span>
+                  <button onclick="removeManualMealGarnish(${idx})" style="background:none; border:none; color:var(--t3); cursor:pointer; font-size:18px;" title="Remove">✕</button>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
         </div>
         ${renderManualMealButtons()}
       `;
       break;
       
-    case 7: // Screen 8: Review
+
+      
+    case 7: // Screen 8: Confidence & Notes
+      html = `
+        <h2 style="color:var(--t1); margin-bottom:20px;">${T('confidenceQ')}</h2>
+        <div style="display:grid; gap:10px; margin-bottom:16px;">
+          <label style="display:flex; align-items:center; padding:14px; border:2px solid ${_manualMealQuestionnaire.accuracy === 'rough' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.accuracy === 'rough' ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
+            <input type="radio" name="accuracy" value="rough" 
+              ${_manualMealQuestionnaire.accuracy === 'rough' ? 'checked' : ''}
+              onclick="updateManualMealQuestionnaire('accuracy', 'rough')"
+              style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
+            <span style="color:var(--t1); font-weight:500;">${T('confRoughGuess')}</span>
+          </label>
+          <label style="display:flex; align-items:center; padding:14px; border:2px solid ${_manualMealQuestionnaire.accuracy === 'reasonable' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.accuracy === 'reasonable' ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
+            <input type="radio" name="accuracy" value="reasonable" 
+              ${_manualMealQuestionnaire.accuracy === 'reasonable' ? 'checked' : ''}
+              onclick="updateManualMealQuestionnaire('accuracy', 'reasonable')"
+              style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
+            <span style="color:var(--t1); font-weight:500;">${T('confReasonable')}</span>
+          </label>
+          <label style="display:flex; align-items:center; padding:14px; border:2px solid ${_manualMealQuestionnaire.accuracy === 'accurate' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.accuracy === 'accurate' ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
+            <input type="radio" name="accuracy" value="accurate" 
+              ${_manualMealQuestionnaire.accuracy === 'accurate' ? 'checked' : ''}
+              onclick="updateManualMealQuestionnaire('accuracy', 'accurate')"
+              style="margin-right:12px; width:18px; height:18px; cursor:pointer;">
+            <span style="color:var(--t1); font-weight:500;">${T('confPrettyAccurate')}</span>
+          </label>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="color:var(--t2); display:block; margin-bottom:6px; font-weight:500;">${T('notesLabel')}</label>
+          <textarea id="q-notes" placeholder="e.g., Restaurant meal, estimated portion"
+            style="width:100%; padding:10px; border:1px solid var(--b1); border-radius:6px;
+              background:var(--sf); color:var(--t1); box-sizing:border-box; min-height:80px; resize:none;">${_manualMealQuestionnaire.notes}</textarea>
+        </div>
+        ${renderManualMealButtons()}
+      `;
+      break;
+      
+    case 8: // Screen 9: Review
       const estimated = estimateMealMacros(_manualMealQuestionnaire);
+      const confidenceLabels = { rough: 'Rough guess (±300 kcal)', reasonable: 'Reasonable estimate (±150 kcal)', accurate: 'Pretty accurate (±50 kcal)' };
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('questReview')}</h2>
         <div style="background:var(--sf); padding:16px; border-radius:8px; margin-bottom:16px;">
           <div style="color:var(--t2); font-size:14px; margin-bottom:12px;">
-            <strong>${T('mealNameLabel')}:</strong> ${_manualMealQuestionnaire.mealName}
+            <strong>${T('mealNameLabel')}:</strong> ${_manualMealQuestionnaire.mealName || _manualMealQuestionnaire.mealType}
           </div>
           <div style="color:var(--t2); font-size:14px; margin-bottom:12px;">
-            <strong>${T('mealTypeLabel')}:</strong> ${_manualMealQuestionnaire.mealType}
+            <strong>${T('mealTypeLabel')}:</strong> ${T(_manualMealQuestionnaire.mealType)}
           </div>
+          ${_manualMealQuestionnaire.garnish.length > 0 ? `
+            <div style="color:var(--t2); font-size:14px; margin-bottom:12px;">
+              <strong>${T('garnishQ')}:</strong><br>
+              ${_manualMealQuestionnaire.garnish.map(g => `${T('garnish' + g.type.charAt(0).toUpperCase() + g.type.slice(1))} (${T('garnish' + g.size.charAt(0).toUpperCase() + g.size.slice(1))})`).join(', ')}
+            </div>
+          ` : ''}
           <div style="color:var(--t2); font-size:14px; margin-bottom:12px;">
             <strong>${T('estimatedMacros')}</strong>
           </div>
@@ -4142,8 +4218,9 @@ function renderManualMealScreen() {
             </div>
           </div>
           <div style="color:var(--t3); font-size:12px; margin-top:12px;">
-            Confidence: ${Math.round(estimated.confidence * 100)}%
+            <strong>${T('confidenceQ')}</strong><br>${confidenceLabels[_manualMealQuestionnaire.accuracy] || 'Reasonable estimate'}
           </div>
+          ${_manualMealQuestionnaire.notes ? `<div style="color:var(--t3); font-size:12px; margin-top:8px;"><strong>${T('notesLabel')}:</strong> ${_manualMealQuestionnaire.notes}</div>` : ''}
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
           <button onclick="closeManualMealModal()" style="
@@ -4162,20 +4239,14 @@ function renderManualMealScreen() {
   container.innerHTML = html;
   
   // Update from input fields if they exist
-  const mealName = document.getElementById('q-mealName');
-  const mealType = document.getElementById('q-mealType');
-  const mealTime = document.getElementById('q-mealTime');
   const notes = document.getElementById('q-notes');
   
-  if (mealName) _manualMealQuestionnaire.mealName = mealName.value || _manualMealQuestionnaire.mealName;
-  if (mealType) _manualMealQuestionnaire.mealType = mealType.value || _manualMealQuestionnaire.mealType;
-  if (mealTime) _manualMealQuestionnaire.mealTime = mealTime.value || _manualMealQuestionnaire.mealTime;
   if (notes) _manualMealQuestionnaire.notes = notes.value || _manualMealQuestionnaire.notes;
 }
 
 function renderManualMealButtons() {
   const isFirstScreen = _manualMealCurrentScreen === 0;
-  const isLastScreen = _manualMealCurrentScreen === 7;
+  const isLastScreen = _manualMealCurrentScreen === 8;
   
   let html = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:24px;">`;
   
@@ -4238,6 +4309,18 @@ function toggleManualMealAddition(addition) {
   } else {
     _manualMealQuestionnaire.additions.splice(idx, 1);
   }
+  renderManualMealScreen();
+}
+
+function addManualMealGarnish(type) {
+  // Show size selector - default to medium
+  const size = 'medium';
+  _manualMealQuestionnaire.garnish.push({ type, size });
+  renderManualMealScreen();
+}
+
+function removeManualMealGarnish(idx) {
+  _manualMealQuestionnaire.garnish.splice(idx, 1);
   renderManualMealScreen();
 }
 

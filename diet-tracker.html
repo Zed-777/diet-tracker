@@ -4875,6 +4875,25 @@ function nextManualMealScreen() {
     return;
   }
   
+  // When leaving screen 1 (course selection), initialize questionnaire for first course
+  if (_manualMealCurrentScreen === 1) {
+    _manualMealQuestionnaire = {
+      mealName: '',
+      mealType: _manualMealQuestionnaire.mealType,
+      foodType: 'chicken',
+      protein: null,
+      additionalProteinType: '',
+      cookingMethod: 'grilled',
+      portionSize: 'medium',
+      additions: [],
+      garnish: [],
+      accuracy: 'reasonable',
+      notes: '',
+      isFromTemplate: false,
+      templateId: null
+    };
+  }
+  
   // Handle course confirmation screen
   if (_manualMealCurrentScreen === 9) {  // After confidence for each course
     if (_manualMealCurrentCourseIndex + 1 < _manualMealNumCourses) {
@@ -5008,23 +5027,7 @@ function selectNumCourses(num) {
   _manualMealNumCourses = num;
   _manualMealCurrentCourseIndex = 0;
   _manualMealCourses = [];
-  // Reset questionnaire for first course
-  _manualMealQuestionnaire = {
-    mealName: '',
-    mealType: _manualMealQuestionnaire.mealType,  // Keep meal type
-    foodType: 'chicken',
-    protein: null,
-    additionalProteinType: '',
-    cookingMethod: 'grilled',
-    portionSize: 'medium',
-    additions: [],
-    garnish: [],
-    accuracy: 'reasonable',
-    notes: '',
-    isFromTemplate: false,
-    templateId: null
-  };
-  _manualMealCurrentScreen = 2;  // Skip to meal name screen
+  // Just update the selection - don't auto-advance
   renderManualMealScreen();
 }
 

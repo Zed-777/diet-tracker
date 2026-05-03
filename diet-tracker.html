@@ -6643,11 +6643,29 @@ function renderWeek() {
   const days = PLAN.generateWeek(dateStr(ws), p.goal, p.favourites || []);
   const today = todayStr();
 
+  // Helper: count meals (planned + manual) for a date
+  function countMeals(date) {
+    const log = getLog(date);
+    const manualMeals = getManualMeals(date);
+    const plannedCount = log.completed.length;
+    // Count unique manual meal types
+    const manualTypes = new Set(manualMeals.map(m => m.mealType));
+    return plannedCount + manualTypes.size;
+  }
+
+  // Helper: check if meal type is logged (planned or manual)
+  function isMealLogged(date, mealType) {
+    const log = getLog(date);
+    const plannedLogged = log.completed.includes(mealType);
+    const manualMeals = getManualMeals(date);
+    const manualLogged = manualMeals.some(m => m.mealType === mealType);
+    return plannedLogged || manualLogged;
+  }
+
   let dayCards = '<div class="week-grid">';
   const dayNames = [T('mon'),T('tue'),T('wed'),T('thu'),T('fri'),T('sat'),T('sun')];
   days.forEach((day, i) => {
-    const log  = getLog(day.date);
-    const done = log.completed.length;
+    const done = countMeals(day.date);
     const isToday = day.date === today;
     const pct = Math.round((done / 5) * 100);
     const col = pct === 100 ? 'var(--ac)' : pct >= 60 ? 'var(--carb)' : 'var(--t3)';
@@ -6672,8 +6690,7 @@ function renderWeek() {
   slots.forEach(slot => {
     table += `<div class="wmt-row"><div class="wmt-label">${slotNames[slot]}</div>`;
     days.forEach(day => {
-      const log = getLog(day.date);
-      const done = log.completed.includes(slot);
+      const done = isMealLogged(day.date, slot);
       table += `<div class="wmt-item"><span class="wmt-check ${done?'ok':''}">${done?'✓':''}</span></div>`;
     });
     table += '</div>';
@@ -6682,9 +6699,14 @@ function renderWeek() {
 
   const weekCal = days.reduce((s,day) => {
     const log = getLog(day.date);
-    return s + PLAN.mealSlots(day)
+    const manualMeals = getManualMeals(day.date);
+    // Planned meals
+    const plannedCal = PLAN.mealSlots(day)
       .filter(sl => log.completed.includes(sl.key))
       .reduce((a,sl) => a + sl.meal.cal, 0);
+    // Manual meals
+    const manualCal = manualMeals.reduce((a, m) => a + (m.macros?.kcal || 0), 0);
+    return s + plannedCal + manualCal;
   }, 0);
   const weekCost = days.reduce((s,day) => {
     const log = getLog(day.date);
@@ -6692,8 +6714,8 @@ function renderWeek() {
       .filter(sl => log.completed.includes(sl.key))
       .reduce((a,sl) => a + COST.getMealCost(sl.meal), 0);
   }, 0);
-  const completedMeals = days.reduce((s,day) => s + getLog(day.date).completed.length, 0);
-  const perfectDays = days.filter(day => getLog(day.date).completed.length === 5).length;
+  const completedMeals = days.reduce((s,day) => s + countMeals(day.date), 0);
+  const perfectDays = days.filter(day => countMeals(day.date) === 5).length;
 
   document.getElementById('view').innerHTML = `
     <div class="view-title">📅 ${T('weeklyTitle').slice(3)}</div>
@@ -6716,6 +6738,7 @@ function renderWeek() {
     </div>
     ${table}`;
 }
+}
 
 // ═══════════════════════════════════════════════════════════════
 // MONTH VIEW
@@ -6729,12 +6752,22 @@ function renderMonth() {
   const locale = (S.language === 'es') ? 'es-ES' : 'en-AU';
   const monthName = firstDay.toLocaleDateString(locale, {month:'long',year:'numeric'});
 
+  // Helper: count meals (planned + manual) for a date
+  function countMeals(date) {
+    const log = getLog(date);
+    const manualMeals = getManualMeals(date);
+    const plannedCount = log.completed.length;
+    // Count unique manual meal types
+    const manualTypes = new Set(manualMeals.map(m => m.mealType));
+    return plannedCount + manualTypes.size;
+  }
+
   // Streak calc
   let streak = 0;
   const d = new Date();
   while (true) {
     const ds = dateStr(d);
-    if (getLog(ds).completed.length === 5) { streak++; d.setDate(d.getDate()-1); }
+    if (countMeals(ds) === 5) { streak++; d.setDate(d.getDate()-1); }
     else break;
     if (streak > 365) break;
   }
@@ -6748,8 +6781,7 @@ function renderMonth() {
   for (let i = 0; i < startDow; i++) cal += '<div></div>';
   for (let d = 1; d <= totalDays; d++) {
     const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const log = getLog(ds);
-    const done = log.completed.length;
+    const done = countMeals(ds);
     const isFuture = ds > today;
     let cls = 'cal-day';
     if (ds === today) cls += ' today-cal';
@@ -6766,7 +6798,7 @@ function renderMonth() {
 
   const completedDays = Array.from({length:totalDays},(_,i) => {
     const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`;
-    return ds <= today ? getLog(ds).completed.length : -1;
+    return ds <= today ? countMeals(ds) : -1;
   });
   const doneCount = completedDays.filter(x => x === 5).length;
   const partCount = completedDays.filter(x => x > 0 && x < 5).length;

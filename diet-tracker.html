@@ -3836,6 +3836,35 @@ function initManualMealData() {
 }
 
 function estimateMealMacros(questionnaire) {
+  // Handle multi-course meals
+  if (questionnaire.courses && questionnaire.courses.length > 0) {
+    let totalMacros = { kcal: 0, protein: 0, carbs: 0, fat: 0, confidence: 0.75 };
+    let lowestConfidence = 1.0;
+    
+    questionnaire.courses.forEach(course => {
+      const courseMacros = estimateMealMacros(course); // Recursive call for single course
+      Object.keys(courseMacros).forEach(key => {
+        if (key !== 'confidence') {
+          totalMacros[key] = (totalMacros[key] || 0) + (courseMacros[key] || 0);
+        }
+      });
+      lowestConfidence = Math.min(lowestConfidence, courseMacros.confidence);
+    });
+    
+    // Use the lowest confidence from all courses
+    totalMacros.confidence = lowestConfidence;
+    
+    // Round final values
+    return {
+      kcal: Math.round(totalMacros.kcal || 0),
+      protein: Math.round((totalMacros.protein || 0) * 10) / 10,
+      carbs: Math.round((totalMacros.carbs || 0) * 10) / 10,
+      fat: Math.round((totalMacros.fat || 0) * 10) / 10,
+      confidence: totalMacros.confidence
+    };
+  }
+  
+  // Single course logic (existing code)
   const { foodType, protein, cookingMethod, portionSize, additions, garnish, accuracy } = questionnaire;
   
   // Validate required fields
@@ -4154,6 +4183,9 @@ function updateConsumptionLog(date) {
 
 function openManualMealModal() {
   _manualMealCurrentScreen = 0;
+  _manualMealNumCourses = 1;  // Default to 1 course
+  _manualMealCurrentCourseIndex = 0;  // Track which course we're editing
+  _manualMealCourses = [];  // Array to store each course
   _manualMealQuestionnaire = {
     mealName: '',
     mealType: 'lunch',
@@ -4205,9 +4237,13 @@ function openManualMealModal() {
 
 let _manualMealCurrentScreen = 0;
 let _manualMealQuestionnaire = {};
+let _manualMealNumCourses = 1;  // 1, 2, or 3 courses
+let _manualMealCurrentCourseIndex = 0;  // Which course we're editing (0-2)
+let _manualMealCourses = [];  // Array of course objects
 
 const _manualMealScreenTitles = [
   'Meal Type',                           // Screen 0
+  'Number of Courses',                   // Screen 0b
   'Select Main Protein',                 // Screen 1
   'Select Main Food',                    // Screen 2
   'Additional Protein',                  // Screen 3
@@ -4216,7 +4252,8 @@ const _manualMealScreenTitles = [
   'Additions',                           // Screen 6
   'Sides & Vegetables',                  // Screen 7
   'Confidence Level',                    // Screen 8
-  'Review Your Meal'                     // Screen 9
+  'More Courses?',                       // Screen 9 (after confidence, if not final course)
+  'Review Your Meal'                     // Screen 10 (final review)
 ];
 
 function renderManualMealScreen() {
@@ -4265,7 +4302,31 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 1: // Screen 2: Meal Name Input
+    case 1: // Screen 2: Number of Courses
+      html = `
+        <h2 style="color:var(--t1); margin-bottom:20px;">📌 How many courses?</h2>
+        <p style="color:var(--t2); font-size:13px; margin-bottom:16px; padding:12px; background:var(--s2); border-radius:6px;">
+          Select how many separate courses you ate (appetizer, main, dessert, etc.)
+        </p>
+        <div style="display:grid; gap:10px;">
+          <button onclick="selectNumCourses(1);" style="padding:16px; border:2px solid ${_manualMealNumCourses === 1 ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealNumCourses === 1 ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:14px; text-align:center; transition:all .2s;">
+            🥗 Single Course
+            <div style="font-size:11px; color:var(--t3); margin-top:4px;">Quick snack or simple meal</div>
+          </button>
+          <button onclick="selectNumCourses(2);" style="padding:16px; border:2px solid ${_manualMealNumCourses === 2 ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealNumCourses === 2 ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:14px; text-align:center; transition:all .2s;">
+            🍽️ Two Courses
+            <div style="font-size:11px; color:var(--t3); margin-top:4px;">Main + side or main + dessert</div>
+          </button>
+          <button onclick="selectNumCourses(3);" style="padding:16px; border:2px solid ${_manualMealNumCourses === 3 ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; background:${_manualMealNumCourses === 3 ? 'rgba(16,185,129,.12)' : 'var(--sf)'}; color:var(--t1); cursor:pointer; font-weight:600; font-size:14px; text-align:center; transition:all .2s;">
+            ✨ Three Courses
+            <div style="font-size:11px; color:var(--t3); margin-top:4px;">Appetizer + main + dessert</div>
+          </button>
+        </div>
+        ${renderManualMealButtons()}
+      `;
+      break;
+      
+    case 2: // Screen 3: Meal Name Input
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('mealNameLabel') || 'Meal Name'}</h2>
         <div style="margin-bottom:20px;">
@@ -4279,7 +4340,7 @@ function renderManualMealScreen() {
       `
       break;
       
-    case 2: // Screen 3: Food Classification - Now with 100+ foods!
+    case 3: // Screen 4: Food Classification - Now with 100+ foods!
       // Show template button if templates exist for this meal type
       const hasTemplates = (S.profile.mealTemplates || []).filter(t => t.mealType === _manualMealQuestionnaire.mealType).length > 0;
       let templateBtn = '';
@@ -4348,7 +4409,7 @@ function renderManualMealScreen() {
       
       break;
       
-    case 3: // Screen 4: Protein Source
+    case 4: // Screen 5: Protein Source
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('proteinSourceQ')}</h2>
         <div style="display:grid; gap:10px;">
@@ -4429,7 +4490,7 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 4: // Screen 5: Cooking Method (13 options!)
+    case 5: // Screen 6: Cooking Method (13 options!)
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">🔥 How Was It Cooked?</h2>
         <p style="color:var(--t2); font-size:13px; margin-bottom:12px;">Cooking method affects fat content & calorie accuracy</p>
@@ -4455,7 +4516,7 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 5: // Screen 6: Portion Size
+    case 6: // Screen 7: Portion Size
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('portionSizeQ')}</h2>
         <div style="display:grid; gap:10px;">
@@ -4473,7 +4534,7 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 6: // Screen 7: Additions
+    case 7: // Screen 8: Additions
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('additionsQ')}</h2>
         <div style="display:grid; gap:10px;">
@@ -4491,7 +4552,7 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 7: // Screen 8: Garnish & Vegetables
+    case 8: // Screen 9: Garnish & Vegetables
       const garnishLabels = {
         'broccoli': 'Broccoli/Green vegetables',
         'carrots': 'Carrots',
@@ -4538,7 +4599,7 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 8: // Screen 9: Confidence & Notes
+    case 9: // Screen 10: Confidence & Notes
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('confidenceQ')}</h2>
         <p style="color:var(--t2); font-size:13px; margin-bottom:16px; padding:12px; background:var(--s2); border-radius:6px;">
@@ -4600,7 +4661,29 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 9: // Screen 10: Review
+    case 10: // Screen 11: More Courses?
+      html = `
+        <h2 style="color:var(--t1); margin-bottom:20px;">📌 Course ${_manualMealCurrentCourseIndex + 1} of ${_manualMealNumCourses}</h2>
+        <p style="color:var(--t2); font-size:13px; margin-bottom:16px; padding:12px; background:var(--s2); border-radius:6px;">
+          You've completed course ${_manualMealCurrentCourseIndex + 1}. Ready for the next course?
+        </p>
+        <div style="background:var(--sf); padding:14px; border-radius:8px; margin-bottom:20px; border-left:4px solid var(--ac);">
+          <div style="font-size:12px; color:var(--t2); margin-bottom:6px;"><strong>Current course:</strong></div>
+          <div style="color:var(--t1); font-weight:600;">${_manualMealQuestionnaire.mealName || 'Course ' + (_manualMealCurrentCourseIndex + 1)}</div>
+          <div style="font-size:11px; color:var(--t3); margin-top:4px;">${estimateMealMacros(_manualMealQuestionnaire).kcal} kcal</div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <button onclick="completeCourseAndStartNew()" style="padding:14px; background:var(--ac); border:none; color:#fff; border-radius:8px; cursor:pointer; font-weight:600;">
+            ✓ Add Another Course
+          </button>
+          <button onclick="skipToReview()" style="padding:14px; background:var(--s2); border:1px solid var(--b1); color:var(--t2); border-radius:8px; cursor:pointer; font-weight:600;">
+            → Skip to Review
+          </button>
+        </div>
+      `;
+      break;
+      
+    case 11: // Screen 12: Review All Courses
       const estimated = estimateMealMacros(_manualMealQuestionnaire);
       const confidenceLabels = { 
         guess: '🎲 Just a guess (±350 kcal)', 
@@ -4609,6 +4692,41 @@ function renderManualMealScreen() {
         careful: '⚖️ Careful estimate (±75 kcal)', 
         precise: '🎯 Very precise (±40 kcal)' 
       };
+      
+      let coursesHTML = '';
+      if (_manualMealQuestionnaire.courses && _manualMealQuestionnaire.courses.length > 0) {
+        _manualMealQuestionnaire.courses.forEach((course, idx) => {
+          // Calculate macros for this course using the full course object
+          const courseMacros = estimateMealMacros(course);
+          
+          coursesHTML += `
+            <div style="background:var(--b1); padding:12px; border-radius:6px; margin-bottom:12px; border-left:4px solid var(--ac);">
+              <div style="color:var(--t2); font-size:13px; font-weight:600; margin-bottom:8px;">
+                ${T('course')} ${idx + 1}: ${T(course.foodType.replace('-', ''))}
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; font-size:11px;">
+                <div style="text-align:center;">
+                  <div style="color:var(--t3);">${T('protein')}</div>
+                  <div style="color:var(--pro); font-weight:bold;">${courseMacros.protein}g</div>
+                </div>
+                <div style="text-align:center;">
+                  <div style="color:var(--t3);">${T('carbs')}</div>
+                  <div style="color:var(--carb); font-weight:bold;">${courseMacros.carbs}g</div>
+                </div>
+                <div style="text-align:center;">
+                  <div style="color:var(--t3);">${T('fat')}</div>
+                  <div style="color:var(--fat); font-weight:bold;">${courseMacros.fat}g</div>
+                </div>
+                <div style="text-align:center;">
+                  <div style="color:var(--t3);">Kcal</div>
+                  <div style="color:var(--ac); font-weight:bold;">${courseMacros.kcal}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      }
+      
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('questReview')}</h2>
         <div style="background:var(--sf); padding:16px; border-radius:8px; margin-bottom:16px;">
@@ -4618,6 +4736,11 @@ function renderManualMealScreen() {
           <div style="color:var(--t2); font-size:14px; margin-bottom:12px;">
             <strong>${T('mealTypeLabel')}:</strong> ${T(_manualMealQuestionnaire.mealType)}
           </div>
+          ${_manualMealNumCourses > 1 ? `
+            <div style="color:var(--t2); font-size:14px; margin-bottom:12px;">
+              <strong>Courses:</strong> ${_manualMealNumCourses}
+            </div>
+          ` : ''}
           ${_manualMealQuestionnaire.garnish.length > 0 ? `
             <div style="color:var(--t2); font-size:14px; margin-bottom:12px;">
               <strong>${T('garnishQ')}:</strong><br>
@@ -4629,7 +4752,15 @@ function renderManualMealScreen() {
               <strong>Additional Protein:</strong> ${T(_manualMealQuestionnaire.additionalProteinType)}
             </div>
           ` : ''}
-          <div style="color:var(--t2); font-size:14px; margin-bottom:12px;">
+          
+          ${_manualMealNumCourses > 1 ? `
+            <div style="color:var(--t2); font-size:14px; margin-bottom:12px; padding-top:12px; border-top:1px solid var(--b1);">
+              <strong>Course Breakdown:</strong>
+            </div>
+            ${coursesHTML}
+          ` : ''}
+          
+          <div style="color:var(--t2); font-size:14px; margin-bottom:12px; padding-top:12px; border-top:1px solid var(--b1);">
             <strong>${T('estimatedMacros')}</strong>
           </div>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -4686,7 +4817,7 @@ function renderManualMealScreen() {
 
 function renderManualMealButtons() {
   const isFirstScreen = _manualMealCurrentScreen === 0;
-  const isLastScreen = _manualMealCurrentScreen === 8;
+  const isLastScreen = _manualMealCurrentScreen === 11;  // Review screen is final
   
   let html = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:24px;">`;
   
@@ -4731,10 +4862,21 @@ function nextManualMealScreen() {
     return;
   }
   
-  if (_manualMealCurrentScreen < 9) {
+  // Handle course confirmation screen
+  if (_manualMealCurrentScreen === 9) {  // After confidence for each course
+    if (_manualMealCurrentCourseIndex + 1 < _manualMealNumCourses) {
+      // Not the last course, show "More Courses?" screen
+      _manualMealCurrentScreen = 10;
+    } else {
+      // Last course, skip to review
+      skipToReview();
+      return;
+    }
+  } else if (_manualMealCurrentScreen < 11) {
     _manualMealCurrentScreen++;
-    renderManualMealScreen();
   }
+  
+  renderManualMealScreen();
 }
 
 function validateManualMealScreen(screen) {
@@ -4744,12 +4886,17 @@ function validateManualMealScreen(screen) {
         return 'Please select a meal type';
       }
       break;
-    case 2: // Food classification
+    case 1: // Number of courses
+      if (!_manualMealNumCourses) {
+        return 'Please select number of courses';
+      }
+      break;
+    case 3: // Food classification (now screen 3 after adding course selection)
       if (!_manualMealQuestionnaire.foodType) {
         return 'Please select a main ingredient';
       }
       break;
-    case 5: // Garnish (optional but if added, validate)
+    case 8: // Garnish (optional but if added, validate) - now screen 8
       break;
   }
   return null;
@@ -4844,10 +4991,78 @@ function removeManualMealGarnish(idx) {
   renderManualMealScreen();
 }
 
+function selectNumCourses(num) {
+  _manualMealNumCourses = num;
+  _manualMealCurrentCourseIndex = 0;
+  _manualMealCourses = [];
+  // Reset questionnaire for first course
+  _manualMealQuestionnaire = {
+    mealName: '',
+    mealType: _manualMealQuestionnaire.mealType,  // Keep meal type
+    foodType: 'chicken',
+    protein: null,
+    additionalProteinType: '',
+    cookingMethod: 'grilled',
+    portionSize: 'medium',
+    additions: [],
+    garnish: [],
+    accuracy: 'reasonable',
+    notes: '',
+    isFromTemplate: false,
+    templateId: null
+  };
+  _manualMealCurrentScreen = 2;  // Skip to meal name screen
+  renderManualMealScreen();
+}
+
+function completeCourseAndStartNew() {
+  // Save current questionnaire to courses array
+  _manualMealCourses.push({..._manualMealQuestionnaire});
+  _manualMealCurrentCourseIndex++;
+  
+  // Reset questionnaire for next course
+  _manualMealQuestionnaire = {
+    mealName: `Course ${_manualMealCurrentCourseIndex + 1}`,
+    mealType: _manualMealQuestionnaire.mealType,
+    foodType: 'chicken',
+    protein: null,
+    additionalProteinType: '',
+    cookingMethod: 'grilled',
+    portionSize: 'medium',
+    additions: [],
+    garnish: [],
+    accuracy: 'reasonable',
+    notes: '',
+    isFromTemplate: false,
+    templateId: null
+  };
+  
+  // Jump back to food selection (Screen 3)
+  _manualMealCurrentScreen = 3;
+  renderManualMealScreen();
+}
+
+function skipToReview() {
+  // Save current course to courses array in questionnaire
+  if (!_manualMealQuestionnaire.courses) {
+    _manualMealQuestionnaire.courses = [];
+  }
+  
+  // Add all previously saved courses plus current one
+  _manualMealQuestionnaire.courses = [..._manualMealCourses, {..._manualMealQuestionnaire}];
+  
+  // Go to review screen
+  _manualMealCurrentScreen = 11;
+  renderManualMealScreen();
+}
+
 function closeManualMealModal() {
   const modal = document.getElementById('manual-meal-modal');
   if (modal) modal.remove();
   _manualMealCurrentScreen = 0;
+  _manualMealNumCourses = 1;
+  _manualMealCurrentCourseIndex = 0;
+  _manualMealCourses = [];
 }
 
 async function finalizeManualMeal() {
@@ -4857,23 +5072,32 @@ async function finalizeManualMeal() {
   // Use mealType as fallback if mealName is not provided
   const finalMealName = (_manualMealQuestionnaire.mealName || '').trim() || _manualMealQuestionnaire.mealType;
   
-  // Calculate macros
+  // Calculate macros (aggregates all courses automatically)
   const macros = estimateMealMacros(_manualMealQuestionnaire);
+  
+  // Create questionnaire object - include courses if multi-course meal
+  const questionnaire = {
+    foodType: _manualMealQuestionnaire.foodType,
+    protein: _manualMealQuestionnaire.protein,
+    additionalProteinType: _manualMealQuestionnaire.additionalProteinType,
+    cookingMethod: _manualMealQuestionnaire.cookingMethod,
+    portionSize: _manualMealQuestionnaire.portionSize,
+    additions: _manualMealQuestionnaire.additions,
+    garnish: _manualMealQuestionnaire.garnish,
+    accuracy: _manualMealQuestionnaire.accuracy
+  };
+  
+  // Include courses if multi-course meal
+  if (_manualMealQuestionnaire.courses && _manualMealQuestionnaire.courses.length > 0) {
+    questionnaire.courses = _manualMealQuestionnaire.courses;
+    questionnaire.numCourses = _manualMealNumCourses;
+  }
   
   // Create meal object
   const meal = {
     mealName: finalMealName,
     mealType: _manualMealQuestionnaire.mealType,
-    questionnaire: {
-      foodType: _manualMealQuestionnaire.foodType,
-      protein: _manualMealQuestionnaire.protein,
-      additionalProteinType: _manualMealQuestionnaire.additionalProteinType,
-      cookingMethod: _manualMealQuestionnaire.cookingMethod,
-      portionSize: _manualMealQuestionnaire.portionSize,
-      additions: _manualMealQuestionnaire.additions,
-      garnish: _manualMealQuestionnaire.garnish,
-      accuracy: _manualMealQuestionnaire.accuracy
-    },
+    questionnaire: questionnaire,
     macros: macros,
     notes: _manualMealQuestionnaire.notes,
     isLogged: true

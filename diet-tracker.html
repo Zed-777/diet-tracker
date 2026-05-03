@@ -4215,9 +4215,8 @@ const _manualMealScreenTitles = [
   'Portion Size',                        // Screen 5
   'Additions',                           // Screen 6
   'Sides & Vegetables',                  // Screen 7
-  'How Did You Measure?',                // Screen 8
-  'Confidence Level',                    // Screen 9
-  'Review Your Meal'                     // Screen 10
+  'Confidence Level',                    // Screen 8
+  'Review Your Meal'                     // Screen 9
 ];
 
 function renderManualMealScreen() {
@@ -4539,75 +4538,11 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 8: // Screen 9: Measurement Calibration (NEW - for accuracy)
-      html = `
-        <h2 style="color:var(--t1); margin-bottom:20px;">How did you measure this meal?</h2>
-        <p style="color:var(--t2); font-size:14px; margin-bottom:20px;">This helps us estimate accuracy:</p>
-        <div style="display:grid; gap:12px; margin-bottom:20px;">
-          <label style="display:flex; align-items:flex-start; padding:12px; border:2px solid var(--b1); border-radius:8px; cursor:pointer; background:transparent;">
-            <input type="checkbox" 
-              id="calib-weighed"
-              onchange="_manualMealQuestionnaire.calibrationWeighed = this.checked"
-              style="margin-right:12px; width:18px; height:18px; cursor:pointer; margin-top:2px;">
-            <span style="color:var(--t1);">
-              <div style="font-weight:500;">⚖️ Weighed the food</div>
-              <div style="font-size:12px; color:var(--t3);">Most accurate - used a scale</div>
-            </span>
-          </label>
-          
-          <label style="display:flex; align-items:flex-start; padding:12px; border:2px solid var(--b1); border-radius:8px; cursor:pointer; background:transparent;">
-            <input type="checkbox" 
-              id="calib-label"
-              onchange="_manualMealQuestionnaire.calibrationLabel = this.checked"
-              style="margin-right:12px; width:18px; height:18px; cursor:pointer; margin-top:2px;">
-            <span style="color:var(--t1);">
-              <div style="font-weight:500;">🏷️ Used nutrition label</div>
-              <div style="font-size:12px; color:var(--t3);">Very accurate - label provided info</div>
-            </span>
-          </label>
-          
-          <label style="display:flex; align-items:flex-start; padding:12px; border:2px solid var(--b1); border-radius:8px; cursor:pointer; background:transparent;">
-            <input type="checkbox" 
-              id="calib-recipe"
-              onchange="_manualMealQuestionnaire.calibrationRecipe = this.checked"
-              style="margin-right:12px; width:18px; height:18px; cursor:pointer; margin-top:2px;">
-            <span style="color:var(--t1);">
-              <div style="font-weight:500;">📖 Recipe with measurements</div>
-              <div style="font-size:12px; color:var(--t3);">Very accurate - know exact amounts</div>
-            </span>
-          </label>
-          
-          <label style="display:flex; align-items:flex-start; padding:12px; border:2px solid var(--b1); border-radius:8px; cursor:pointer; background:transparent;">
-            <input type="checkbox" 
-              id="calib-restaurant"
-              onchange="_manualMealQuestionnaire.calibrationRestaurant = this.checked"
-              style="margin-right:12px; width:18px; height:18px; cursor:pointer; margin-top:2px;">
-            <span style="color:var(--t1);">
-              <div style="font-weight:500;">🍽️ Restaurant/takeout meal</div>
-              <div style="font-size:12px; color:var(--t3);">Less certain - unknown ingredients/portions</div>
-            </span>
-          </label>
-          
-          <label style="display:flex; align-items:flex-start; padding:12px; border:2px solid var(--b1); border-radius:8px; cursor:pointer; background:transparent;">
-            <input type="checkbox" 
-              id="calib-photo"
-              onchange="_manualMealQuestionnaire.calibrationPhoto = this.checked"
-              style="margin-right:12px; width:18px; height:18px; cursor:pointer; margin-top:2px;">
-            <span style="color:var(--t1);">
-              <div style="font-weight:500;">📸 Estimated from photo</div>
-              <div style="font-size:12px; color:var(--t3);">Visual estimate - higher uncertainty</div>
-            </span>
-          </label>
-        </div>
-        ${renderManualMealButtons()}
-      `;
-      break;
-      
-    case 9: // Screen 10: Confidence & Notes
+    case 8: // Screen 9: Confidence & Notes
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('confidenceQ')}</h2>
         <p style="color:var(--t2); font-size:13px; margin-bottom:16px; padding:12px; background:var(--s2); border-radius:6px;">
-          Based on your measurement method, pick your confidence level:
+          How confident are you about this estimate?
         </p>
         <div style="display:grid; gap:10px; margin-bottom:16px;">
           <label style="display:flex; align-items:center; padding:14px; border:2px solid ${_manualMealQuestionnaire.accuracy === 'guess' ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.accuracy === 'guess' ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
@@ -4665,7 +4600,7 @@ function renderManualMealScreen() {
       `;
       break;
       
-    case 10: // Screen 11: Review
+    case 9: // Screen 10: Review
       const estimated = estimateMealMacros(_manualMealQuestionnaire);
       const confidenceLabels = { 
         guess: '🎲 Just a guess (±350 kcal)', 
@@ -4751,7 +4686,7 @@ function renderManualMealScreen() {
 
 function renderManualMealButtons() {
   const isFirstScreen = _manualMealCurrentScreen === 0;
-  const isLastScreen = _manualMealCurrentScreen === 9;
+  const isLastScreen = _manualMealCurrentScreen === 8;
   
   let html = `<div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:24px;">`;
   
@@ -4796,7 +4731,7 @@ function nextManualMealScreen() {
     return;
   }
   
-  if (_manualMealCurrentScreen < 10) {
+  if (_manualMealCurrentScreen < 9) {
     _manualMealCurrentScreen++;
     renderManualMealScreen();
   }
@@ -5048,8 +4983,8 @@ function loadMealTemplate(templateId) {
   _manualMealQuestionnaire.isFromTemplate = true;
   _manualMealQuestionnaire.templateId = templateId;
   
-  // Skip to review screen (now screen 10)
-  _manualMealCurrentScreen = 10;
+  // Skip to review screen (now screen 9)
+  _manualMealCurrentScreen = 9;
   renderManualMealScreen();
 }
 

@@ -4242,18 +4242,18 @@ let _manualMealCurrentCourseIndex = 0;  // Which course we're editing (0-2)
 let _manualMealCourses = [];  // Array of course objects
 
 const _manualMealScreenTitles = [
-  'Meal Type',                           // Screen 0
-  'Number of Courses',                   // Screen 0b
-  'Select Main Protein',                 // Screen 1
-  'Select Main Food',                    // Screen 2
-  'Additional Protein',                  // Screen 3
-  'Cooking Method',                      // Screen 4
-  'Portion Size',                        // Screen 5
-  'Additions',                           // Screen 6
-  'Sides & Vegetables',                  // Screen 7
-  'Confidence Level',                    // Screen 8
-  'More Courses?',                       // Screen 9 (after confidence, if not final course)
-  'Review Your Meal'                     // Screen 10 (final review)
+  'Meal Type',                           // Screen 0: Select meal type (breakfast/lunch/dinner/etc)
+  'Number of Courses',                   // Screen 1: Select 1, 2, or 3 courses
+  'Meal Name',                           // Screen 2: Enter meal name (optional)
+  'Main Food',                           // Screen 3: Select main ingredient (chicken/pasta/etc)
+  'Additional Protein',                  // Screen 4: Add protein source if needed
+  'Cooking Method',                      // Screen 5: How was it cooked
+  'Portion Size',                        // Screen 6: Small/medium/large portion
+  'Additions',                           // Screen 7: Butter, oil, cheese, etc.
+  'Garnish & Vegetables',                // Screen 8: Side vegetables
+  'Confidence & Notes',                  // Screen 9: Confidence level + optional notes
+  'More Courses?',                       // Screen 10: Add another course or review?
+  'Review All Courses'                   // Screen 11: Final review and save
 ];
 
 function renderManualMealScreen() {

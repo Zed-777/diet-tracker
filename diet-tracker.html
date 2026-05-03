@@ -4217,7 +4217,14 @@ function openManualMealModal() {
           display: flex; justify-content: space-between; align-items: center;
           padding: 16px 24px; border-bottom: 1px solid var(--b1); flex-shrink: 0;
         ">
-          <h3 style="color: var(--t1); margin: 0; font-size: 18px; font-weight: 600;">${_manualMealScreenTitles[_manualMealCurrentScreen] || 'Add Manual Meal'}</h3>
+          <div>
+            <h3 style="color: var(--t1); margin: 0; font-size: 18px; font-weight: 600;">${_manualMealScreenTitles[_manualMealCurrentScreen] || 'Add Manual Meal'}</h3>
+            ${_manualMealNumCourses > 1 && _manualMealCurrentScreen > 2 && _manualMealCurrentScreen < 11 ? `
+              <div style="color: var(--t3); font-size: 12px; margin-top: 4px;">
+                🍽️ Course ${_manualMealCurrentCourseIndex + 1} of ${_manualMealNumCourses}
+              </div>
+            ` : ''}
+          </div>
           <button onclick="closeManualMealModal()" style="
             background: none; border: none; color: var(--t2); font-size: 24px;
             cursor: pointer; padding: 0; width: 32px; height: 32px;
@@ -5429,13 +5436,29 @@ function renderToday() {
     
     manualMeals.forEach(meal => {
       const mealId = `mm-${meal.id}`;
+      const isMultiCourse = meal.questionnaire.courses && meal.questionnaire.courses.length > 1;
+      const courseCount = meal.questionnaire.courses ? meal.questionnaire.courses.length : 1;
+      
+      // Generate course summary line
+      let courseSummary = '';
+      if (isMultiCourse && meal.questionnaire.courses) {
+        courseSummary = meal.questionnaire.courses.map((c, idx) => {
+          const cMacros = estimateMealMacros(c);
+          return `${c.mealName || `Course ${idx + 1}`} (${cMacros.kcal}kcal)`;
+        }).join(' • ');
+      }
+      
       html += `
-      <div class="meal-card" style="background:var(--s1); border:1px solid var(--ac);">
+      <div class="meal-card" style="background:var(--s1); border:1px solid var(--ac); overflow:hidden;">
         <div style="display:flex; align-items:center; gap:10px; padding:12px; cursor:pointer;" onclick="toggleMealDetail('${mealId}')">
           <div style="flex:1; min-width:0;">
-            <div style="font-weight:600; color:var(--t1);">${meal.mealName}</div>
-            <div style="font-size:11px; color:var(--ac); font-weight:600; margin-top:2px;">${T(meal.mealType || 'lunch')}</div>
-            <div style="color:var(--t2); font-size:12px; margin-top:4px;">
+            <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px;">
+              <div style="font-weight:600; color:var(--t1);">${meal.mealName}</div>
+              ${isMultiCourse ? `<span style="font-size:10px; background:var(--ac); color:#fff; padding:2px 6px; border-radius:12px; font-weight:600;">${courseCount} courses</span>` : ''}
+            </div>
+            <div style="font-size:11px; color:var(--ac); font-weight:600; margin-bottom:2px;">${T(meal.mealType || 'lunch')}</div>
+            ${isMultiCourse ? `<div style="font-size:10px; color:var(--t3); margin-bottom:4px;">${courseSummary}</div>` : ''}
+            <div style="color:var(--t2); font-size:12px;">
               <span style="margin-right:16px;">${meal.macros.kcal} kcal</span>
               <span style="color:#8B5CF6; margin-right:8px;">● ${meal.macros.protein}g</span>
               <span style="color:#F59E0B; margin-right:8px;">● ${meal.macros.carbs}g</span>
@@ -5451,16 +5474,49 @@ function renderToday() {
           </div>
         </div>
         <div id="md-${mealId}" class="meal-detail" style="background:var(--s2); padding:12px; border-top:1px solid var(--b1);">
-          <div style="font-size:12px; color:var(--t2); margin-bottom:8px; font-weight:600;">${T('mealDetails')}</div>
-          <div style="font-size:11px; color:var(--t3); margin-bottom:12px;">
-            <strong>${T('foodType')}:</strong> ${T(meal.questionnaire.foodType || 'other')}
-          </div>
-          ${meal.questionnaire.protein !== null ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('protein')}:</strong> ${T(meal.questionnaire.protein === 'separate' ? 'proteinSourceSeparate' : meal.questionnaire.protein === 'mixed' ? 'proteinSourceMixed' : 'proteinSourceNo')}</div>` : ''}
-          ${meal.questionnaire.cookingMethod ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('cookingMethod')}:</strong> ${meal.questionnaire.cookingMethod}</div>` : ''}
-          ${meal.questionnaire.portionSize ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('portionSize')}:</strong> ${meal.questionnaire.portionSize}</div>` : ''}
-          ${meal.questionnaire.additions.length > 0 ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('additions')}:</strong> ${meal.questionnaire.additions.join(', ')}</div>` : ''}
-          ${meal.questionnaire.garnish.length > 0 ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('garnish')}:</strong> ${meal.questionnaire.garnish.join(', ')}</div>` : ''}
-          ${meal.notes ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('notesLabel')}:</strong> ${meal.notes}</div>` : ''}
+          <div style="font-size:12px; color:var(--t2); margin-bottom:12px; font-weight:600;">${T('mealDetails')}</div>
+          
+          ${!isMultiCourse ? `
+            <div style="font-size:11px; color:var(--t3); margin-bottom:12px;">
+              <strong>${T('foodType')}:</strong> ${T(meal.questionnaire.foodType || 'other')}
+            </div>
+            ${meal.questionnaire.protein !== null ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('protein')}:</strong> ${T(meal.questionnaire.protein === 'separate' ? 'proteinSourceSeparate' : meal.questionnaire.protein === 'mixed' ? 'proteinSourceMixed' : 'proteinSourceNo')}</div>` : ''}
+            ${meal.questionnaire.cookingMethod ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('cookingMethod')}:</strong> ${meal.questionnaire.cookingMethod}</div>` : ''}
+            ${meal.questionnaire.portionSize ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('portionSize')}:</strong> ${meal.questionnaire.portionSize}</div>` : ''}
+            ${meal.questionnaire.additions.length > 0 ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('additions')}:</strong> ${meal.questionnaire.additions.join(', ')}</div>` : ''}
+            ${meal.questionnaire.garnish.length > 0 ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('garnish')}:</strong> ${meal.questionnaire.garnish.map(g => typeof g === 'string' ? g : g.type).join(', ')}</div>` : ''}
+          ` : `
+            <div style="font-size:12px; font-weight:600; color:var(--ac); margin-bottom:10px;">🍽️ ${courseCount}-Course Meal</div>
+            ${meal.questionnaire.courses.map((course, idx) => {
+              const cMacros = estimateMealMacros(course);
+              return `
+              <div style="background:var(--s1); padding:10px; border-radius:6px; margin-bottom:8px; border-left:3px solid var(--ac);">
+                <div onclick="toggleCourseDetail('${mealId}-c${idx}')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                  <div style="font-weight:600; color:var(--t1); font-size:12px;">
+                    ${course.mealName || `Course ${idx + 1}`}
+                  </div>
+                  <div style="font-size:11px; color:var(--t2);">
+                    ${cMacros.kcal}kcal
+                  </div>
+                  <div style="color:var(--t3); font-size:12px;">⌄</div>
+                </div>
+                <div id="cd-${mealId}-c${idx}" style="display:none; margin-top:8px; padding-top:8px; border-top:1px solid var(--b1);">
+                  <div style="font-size:10px; color:var(--t3); display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <div>🥩 <strong>${T('protein')}:</strong> <span style="color:#8B5CF6;">${cMacros.protein}g</span></div>
+                    <div>🍞 <strong>${T('carbs')}:</strong> <span style="color:#F59E0B;">${cMacros.carbs}g</span></div>
+                    <div>🫒 <strong>${T('fat')}:</strong> <span style="color:#EF4444;">${cMacros.fat}g</span></div>
+                    <div>🔥 <strong>Kcal:</strong> <span style="color:var(--ac);">${cMacros.kcal}</span></div>
+                  </div>
+                  ${course.foodType ? `<div style="font-size:10px; color:var(--t3); margin-top:6px;"><strong>${T('foodType')}:</strong> ${T(course.foodType)}</div>` : ''}
+                  ${course.cookingMethod ? `<div style="font-size:10px; color:var(--t3);"><strong>${T('cookingMethod')}:</strong> ${course.cookingMethod}</div>` : ''}
+                  ${course.portionSize ? `<div style="font-size:10px; color:var(--t3);"><strong>${T('portionSize')}:</strong> ${course.portionSize}</div>` : ''}
+                </div>
+              </div>
+              `;
+            }).join('')}
+          `}
+          
+          ${meal.notes ? `<div style="font-size:11px; color:var(--t3); margin-top:12px; padding-top:12px; border-top:1px solid var(--b1);"><strong>${T('notesLabel')}:</strong> ${meal.notes}</div>` : ''}
           <div style="font-size:10px; color:var(--t3); margin-top:8px; padding-top:8px; border-top:1px solid var(--b1);">
             Confidence: ${Math.round(meal.macros.confidence * 100)}%
           </div>
@@ -5494,6 +5550,20 @@ function toggleMealDetail(key) {
   const btn = el.previousElementSibling.querySelector('.meal-expand-btn');
   const open = el.classList.toggle('open');
   if (btn) btn.textContent = open ? '⌃' : '⌄';
+}
+
+function toggleCourseDetail(id) {
+  const el = document.getElementById('cd-' + id);
+  if (!el) return;
+  const isVisible = el.style.display === 'block';
+  el.style.display = isVisible ? 'none' : 'block';
+  // Update arrow direction
+  const parent = el.previousElementSibling;
+  if (parent) {
+    const arrow = parent.querySelector('div:last-child');
+    if (arrow) arrow.textContent = isVisible ? '⌄' : '⌃';
+  }
+}
 }
 
 function switchTab(slotKey, panel, btn) {

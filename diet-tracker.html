@@ -4181,7 +4181,83 @@ function updateConsumptionLog(date) {
   };
 }
 
+function editManualMeal(dateStr, mealId) {
+  // Find the meal
+  initManualMealData();
+  const meals = S.profile.manualMeals[dateStr] || [];
+  const meal = meals.find(m => m.id === mealId);
+  if (!meal) { flash('Meal not found', 'error'); return; }
+
+  // Store edit context
+  _manualMealEditId = mealId;
+  _manualMealEditDate = dateStr;
+
+  // Restore state from saved meal
+  _manualMealNumCourses = meal.questionnaire.numCourses || 1;
+  _manualMealCurrentCourseIndex = 0;
+  _manualMealCourses = [];
+
+  // Restore the questionnaire from saved data
+  _manualMealQuestionnaire = {
+    mealName: meal.mealName || '',
+    mealType: meal.mealType || 'lunch',
+    foodType: meal.questionnaire.foodType || 'chicken',
+    protein: meal.questionnaire.protein ?? null,
+    additionalProteinType: meal.questionnaire.additionalProteinType || '',
+    cookingMethod: meal.questionnaire.cookingMethod || 'grilled',
+    portionSize: meal.questionnaire.portionSize || 'medium',
+    additions: [...(meal.questionnaire.additions || [])],
+    garnish: [...(meal.questionnaire.garnish || [])],
+    accuracy: meal.questionnaire.accuracy || 'reasonable',
+    notes: meal.notes || '',
+    courses: meal.questionnaire.courses ? [...meal.questionnaire.courses] : [],
+    isFromTemplate: false,
+    templateId: null
+  };
+
+  // Go straight to review screen so the user sees what they logged
+  _manualMealCurrentScreen = 11;
+
+  // Build the modal (same as openManualMealModal)
+  const html = `
+    <div id="manual-meal-modal" style="
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7); display: flex; align-items: center;
+      justify-content: center; z-index: 9999;
+    " onclick="if(event.target.id==='manual-meal-modal') closeManualMealModal();">
+      <div style="
+        background: var(--bg); border-radius: 12px; padding: 0;
+        max-width: 500px; width: 90%; max-height: 80vh; overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3); display: flex; flex-direction: column;
+      ">
+        <div style="
+          display: flex; justify-content: space-between; align-items: center;
+          padding: 16px 24px; border-bottom: 1px solid var(--b1); flex-shrink: 0;
+          background: rgba(16,185,129,.08);
+        ">
+          <div>
+            <h3 style="color: var(--t1); margin: 0; font-size: 18px; font-weight: 600;">✎ Edit Meal</h3>
+            <div style="color: var(--ac); font-size: 12px; margin-top: 2px;">Modifying saved meal</div>
+          </div>
+          <button onclick="closeManualMealModal()" style="
+            background: none; border: none; color: var(--t2); font-size: 24px;
+            cursor: pointer; padding: 0; width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center; transition: color .2s;
+          " onmouseover="this.style.color='var(--t1)'" onmouseout="this.style.color='var(--t2)'">
+            ✕
+          </button>
+        </div>
+        <div id="manual-meal-content" style="overflow-y: auto; padding: 24px; flex: 1;"></div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', html);
+  renderManualMealScreen();
+}
+
 function openManualMealModal() {
+  _manualMealEditId = null;
+  _manualMealEditDate = null;
   _manualMealCurrentScreen = 0;
   _manualMealNumCourses = 1;  // Default to 1 course
   _manualMealCurrentCourseIndex = 0;  // Track which course we're editing
@@ -4247,6 +4323,8 @@ let _manualMealQuestionnaire = {};
 let _manualMealNumCourses = 1;  // 1, 2, or 3 courses
 let _manualMealCurrentCourseIndex = 0;  // Which course we're editing (0-2)
 let _manualMealCourses = [];  // Array of course objects
+let _manualMealEditId = null;   // If set, we're editing an existing meal (stores its original ID)
+let _manualMealEditDate = null; // Date string of the meal being edited
 
 const _manualMealScreenTitles = [
   'Meal Type',                           // Screen 0: Select meal type (breakfast/lunch/dinner/etc)
@@ -4748,7 +4826,17 @@ function renderManualMealScreen() {
       }
       
       html = `
-        <h2 style="color:var(--t1); margin-bottom:20px;">${T('questReview')}</h2>
+        ${_manualMealEditId ? `
+          <div style="background:rgba(16,185,129,.1); border:1px solid var(--ac); border-radius:8px; padding:10px 14px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-size:13px; color:var(--ac); font-weight:600;">✎ Edit Mode</div>
+            <div style="display:flex; gap:8px;">
+              <button onclick="_manualMealCurrentScreen=0; renderManualMealScreen();" style="font-size:11px; padding:4px 10px; background:var(--s1); border:1px solid var(--b1); border-radius:6px; color:var(--t2); cursor:pointer;">Change Type</button>
+              <button onclick="_manualMealCurrentScreen=3; renderManualMealScreen();" style="font-size:11px; padding:4px 10px; background:var(--s1); border:1px solid var(--b1); border-radius:6px; color:var(--t2); cursor:pointer;">Change Food</button>
+              <button onclick="_manualMealCurrentScreen=9; renderManualMealScreen();" style="font-size:11px; padding:4px 10px; background:var(--s1); border:1px solid var(--b1); border-radius:6px; color:var(--t2); cursor:pointer;">Change Notes</button>
+            </div>
+          </div>
+        ` : ''}
+        <h2 style="color:var(--t1); margin-bottom:20px;">${_manualMealEditId ? 'Review Changes' : T('questReview')}</h2>
         <div style="background:var(--sf); padding:16px; border-radius:8px; margin-bottom:16px;">
           <div style="color:var(--t2); font-size:14px; margin-bottom:12px;">
             <strong>${T('mealNameLabel')}:</strong> ${_manualMealQuestionnaire.mealName || _manualMealQuestionnaire.mealType}
@@ -4820,8 +4908,8 @@ function renderManualMealScreen() {
           ">${T('questCancel')}</button>
           <button onclick="finalizeManualMeal()" style="
             padding:12px; background:var(--ac); border:none; border-radius:8px;
-            color:#fff; cursor:pointer; font-weight:500;
-          ">${T('questSave')}</button>
+            color:#fff; cursor:pointer; font-weight:600;
+          ">${_manualMealEditId ? '✎ Update Meal' : T('questSave')}</button>
         </div>
       `;
       break;
@@ -5086,6 +5174,8 @@ function closeManualMealModal() {
   _manualMealNumCourses = 1;
   _manualMealCurrentCourseIndex = 0;
   _manualMealCourses = [];
+  _manualMealEditId = null;
+  _manualMealEditDate = null;
 }
 
 async function finalizeManualMeal() {
@@ -5126,12 +5216,36 @@ async function finalizeManualMeal() {
     isLogged: true
   };
   
-  // Save the meal
+  // Save the meal (edit = replace existing, create = push new)
   try {
-    const result = await saveManualMeal(S.viewDate, meal);
+    const targetDate = _manualMealEditDate || S.viewDate;
+    let result;
+
+    if (_manualMealEditId) {
+      // EDIT MODE: replace the existing meal in-place, preserving original ID & timestamp
+      initManualMealData();
+      const dateKey = typeof targetDate === 'string' ? targetDate : targetDate.toISOString().split('T')[0];
+      const meals = S.profile.manualMeals[dateKey] || [];
+      const idx = meals.findIndex(m => m.id === _manualMealEditId);
+      if (idx !== -1) {
+        const original = meals[idx];
+        meals[idx] = { ...original, ...meal, id: original.id, timestamp: original.timestamp };
+        S.profile.manualMeals[dateKey] = meals;
+        updateConsumptionLog(dateKey);
+        await DB.set('profile', S.profile);
+        flash('Meal updated', 'success');
+        result = meals[idx];
+      } else {
+        flash('Could not find original meal to update', 'error');
+        return;
+      }
+    } else {
+      result = await saveManualMeal(S.viewDate, meal);
+    }
+
     if (result) {
       // Mark this meal type as completed in the log for week view
-      const dateStr = typeof S.viewDate === 'string' ? S.viewDate : S.viewDate.toISOString().split('T')[0];
+      const dateStr = typeof targetDate === 'string' ? targetDate : targetDate.toISOString().split('T')[0];
       const log = getLog(dateStr);
       
       // Map meal type to meal slot
@@ -5156,7 +5270,7 @@ async function finalizeManualMeal() {
     }
   } catch (err) {
     console.error('Error finalizing meal:', err);
-    flash('Error saving meal', 'error');
+    flash(_manualMealEditId ? 'Error updating meal' : 'Error saving meal', 'error');
   }
 }
 
@@ -5465,12 +5579,18 @@ function renderToday() {
               <span style="color:#EF4444;">● ${meal.macros.fat}g</span>
             </div>
           </div>
-          <div style="display:flex; gap:8px; flex-direction:column; align-items:flex-end;">
+          <div style="display:flex; gap:6px; flex-direction:column; align-items:flex-end;">
             <button class="meal-expand-btn" style="color:var(--t3); font-size:16px; padding:4px; background:none; border:none; cursor:pointer;">⌄</button>
-            <button onclick="deleteManualMeal('${dateStr(S.viewDate)}', '${meal.id}'); event.stopPropagation();" style="
-              padding:4px 8px; background:#EF4444; border:none; border-radius:4px;
-              color:#fff; font-size:11px; cursor:pointer; white-space:nowrap;
-            ">${T('deleteMeal')}</button>
+            <div style="display:flex; gap:6px;">
+              <button onclick="editManualMeal('${dateStr(S.viewDate)}', '${meal.id}'); event.stopPropagation();" style="
+                padding:4px 8px; background:var(--ac); border:none; border-radius:4px;
+                color:#fff; font-size:11px; cursor:pointer; white-space:nowrap;
+              ">✎ Edit</button>
+              <button onclick="deleteManualMeal('${dateStr(S.viewDate)}', '${meal.id}'); event.stopPropagation();" style="
+                padding:4px 8px; background:#EF4444; border:none; border-radius:4px;
+                color:#fff; font-size:11px; cursor:pointer; white-space:nowrap;
+              ">✕ Delete</button>
+            </div>
           </div>
         </div>
         <div id="md-${mealId}" class="meal-detail" style="background:var(--s2); padding:12px; border-top:1px solid var(--b1);">

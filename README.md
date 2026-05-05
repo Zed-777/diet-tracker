@@ -22,6 +22,7 @@ A production-ready meal tracking application with personalized nutrition plannin
 ## 🚀 Deployment
 
 ### Prerequisites
+
 - Supabase project with `diet_data` table
 - Cloudflare account with Pages + Workers
 - GitHub repository
@@ -45,7 +46,8 @@ CREATE POLICY "allow all" ON diet_data
 ### 2. Configure Cloudflare Environment Variables
 
 In Cloudflare Pages → Settings → Environment variables, add:
-```
+
+```env
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_KEY=your-anon-public-key
 ```
@@ -62,15 +64,18 @@ Or connect your GitHub repo to Cloudflare Pages for auto-deploy.
 ### 4. Verify Setup
 
 Visit your Cloudflare Pages URL. The app should:
+
 - Load the Diet Tracker UI
 - Create your profile
 - Save meals to Supabase
 - Work offline
+
 ---
 
 ## 🏗️ Architecture
 
 ### Frontend
+
 - **Single-file SPA** — All UI, logic, and styles in `diet-tracker.html`
 - **No build step** — Works directly in browser
 - **Responsive design** — Mobile-first, works on all devices
@@ -84,10 +89,12 @@ Visit your Cloudflare Pages URL. The app should:
   - Plus 8 screens: Today, Meals, Progress, Analytics, Weight, Notes, Settings, Community
 
 ### Backend
+
 - **Supabase PostgreSQL** — Data persistence
 - **Table:** `diet_data` with JSONB blob storage
 - **Data structure:**
-  ```javascript
+
+```javascript
   {
     profile: { name, age, height, weight, goal, experience },
     weights: [ { date, value } ],
@@ -95,9 +102,10 @@ Visit your Cloudflare Pages URL. The app should:
     meal_swaps: { date: { index: swapId } },
     preferences: { language, theme, units }
   }
-  ```
+```
 
 ### Deployment
+
 - **Cloudflare Pages** — Static hosting + auto-deploy from GitHub
 - **Cloudflare Workers** — Credential injection via `functions/api/env.js`
 - **Environment variables** stored in Cloudflare (zero hardcoded secrets)
@@ -118,7 +126,7 @@ Visit your Cloudflare Pages URL. The app should:
 
 ## 📁 Project Structure
 
-```
+```text
 diet-tracker/
 ├── diet-tracker.html           # Main app (4500+ lines)
 │                                 # - HTML structure
@@ -185,6 +193,7 @@ wrangler dev
 ## 📝 Data Export
 
 Users can export their data as JSON from Settings view. Useful for:
+
 - Backup before reset
 - Migration to other app
 - Analytics/review
@@ -211,16 +220,19 @@ Users can export their data as JSON from Settings view. Useful for:
 ## 📞 Support & Troubleshooting
 
 **App shows blank screen:**
+
 - Check browser console for errors
 - Verify Supabase credentials in Cloudflare env vars
 - Clear browser cache and reload
 
 **Data not saving:**
+
 - Check browser console network tab
 - Verify Supabase table exists
 - Check RLS policies allow INSERT/UPDATE
 
 **Offline mode not working:**
+
 - Verify browser supports Service Worker
 - Check if app is served over HTTPS
 - Offline mode caches writes locally, syncs when online
@@ -236,7 +248,6 @@ Users can export their data as JSON from Settings view. Useful for:
 ---
 
 **Built with ❤️ — Production Ready** 🚀
-  - `grocery_YYYY-MM-DD` — shopping checklist
 
 ### Persistence
 
@@ -266,6 +277,7 @@ The app includes **42 diverse recipes** designed for real variety:
 - **11 Snacks**: protein shakes, fruits, nuts, cheese, yogurt, jerky, hummus, energy balls
 
 Each meal is:
+
 - **Goal-tagged**: meals specify which goals they suit (`['lose','build','definition','maintenance']`)
 - **Nutritionally balanced**: accurate macros and calories
 - **Practical**: realistic prep times (2–30 minutes)

@@ -6,16 +6,19 @@
 
 ## 📋 Executive Summary
 
-**Current Version:** 4.2  
-**Last Updated:** May 1, 2026  
+**Current Version:** 4.3  
+**Last Updated:** May 3, 2026  
 **Status:** Production (Cloudflare Pages)  
 **Region:** Castellón supermarket pricing (Mercadona/Consum/Carrefour)  
 
 ### Active Development Focus
 
 - ✅ **Completed**: Daily cost display, mindfulness system overhaul, Body Love acupressure, Body Scan MBSR
+- ✅ **Completed (May 3)**: Manual Meal Logger Phases 1–3 fully shipped
+- ✅ **Completed (May 3)**: Edit Existing Manual Meal (in-place questionnaire re-open)
 - 🔄 **In Progress**: Body Scan visualization rendering (needs debug)
 - ⏸️ **On Hold**: Mind enhancement features (for continuation)
+- 🔬 **Research**: Hormonal / Menstrual Cycle module (study complete, pending decision)
 
 ---
 
@@ -253,15 +256,16 @@
 
 ### Feature: Manual Meal Logger + Consumption Analytics
 
-**Status:** 🟡 PHASE 1 COMPLETE (Commit 61e56aa)  
+**Status:** � PHASES 1–3 COMPLETE  
 **Priority:** HIGH (Revolutionary feature)  
 **Complexity:** HIGH (substantial implementation)
 
 **Progress:**
 
-- ✅ Phase 1: Data structures + Questionnaire Modal UI (DONE)
-- ⏸️ Phase 2: Macro estimation engine refinement (NEXT)
-- ⏸️ Phase 3: Storage & display integration (PENDING)
+- ✅ Phase 1: Data structures + Questionnaire Modal UI (Commit 61e56aa)
+- ✅ Phase 2: Macro estimation engine — USDA database 1000+ foods (Commit 7396e61)
+- ✅ Phase 3: Storage, display, manual meal cards with course toggles (Commit f8a7182)
+- ✅ Phase 3b: Edit Existing Meal — in-place questionnaire re-open (Commit aca0cc3)
 - ⏸️ Phase 4: Analytics + PROGRESS tab (PENDING)
 
 ---
@@ -1042,3 +1046,936 @@ console.log(BODY_SCAN_REGIONS);
 **Status:** Ready for continuation  
 **Last Verified:** May 1, 2026  
 **Next Review:** Upon Body Scan debug completion
+
+---
+
+---
+
+# 🔧 SECTION II: ADD & MANUAL MEAL MODAL - FIXES & REFINEMENTS
+
+## Add Meal Modal - Complete Fix Summary
+
+### Issues Identified & Fixed
+
+#### 🔴 Issue 1: "Please enter a meal name" Error with No Input Field
+
+**Root Cause**: Screen 0.5 (meal name input) used decimal numbering and was never reached because `nextManualMealScreen()` used integer increment (`++`), jumping from screen 0 directly to screen 1.
+
+**Fix**:
+- Renumbered all screens to use integers only (0-9)
+- Moved meal name input to screen 1 (now reachable)
+- Updated `nextManualMealScreen()` to properly increment
+
+#### 🔴 Issue 2: Meal Name Required But Optional on Review
+
+**Root Cause**: Validation checked for empty mealName and threw error, but review screen showed fallback to mealType, creating confusion.
+
+**Fix**:
+- Changed mealName from required to optional (marked as such)
+- Updated validation to use `mealType` as fallback: `const finalMealName = (_manualMealQuestionnaire.mealName || '').trim() || _manualMealQuestionnaire.mealType;`
+- No more error on finalization
+
+#### 🔴 Issue 3: Duplicate Template Names for Same Meal
+
+**Root Cause**: When saving templates, no deduplication logic prevented multiple templates with identical names.
+
+**Fix**:
+- Added `existingIndex` check in `saveMealAsTemplate()`
+- Prompts user to confirm overwrite if template with same name exists
+- Updates existing template instead of creating duplicate
+- Reuses existing template ID to maintain consistency
+
+#### 🟢 Issue 4: Field Persistence During Navigation (Already Fixed Earlier)
+
+**Status**: `nextManualMealScreen()` now saves mealName, notes, and additionalProtein before advancing
+
+### Screen Flow (Corrected)
+
+```
+Screen -1: Template Selection (if templates exist)
+Screen  0: Meal Type Selection
+Screen  1: Meal Name Input ← FIXED (was 0.5)
+Screen  2: Food Classification
+Screen  3: Protein Source
+Screen  4: Cooking Method
+Screen  5: Portion Size
+Screen  6: Additions
+Screen  7: Garnish
+Screen  8: Confidence & Notes
+Screen  9: Review (Final - includes Save/Save as Template)
+```
+
+### Code Locations
+
+- `renderManualMealButtons()` - Line ~4427
+- `nextManualMealScreen()` - Line ~4462
+- Case Statements - Lines ~4100-4350
+- `finalizeManualMeal()` - Line ~4530
+- `saveMealAsTemplate()` - Line ~4600
+
+---
+
+---
+
+# 🥘 SECTION III: RECIPE CONTENT AUDIT - COOKED VS UNCOOKED
+
+## Ingredient Measurement Standardization
+
+**Date:** April 30, 2026  
+**Status:** Audit Complete - Conversions Ready  
+**Issue:** 10 recipes use "g cooked" rice, confusing for users who need uncooked quantities
+
+### Why This Matters
+
+Users need **uncooked quantities** to:
+- Know how much to purchase at the store
+- Properly measure before cooking
+- Get consistent results
+
+Cooked weights are problematic because:
+- Different cooking methods yield different final weights
+- Water absorption varies by cooking time
+- Users naturally measure ingredients **before cooking**
+
+### Conversion Formula
+
+**Brown Rice:**
+- Cooked rice ÷ 3 ≈ Uncooked rice
+- Example: 150g cooked ÷ 3 = **50g uncooked**
+
+**Rationale:** Brown rice roughly triples in weight when cooked (1 cup raw → 3 cups cooked)
+
+### Recipes Requiring Updates
+
+#### Lunch Recipes
+
+| Meal ID | Meal Name | Current | Conversion | Corrected |
+|---------|-----------|---------|------------|-----------|
+| **l1** | Grilled Salmon with Brown Rice & Broccoli | 150g cooked | ÷3 | **50g** |
+| **l2** | Chicken Brown Rice Bowl | 150g cooked | ÷3 | **50g** |
+| **l3** | Turkey Meatballs with Brown Rice | 100g cooked | ÷3 | **35g** |
+| **l5** | Asian Chicken Stir-Fry with Brown Rice | 150g cooked | ÷3 | **50g** |
+| **l6** | Canned Tuna Salad with Brown Rice | 120g cooked | ÷3 | **40g** |
+| **l11** | Asian Chicken Bowl with Rice | 140g cooked | ÷3 | **45g** |
+
+#### Dinner Recipes
+
+| Meal ID | Meal Name | Current | Conversion | Corrected |
+|---------|-----------|---------|------------|-----------|
+| **d1** | Grilled Salmon with Brown Rice & Vegetables | 160g cooked | ÷3 | **50g** |
+| **d3** | Lean Beef Steak with Brown Rice | 150g cooked | ÷3 | **50g** |
+| **d7** | Asian Chicken with Brown Rice | 160g cooked | ÷3 | **50g** |
+| **d8** | Lean Beef Stir-Fry with Brown Rice | 140g cooked | ÷3 | **45g** |
+
+**Breakfast Recipes:** ✅ No cooked ingredients found  
+**Status:** All breakfast items use correct quantities
+
+---
+
+---
+
+# 💰 SECTION IV: COST ANALYSIS FEATURE - DETAILED SPECIFICATION
+
+## Castellón, Spain Grocery Pricing Integration
+
+**Date:** April 30, 2026  
+**Status:** Implementation Complete  
+**Location:** Castellón, Spain  
+**Price Source:** Average prices from major supermarkets (Mercadona, Consum, Carrefour)
+
+### Feature Overview
+
+✅ **Ingredient-Level Pricing** — Individual prices for all 100+ ingredients  
+✅ **Daily Cost Tracking** — See exactly how much each day's meals cost  
+✅ **Weekly Cost Summary** — Estimate weekly grocery spending  
+✅ **Monthly Cost Projection** — Plan budget for entire month  
+✅ **Cost by Category** — Breakdown by protein, grains, vegetables, dairy, pantry  
+✅ **No Hard-coded Values** — Dynamic calculation based on meal selection  
+✅ **Regional Accuracy** — Castellón market prices (EUR/€)  
+
+### Ingredient Pricing Database
+
+All ingredient prices stored in `INGREDIENT_PRICES` object with:
+- **Base Price:** EUR (€) per standard unit
+- **Unit Reference:** How the price is calculated (per kg, per 500g, per can, etc.)
+- **Category:** For cost breakdown analysis
+
+### Cost Calculation System
+
+**Ingredient Cost = Base Price × (Amount ÷ Standard Unit)**
+
+Example: 150g chicken @ €6.50/kg  
+Cost = €6.50 × (150 ÷ 1000) = €0.98
+
+### Pricing Examples (Castellón, Spain)
+
+#### Proteins (High Variability)
+
+| Ingredient | Price | Unit | Notes |
+|-----------|-------|------|-------|
+| Chicken breast | €6.50 | per kg | Most affordable protein |
+| Salmon fillet | €12.00 | per kg | Premium protein |
+| Lean beef strips | €9.00 | per kg | Mid-range protein |
+| Turkey mince | €6.00 | per kg | Budget-friendly |
+| Canned tuna | €1.20 | per can | Convenience option |
+| Eggs | €0.28 | each | (~€3.30/dozen) |
+
+#### Grains & Carbs (Low Cost)
+
+| Ingredient | Price | Unit | Notes |
+|-----------|-------|------|-------|
+| Brown rice | €0.60 | per kg | Economical staple |
+| Whole wheat pasta | €1.20 | per 500g | Common pantry item |
+| Rolled oats | €1.40 | per kg | Budget-friendly |
+| Bread | €1.80 | per loaf | Daily staple |
+
+#### Vegetables & Fruits (Seasonal Variation)
+
+| Ingredient | Price | Unit | Notes |
+|-----------|-------|------|-------|
+| Spinach | €1.80 | per 250g | Premium vegetable |
+| Broccoli | €2.00 | per kg | Common choice |
+| Carrots | €0.90 | per kg | Very economical |
+| Tomatoes | €1.80 | per kg | Seasonal price |
+| Frozen berries | €3.80 | per kg | Year-round option |
+| Bananas | €0.12 | each | Cheapest fruit |
+
+#### Dairy (Moderate Cost)
+
+| Ingredient | Price | Unit | Notes |
+|-----------|-------|------|-------|
+| Greek yogurt | €3.20 | per 500g | Premium yogurt |
+| Milk (2%) | €0.95 | per liter | Standard milk |
+| Cottage cheese | €2.80 | per 500g | Budget option |
+| Feta cheese | €8.50 | per 200g | Premium cheese |
+
+### Budget & Financial Impact
+
+- **Daily Average:** €6-8 per day (€18-24 for 3 meals)
+- **Weekly Budget:** €42-56
+- **Monthly Budget:** €180-240
+- **Annual Food Cost:** ~€2,160-2,880
+
+---
+
+---
+
+# 🌸 SECTION V: CYCLE MODE MODULE - HORMONAL TRACKING
+
+## Menstrual Cycle-Based Nutrition & Exercise System
+
+**Status:** Research Complete - Implementation Pending Decision  
+**Complexity:** HIGH (200+ lines of code required)  
+**Value:** MEDIUM-HIGH (specialized feature for targeted users)  
+**Timeline:** 4-6 weeks if approved
+
+### Executive Overview
+
+**Problem:** Standard nutrition apps ignore menstrual cycle - a major factor in metabolism, nutrient needs, energy, mood, and exercise capacity.
+
+**Solution:** Cycle Mode adapts meal suggestions, macros, exercise recommendations, and mindfulness based on the 4 phases of the menstrual cycle.
+
+**Target User:** Women aged 18-50 tracking nutrition with cyclical hormonal patterns
+
+### The 4 Cycle Phases
+
+#### Phase 1: Menstrual (Days 1-5)
+- **Hormones:** Estrogen/Progesterone at baseline
+- **Metabolism:** Standard RMR
+- **Recommendations:** Higher iron, light exercise, restorative mindfulness
+- **Mood:** Naturally lower energy, introspection appropriate
+
+#### Phase 2: Follicular (Days 6-12)
+- **Hormones:** Rising estrogen, improving insulin sensitivity
+- **Metabolism:** +2% RMR
+- **Recommendations:** Maintain standard intake, strength training optimal
+- **Mood:** Increasing confidence, verbal ability, energy
+
+#### Phase 3: Ovulatory (Days 13-15)
+- **Hormones:** Estrogen/testosterone PEAK, highest insulin sensitivity
+- **Metabolism:** +4-5% RMR
+- **Recommendations:** Peak athletic performance window, test PRs
+- **Mood:** Peak confidence, social engagement, physical capability
+
+#### Phase 4: Luteal (Days 16-28)
+- **Hormones:** Progesterone rising, both hormones drop late luteal
+- **Metabolism:** +8-10% RMR (progesterone thermogenic)
+- **Recommendations:** +175 kcal/day, magnesium + B6 priority, moderate exercise
+- **Mood:** Carb cravings valid, serotonin support important, PMS window days 24-28
+
+### Key Data Structure
+
+```javascript
+S.profile.cycleMode = {
+  enabled: false,
+  cycleLength: 28,        // days; typical range 21–35
+  periodLength: 5,        // days; typical range 2–7
+  lastPeriodStart: null,  // ISO date string "2026-05-01"
+  manualPhaseOverride: null,
+  symptomLog: { "2026-05-03": { symptoms, mood, energy, flow } },
+  cycleHistory: [ /* recorded cycles */ ],
+  preferences: { showPhaseBanner: true, showMacroAdjustment: true }
+};
+```
+
+### Nutrition Adaptations Table
+
+| Nutrient | Menstrual | Follicular | Ovulatory | Luteal | 
+|---|---|---|---|---|
+| **Iron** | ★★★ 27mg | ★ 18mg | ★ 18mg | ★ 18mg |
+| **Magnesium** | ★★ | ★ 310mg | ★ 310mg | ★★★ 360mg |
+| **Calcium** | ★ | ★ | ★ | ★★★ 1200mg |
+| **Vitamin B6** | ★ | ★ | ★ | ★★★ 50-100mg |
+| **Omega-3** | ★★ | ★ | ★ | ★★ 1-2g |
+
+### Exercise Recommendations
+
+| Phase | Intensity | Focus | Notes |
+|---|---|---|---|
+| Menstrual | Light | Restorative | Yoga, walking, body scan |
+| Follicular | Moderate-High | Strength | Optimal for hypertrophy |
+| Ovulatory | Peak | Max Effort | Test PRs, HIIT tolerated |
+| Luteal | Moderate | Maintenance | Moderate strength, avoid HIIT day 24-28 |
+
+### Implementation Phases
+
+**Phase 1:** Settings + phase calculation + daily banner (400 lines)  
+**Phase 2:** Symptom log + micronutrient highlights (500 lines)  
+**Phase 3:** Week/month calendar overlay + analytics (350 lines)  
+**Phase 4:** Pattern recognition + Mindfulness integration (600 lines)  
+
+**Total:** 1,850 lines (estimated)
+
+---
+
+---
+
+# 🇪🇸 SECTION VI: SPANISH TRANSLATION AUDIT & REVIEW
+
+## Diet Tracker - Complete Accuracy Review
+
+**Date:** April 30, 2026  
+**Status:** ✅ COMPLETE - All critical errors fixed and verified  
+**Reviewed By:** Comprehensive Spanish language audit  
+**Language Standard:** Latin American Spanish (primary), Spain Spanish compatible
+
+### Executive Summary
+
+A detailed in-depth review of all Spanish translations throughout the Diet Tracker app has been completed. **All critical accuracy errors have been identified and corrected.** The translations now use:
+
+✅ Proper Spanish culinary terminology  
+✅ Accurate ingredient names (no confusions like Pimentón/Pimiento)  
+✅ Correct cooking verb conjugations  
+✅ Clear, consistent UI terminology  
+✅ Appropriate register and formality throughout  
+
+**Total Corrections Made: 15+ entries**
+
+### Critical Issues Fixed
+
+#### 1. Ingredient Translation Errors (FIXED ✅)
+
+**Capsicum/Pimentón Confusion**
+- **Issue:** Capsicum vegetables were being translated as "Pimentón" (paprika spice)
+- **Impact:** HIGH - Completely changes recipes
+- **Fix Applied:** All capsicum → "Pimiento" (bell pepper)
+
+| Entry | Before | After | Status |
+|-------|--------|-------|--------|
+| Red capsicum | Pimentón rojo | Pimiento rojo | ✓ |
+| Capsicum | Pimentón | Pimiento | ✓ |
+| Bell pepper | Pimiento | Pimiento | ✓ |
+
+#### 2. Cooking Verb Accuracy (FIXED ✅)
+
+**"Blend" Translation Precision**
+- **Issue:** Generic "Mezcla" (mix) doesn't distinguish blender-specific action
+- **Fix:** Changed to "Licúa" (specific to blender/licuadora)
+
+**"Spread" Application Method**
+- **Issue:** "Esparce" means scatter, not spread with knife
+- **Fix:** Changed to "Extiende" (spread/extend with tool)
+
+**"Stir-Fry" Verb Form**
+- **Issue:** "Salteado" is noun form, recipes need verb imperative
+- **Fix:** Changed to "Saltea" (you stir-fry)
+
+#### 3. UI Terminology Updates (FIXED ✅)
+
+**Muscle Building Goal**
+- **Before:** "Aumentar Músculo" (increase - passive)
+- **After:** "Ganar Músculo" (build/gain - standard fitness term)
+
+**Snack Terminology**
+- **Before:** "Refrigerio" (formal, wordy)
+- **After:** "Merienda" (clear, everyday usage)
+
+### Translation Quality Metrics
+
+✅ **Accuracy:** 400+ translation entries reviewed  
+✅ **Consistency:** All terms standardized across app  
+✅ **Completeness:** 100% bilingual support EN/ES  
+✅ **Register:** Appropriate formality level maintained  
+✅ **Culinary Terms:** Evidence-based, accurate terminology  
+
+### Minimum Data Thresholds
+
+| Feature | Minimum Data Required |
+|---|---|
+| Symptom trends | 1 full cycle of daily logs |
+| Nutritional gap analysis | 2 weeks of meal logging + 1 cycle |
+| Pattern recognition | 2 full cycles |
+| Cycle length calibration | 3 full cycles |
+
+---
+
+---
+
+# 📊 EXTENDED FEATURE ROADMAP - COMPREHENSIVE
+
+## All Planned Features by Phase
+
+### 🟢 PHASE 0: Core MVP (COMPLETED)
+- ✅ 5 meal slots/day with planning
+- ✅ Macro tracking (P/C/F/Water)
+- ✅ Cost analysis (Castellón prices)
+- ✅ Weekly/monthly views
+- ✅ Offline support
+- ✅ Bilingual (EN/ES)
+
+### 🟡 PHASE 1: Mind Enhancement (80% COMPLETE)
+- ✅ Breathing meditation
+- ✅ Body Love acupressure (5 points)
+- ✅ Body Scan MBSR (7 regions)
+- ✅ Loving Kindness meditation
+- 🔄 Body Scan rendering debug
+- ⏳ Advanced exercises (4 more types)
+- ⏳ Reminder system
+- ⏳ Streaks & gamification
+
+### 🔵 PHASE 2: Real-World Tracking (70% COMPLETE)
+- ✅ Manual meal logger
+- ✅ Questionnaire UI (9 screens)
+- ✅ Macro estimation engine
+- ✅ Edit/delete meals
+- ✅ Consumption tracking
+- ⏳ Consumption analytics dashboard
+- ⏳ Variance reporting
+
+### 🟣 PHASE 3: Cycle Mode (PENDING APPROVAL)
+- ⏳ Cycle tracking settings
+- ⏳ Phase calculation engine
+- ⏳ Symptom logging
+- ⏳ Nutrition adaptation
+- ⏳ Exercise recommendations
+- ⏳ Mindfulness integration
+- ⏳ Cycle analytics
+
+### 🟠 PHASE 4: Advanced Analytics (FUTURE)
+- ⏳ Trends dashboard
+- ⏳ Goal tracking system
+- ⏳ Achievement badges
+- ⏳ PDF export
+- ⏳ Data correlations
+
+### ⚫ PHASE 5: Social & Community (LONG-TERM)
+- ⏳ Share progress
+- ⏳ Group challenges
+- ⏳ Leaderboards
+- ⏳ Friend connections
+
+---
+
+## 🎯 COMPLETE FEATURE ROADMAP - 18 Planned Features with Detailed Specifications
+
+### 🏆 **Phase 2 Quick Wins** (High ROI, 2-4 weeks each)
+
+#### 1. 📊 Advanced Analytics Dashboard
+
+**Value:** High - Drives user engagement and insights  
+**Effort:** Medium - Requires chart library integration  
+**Timeline:** 2-3 weeks
+
+**Features:**
+- Weight trend line (7-day smoothing to ignore fluctuations)
+- Macro compliance rate (% of days hitting targets)
+- Weekly adherence heatmap (Mon-Sun color-coded)
+- Best days analysis ("You succeed 85% on weekends")
+- Energy/mood correlation charts
+- Calorie deficit summary (weekly, monthly)
+
+**Implementation:**
+- Add Chart.js or D3.js for visualizations
+- Create analytics view with time-range selector (week/month/year)
+- Calculate metrics on data load
+- Store derived stats in state
+
+**Success Metric:** Users spend >2 min on analytics daily
+
+---
+
+#### 2. 🎯 Goal Milestones & Gamification
+
+**Value:** High - Keeps users motivated  
+**Effort:** Low - Simple data tracking + UI  
+**Timeline:** 1-2 weeks
+
+**Features:**
+- Set milestone targets (e.g., "Reach 175 lbs by June 15")
+- Progress bar showing % completion
+- Milestone badges/achievements unlocked
+- Streak counter (consecutive days logging)
+- Achievement notifications ("7-day streak!")
+- "Days until goal" countdown
+
+**Data Structure:**
+```javascript
+S.profile.milestones = [
+  {
+    id: "milestone_123",
+    name: "Reach Goal Weight",
+    targetValue: 175,
+    targetDate: "2026-07-15",
+    unit: "lbs",
+    progress: 165,
+    createdAt: "2026-05-01",
+    completed: false
+  }
+];
+
+S.profile.streaks = {
+  current: 7,
+  best: 42,
+  lastLogDate: "2026-05-05"
+};
+```
+
+**Success Metric:** 60%+ of users create at least 1 milestone
+
+---
+
+#### 3. 🧠 Sleep & Mood Tracking (MVP)
+
+**Value:** Medium - Holistic health  
+**Effort:** Low - Simple 1-5 ratings  
+**Timeline:** 1-2 weeks
+
+**Features:**
+- Daily sleep hours input (0-24)
+- Sleep quality rating (1-5 stars)
+- Mood rating (1-5 emoji scale)
+- Stress level (1-5 slider)
+- Energy level (morning, midday, evening)
+- Notes linking sleep quality to eating patterns
+
+**Data Structure:**
+```javascript
+log_YYYY_MM_DD = {
+  sleep: { hours: 7, quality: 4, notes: "Woke up twice" },
+  mood: { rating: 3, stress: 2, energy: { morning: 2, midday: 3, evening: 2 } }
+};
+```
+
+**Success Metric:** 70%+ of users log sleep data
+
+---
+
+#### 4. 📋 Meal Prep Calendar
+
+**Value:** High - Moves from tracker → planner  
+**Effort:** Medium - Requires weekly planning UI  
+**Timeline:** 2-3 weeks
+
+**Features:**
+- Plan meals for upcoming week
+- Drag-and-drop meal assignment
+- Auto-generate grocery list
+- Group items by category
+- Estimate total weekly cost
+- Mark items as "already have"
+- Share shopping list (SMS/email/export)
+
+**Success Metric:** 50%+ of users plan meals for upcoming week
+
+---
+
+#### 5. 💪 Workout Integration
+
+**Value:** High - Connects diet + fitness  
+**Effort:** Medium - 3-4 weeks  
+**Timeline:** 3-4 weeks
+
+**Features:**
+- Log exercise type (strength, cardio, yoga, HIIT)
+- Calorie burn estimation
+- Adjust daily macros based on workout
+- Strength tracking (1RM progression)
+- Body measurements (chest, waist, arms, thighs)
+- Workout streak tracking
+- Rest day management
+
+**Success Metric:** 45%+ of users log workouts regularly
+
+---
+
+#### 6. 📸 Body Composition Tracking
+
+**Value:** Medium - Better metric than weight  
+**Effort:** Low-Medium - 1-2 weeks  
+**Timeline:** 1-2 weeks
+
+**Features:**
+- Measure body dimensions
+- Estimate body fat %
+- Progress photos capability
+- Visual comparison slider
+- Circumference trend graphs
+- Correlate measurements with weight changes
+
+**Success Metric:** 40%+ of users take measurements monthly
+
+---
+
+### 💪 **Phase 2 Medium Effort** (4-6 weeks)
+
+#### 7. 🥞 Nutrition Education & Smart Suggestions
+
+**Value:** Medium - Educational engagement  
+**Effort:** Medium - 3-4 weeks  
+**Timeline:** 3-4 weeks
+
+**Features:**
+- Daily nutrition tip (rotating, contextual)
+- Macro education modules
+- Ingredient database with nutrition info
+- Smart recipe suggestions based on goals
+- Meal timing advice (pre/post-workout)
+- Interactive guides ("Build Muscle", "Fat Loss")
+
+**Success Metric:** Users engage with education content
+
+---
+
+#### 8. 📱 Cross-Device Sync & Mobile
+
+**Value:** High - Accessibility (critical for retention)  
+**Effort:** High - 5-8 weeks  
+**Timeline:** 5-8 weeks
+
+**Features:**
+- Progressive Web App (PWA)
+- Apple/Android native app
+- Real-time sync across devices
+- Offline-first architecture
+- Push notifications
+- Apple Health / Google Fit integration
+- Cloud backup auto-save
+
+**Success Metric:** 70%+ of users install mobile app
+
+---
+
+#### 9. 👥 Social & Community (Optional)
+
+**Value:** Low-Medium - Network effects  
+**Effort:** High - 6-10 weeks  
+**Timeline:** 6-10 weeks
+
+**Features:**
+- Share meal/progress updates
+- Community challenges
+- Recipe sharing with ratings
+- Accountability buddies
+- Optional leaderboards
+- Discussion forum
+- Moderation tools
+
+**Success Metric:** 30%+ of users enable social features
+
+---
+
+#### 10. 🎤 Voice Input & Smart Recognition
+
+**Value:** Low - Nice-to-have convenience  
+**Effort:** Medium - 2-3 weeks  
+**Timeline:** 2-3 weeks
+
+**Features:**
+- Voice command logging ("Add 150g chicken breast")
+- Meal photos with AI auto-recognition
+- Barcode scanning (UPC lookup)
+- Voice-to-text meal notes
+
+**Success Metric:** 20%+ of users try voice feature
+
+---
+
+### 📊 **Data Export & Reporting** (Phase 2B)
+
+#### 11. 📋 Monthly Progress Reports
+
+**Value:** Low-Medium - Insight + motivation  
+**Effort:** Low - 1 week  
+**Timeline:** 1 week
+
+**Features:**
+- Auto-generated PDF report
+- Summary stats (weight, macros, adherence)
+- Charts and graphs
+- Printable/shareable format
+- Email delivery option
+
+**Success Metric:** 50%+ of users download monthly report
+
+---
+
+#### 12. 📤 Full Data Export
+
+**Value:** Medium - Data portability  
+**Effort:** Low - 3-5 days  
+**Timeline:** 3-5 days
+
+**Features:**
+- CSV export (all meals, weights, logs, workouts)
+- JSON backup (full app state)
+- Excel format with calculations
+- Google Sheets integration
+- HIPAA-compliant encryption option
+
+**Success Metric:** 30%+ of users export data annually
+
+---
+
+### 🔔 **Smart Reminders & Notifications** (Phase 2C)
+
+#### 13. 💬 Intelligent Reminders
+
+**Value:** Medium - Improves consistency  
+**Effort:** Low-Medium - 1-2 weeks  
+**Timeline:** 1-2 weeks
+
+**Features:**
+- Meal logging reminders (based on user history)
+- Hydration alerts every 2 hours
+- Weekly check-in prompts
+- Goal reminder notifications
+- Custom reminder times
+- Smart timing (no alerts during sleep)
+- Streak notifications
+
+**Success Metric:** 60%+ of users enable reminders; +20% adherence
+
+---
+
+### 🎨 **UI/UX Improvements** (Phase 2D)
+
+#### 14. 🌙 Advanced Dark Mode Options
+
+**Value:** Low - Polish + accessibility  
+**Effort:** Low - 3-5 days  
+**Timeline:** 3-5 days
+
+**Features:**
+- OLED-optimized dark mode (pure black)
+- Auto dark/light based on time of day
+- Eye-strain reduction mode
+- Custom accent color selection
+- Reduced motion option
+
+**Success Metric:** 40%+ of users enable dark mode customizations
+
+---
+
+#### 15. ⚡ Performance Optimization
+
+**Value:** Medium - User satisfaction  
+**Effort:** Low-Medium - 2-3 weeks  
+**Timeline:** 2-3 weeks
+
+**Features:**
+- Lazy load images
+- Optimize bundle size
+- Reduce initial render time (<2s target)
+- Service Worker caching
+- Database query optimization
+- Reduce memory footprint
+
+**Target Metrics:**
+- First Contentful Paint (FCP) <1.5s
+- Largest Contentful Paint (LCP) <2.5s
+- Time to Interactive (TTI) <3.5s
+- Lighthouse score >90
+
+**Success Metric:** Lighthouse score >90
+
+---
+
+### 🔧 **Technical Debt & Infrastructure** (Phase 3)
+
+#### 16. 🪧 Unit & Integration Tests
+
+**Value:** High - Reliability + confidence  
+**Effort:** High - 4-6 weeks  
+**Timeline:** 4-6 weeks
+
+**Features:**
+- Jest test suite (unit tests)
+- E2E tests (Cypress)
+- 80%+ code coverage
+- Automated testing on CI/CD
+- Performance regression tests
+
+**Target Coverage:**
+- Data calculations: 100%
+- UI components: 80%
+- API integrations: 90%
+- Edge cases: comprehensive
+
+**Success Metric:** All tests pass, zero critical regressions
+
+---
+
+#### 17. 📖 API Documentation
+
+**Value:** Medium - Developer experience  
+**Effort:** Low - 1 week  
+**Timeline:** 1 week
+
+**Features:**
+- OpenAPI/Swagger specification
+- Data model documentation
+- Integration guide for third-party apps
+- Webhook events
+- Rate limiting policies
+
+**Success Metric:** External developers can integrate
+
+---
+
+#### 18. 🚀 Production Monitoring & Analytics
+
+**Value:** Medium - Production insights  
+**Effort:** Low-Medium - 1-2 weeks  
+**Timeline:** 1-2 weeks
+
+**Features:**
+- Error tracking (Sentry integration)
+- Performance metrics (Web Vitals)
+- User analytics (Mixpanel)
+- Crash reporting
+- Funnel analysis
+- Retention cohorts
+
+**Success Metric:** <0.5% crash rate, 95%+ uptime
+
+---
+
+## 📅 **Recommended Implementation Rollout Plan**
+
+### Month 1-2 (Quick Wins - MVP+)
+
+**Priority:**
+- [ ] Advanced Analytics — HIGH ROI
+- [ ] Goal Milestones — Engagement driver
+- [ ] Sleep/Mood Tracking — Holistic health
+
+**Expected Impact:** +30% engagement, +15% retention
+
+---
+
+### Month 3-4 (Bigger Impact)
+
+**Priority:**
+- [ ] Meal Prep Calendar — User value
+- [ ] Workout Integration — Comprehensive tracking
+- [ ] Body Measurements — Better progress metric
+
+**Expected Impact:** +25% DAU, position as lifestyle app
+
+---
+
+### Month 5-6 (Optional - Based on Feedback)
+
+**Priority:**
+- [ ] Education/Smart Suggestions
+- [ ] Social Features
+- [ ] Mobile App (PWA/native)
+- [ ] Advanced Notifications
+
+**Expected Impact:** Differentiation, network effects
+
+---
+
+### Month 7+ (Technical Debt)
+
+**Priority:**
+- [ ] Performance Optimization (ongoing)
+- [ ] Tests & Monitoring (foundation)
+- [ ] API Documentation (partnerships)
+
+---
+
+## 💡 **Decision Framework for Feature Prioritization**
+
+| Factor | Weight | Scoring | Example |
+|---|---|---|---|
+| **User Demand** | 40% | 1-10 scale (survey, requests) | Meal prep = 8/10 |
+| **ROI (effort vs. impact)** | 30% | Effort weeks ÷ Retention lift | Sleep = 2w / +10% |
+| **Engagement Lift** | 20% | Expected % increase in DAU | Gamification = +25% |
+| **Strategic Fit** | 10% | Aligns with vision? | Social = lower priority |
+
+**Example Calculation:**
+```
+Advanced Analytics:
+- User Demand: 9/10 × 0.40 = 3.6
+- ROI: 8/10 × 0.30 = 2.4
+- Engagement Lift: 8/10 × 0.20 = 1.6
+- Strategic Fit: 9/10 × 0.10 = 0.9
+TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
+```
+
+---
+
+## 📊 Feature Roadmap Quick Reference
+
+| # | Feature | Effort | Value | Timeline | Status |
+|---|---|---|---|---|---|
+| 1 | Advanced Analytics | Medium | High | 2-3w | PLANNED |
+| 2 | Goal Milestones | Low | High | 1-2w | PLANNED |
+| 3 | Sleep/Mood Tracking | Low | Medium | 1-2w | PLANNED |
+| 4 | Meal Prep Calendar | Medium | High | 2-3w | PLANNED |
+| 5 | Workout Integration | Medium | High | 3-4w | PLANNED |
+| 6 | Body Composition | Low-Med | Medium | 1-2w | PLANNED |
+| 7 | Nutrition Education | Medium | Medium | 3-4w | PLANNED |
+| 8 | Cross-Device Sync | High | High | 5-8w | PLANNED |
+| 9 | Social & Community | High | Low-Med | 6-10w | PLANNED |
+| 10 | Voice Input | Medium | Low | 2-3w | PLANNED |
+| 11 | Monthly Reports | Low | Low-Med | 1w | PLANNED |
+| 12 | Data Export | Low | Medium | 3-5d | PLANNED |
+| 13 | Smart Reminders | Low-Med | Medium | 1-2w | PLANNED |
+| 14 | Advanced Dark Mode | Low | Low | 3-5d | PLANNED |
+| 15 | Performance Optimization | Low-Med | Medium | 2-3w | PLANNED |
+| 16 | Unit & Integration Tests | High | High | 4-6w | PLANNED |
+| 17 | API Documentation | Low | Medium | 1w | PLANNED |
+| 18 | Production Monitoring | Low-Med | Medium | 1-2w | PLANNED |
+
+---
+
+## Document Consolidation Summary
+
+**Merged Documents:**
+1. MPDP.md (original) ✅
+2. FIX_SUMMARY.md ✅
+3. CYCLE_MODULE_PLAN.md ✅
+4. COOKED_VS_UNCOOKED_AUDIT.md ✅
+5. COST_ANALYSIS_FEATURE.md ✅
+6. SPANISH_TRANSLATION_AUDIT.md ✅
+7. FEATURE_ROADMAP.md ✅
+
+**Result:** Single comprehensive Master Progress & Development Plan
+
+---
+
+**Last Updated:** May 5, 2026  
+**Status:** Master document consolidation complete  
+**Next Review:** Upon completion of next development milestone

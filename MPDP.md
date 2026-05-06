@@ -1961,6 +1961,217 @@ TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
 
 ---
 
+# 🌸 SECTION VIII: CYCLE MODE IMPLEMENTATION (IN PROGRESS)
+
+**Status:** Ready for implementation - fully optional feature  
+**Started:** May 6, 2026  
+**Current Phase:** 1 of 5 (Foundation)  
+**Git Tag:** `clean-state/pre-cycle-mode` (backup checkpoint)
+
+## Key Requirements (Verified)
+
+✅ **Tied to Diet:** All phase-specific recommendations integrate with daily meal planning, nutrient targets, and shopping list generation  
+✅ **Fully Optional:** Settings toggle - users can enable/disable at any time  
+✅ **Respects All Users:** Works for menstruating users; gracefully disabled for male/trans/non-cycling users  
+✅ **Tracked in MPDP:** All progress documented below  
+
+## Implementation Phases
+
+### PHASE 1: Foundation (Week 1-2) [IN PROGRESS]
+
+**Objective:** Core calculation engine + settings UI  
+**Time:** 8-10 hours  
+**Target Completion:** May 13, 2026
+
+**Deliverables:**
+- [ ] Data structure: `S.profile.cycleMode` with all fields
+- [ ] Constants: `CYCLE_PHASE_CONFIG` (phases, BMR modifiers, micronutrients)
+- [ ] Functions: `getCurrentCyclePhase()`, `getCycleKcalAdjustment()`, `getCycleBMRMultiplier()`
+- [ ] Settings UI: Toggle + date picker + cycle length selector
+- [ ] CSS tokens: `--phase-menstrual`, `--phase-follicular`, `--phase-ovulatory`, `--phase-luteal`
+- [ ] Testing: Phase calculation for 21-day, 28-day, 35-day cycles
+
+**Integration Points:**
+- Data structures save to `S.profile`, persist via `DB.set('profile', S.profile)`
+- Calculation functions pure (testable, no side effects)
+- Feature gate: `if (S.profile.cycleMode?.enabled)` checks prevent baseline impact
+
+**Commits:**
+- [ ] feat: Add cycle mode foundation (data + engine + settings)
+
+**Testing Checklist:**
+- [ ] Phase calculation correct for 28-day cycle
+- [ ] BMR modifiers match Solomon et al. 1982 data
+- [ ] Date math correct across month boundaries
+- [ ] Settings persist and load correctly
+- [ ] Disable still works (feature gate)
+
+---
+
+### PHASE 2: UI Integration (Week 2-3) [PENDING]
+
+**Objective:** TODAY tab banner + phase details + kcal integration  
+**Time:** 6-8 hours  
+**Target Completion:** May 20, 2026
+
+**Deliverables:**
+- [ ] TODAY tab phase banner (emoji, day counter, nutrition tip)
+- [ ] Phase detail modal (full description, science explanation, recommendations)
+- [ ] Kcal adjustment flow: `dailyTargetKcal += getCycleKcalAdjustment()`
+- [ ] Mobile responsive design
+- [ ] Bilingual support (EN/ES)
+
+**Integration Points:**
+- Banner shows only if cycleMode.enabled
+- Phase banner links to "Add Meal" with phase recommendations
+- Kcal adjustment affects macro target rings
+- WEEK/MONTH view shows phase color bands (visual context)
+
+**Success Metric:** User sees cycle info daily, kcal targets adjust automatically
+
+---
+
+### PHASE 3: Diet Integration (Week 3-4) [PENDING]
+
+**Objective:** Micronutrient highlighting, shopping list prioritization, meal suggestions  
+**Time:** 7-9 hours  
+**Target Completion:** May 27, 2026
+
+**Deliverables:**
+- [ ] Micronutrient badges on meal cards (magnesium icon during luteal, iron during menstrual, etc.)
+- [ ] Shopping list phase-aware filtering (prioritize phase-appropriate items)
+- [ ] Manual meal logger "Recommended for today" section with phase-optimal foods
+- [ ] Portion sizing adjusts by phase (luteal: allow +1 size without warning)
+- [ ] Cost analysis phase-aware (highlight affordable magnesium sources during luteal)
+
+**Integration Points:**
+- Meal database tagged with micronutrients
+- Shopping list respects phase priorities in sort order
+- Add meal questionnaire shows phase-specific foods in section 2
+- Daily meal plan reflects phase needs
+
+**Success Metric:** User's daily nutrition plan adapts to cycle phase automatically
+
+---
+
+### PHASE 4: Symptom Logging (Week 4) [PENDING]
+
+**Objective:** Daily tracking + storage + bilingual support  
+**Time:** 5-7 hours  
+**Target Completion:** June 3, 2026
+
+**Deliverables:**
+- [ ] Daily symptom log UI: mood, energy, flow, symptoms (collapsible TODAY card)
+- [ ] Data storage: `S.profile.cycleMode.symptomLog[date] = {...}`
+- [ ] Persistence: Saves to Supabase
+- [ ] Bilingual: All strings in EN/ES
+- [ ] Privacy: Data stays local to user account
+
+**Integration Points:**
+- TODAY tab expandable card (not mandatory)
+- Symptom data used in analytics phase
+- Can be cleared/deleted by user
+- No automatic sharing
+
+**Success Metric:** Users log symptoms consistently (40%+ of enabled users)
+
+---
+
+### PHASE 5: Analytics & Insights (Week 5) [PENDING]
+
+**Objective:** Pattern recognition + PROGRESS tab integration  
+**Time:** 8-10 hours  
+**Target Completion:** June 10, 2026
+
+**Deliverables:**
+- [ ] Cycle statistics: average length, regularity, variability
+- [ ] Symptom trends by phase: which symptoms occur in which phases
+- [ ] PROGRESS tab new section: "Cycle Analytics"
+- [ ] Charts: cycle regularity, symptom patterns, kcal correlation
+- [ ] Insights: "Your PMS is milder on high-magnesium weeks"
+
+**Integration Points:**
+- Requires 2-3 cycles of data to show
+- Analytics read-only (no edit)
+- Charts show correlation with nutrition logging
+- Export option (future): include cycle data in PDF report
+
+**Success Metric:** Analytics show meaningful patterns (3+ cycles of data)
+
+---
+
+## Testing & Quality Assurance
+
+**Unit Tests (Each Phase):**
+- [ ] Phase calculation: all cycle lengths (21-35)
+- [ ] BMR modifiers: match published data
+- [ ] Date math: cross-month boundaries
+- [ ] Feature gate: enabled/disabled correctly
+
+**Integration Tests:**
+- [ ] Settings persist and load
+- [ ] Kcal adjustments reflect in daily target
+- [ ] Micronutrient badges appear correctly
+- [ ] Symptom data saves/loads
+
+**UX Tests:**
+- [ ] Settings non-intimidating (clear opt-in)
+- [ ] Phase banner visible but not intrusive
+- [ ] Mobile experience smooth
+- [ ] Bilingual switching works
+
+**Edge Cases:**
+- [ ] Male/trans users: toggle disabled or hidden (respects user choice)
+- [ ] Irregular cycles: still calculates, shows "variable" flag
+- [ ] Hormonal contraception: user can still track, patterns differ
+- [ ] Offline: symptom log queues, syncs on reconnect
+- [ ] Data corruption: validation before DB.set()
+
+---
+
+## Progress Tracking
+
+**Week 1 (May 6-12):**
+- [x] Clean state checkpoint created
+- [x] Implementation plan created
+- [ ] PHASE 1 data structures
+- [ ] PHASE 1 calculation engine
+- [ ] PHASE 1 settings UI
+
+**Week 2 (May 13-19):**
+- [ ] PHASE 1 testing & validation
+- [ ] PHASE 2 UI implementation
+- [ ] TODAY tab banner
+
+**Week 3 (May 20-26):**
+- [ ] PHASE 2 completion
+- [ ] PHASE 3 diet integration
+- [ ] Micronutrient tagging
+
+**Week 4 (May 27 - June 2):**
+- [ ] PHASE 3 completion
+- [ ] PHASE 4 symptom logging
+- [ ] Bilingual support
+
+**Week 5 (June 3-9):**
+- [ ] PHASE 4 completion
+- [ ] PHASE 5 analytics
+- [ ] Performance tuning
+
+**June 10+:** Launch & monitoring
+
+---
+
+## Decision Log
+
+**May 6, 2026:** Confirmed cycle mode must be:
+1. Fully optional (settings toggle)
+2. Tied to actual diet (not just information)
+3. Respectful of all users (opt-in, can disable)
+4. Tracked in MPDP.md (transparency)
+
+---
+
 ## Document Consolidation Summary
 
 **Merged Documents:**
@@ -1976,6 +2187,6 @@ TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
 
 ---
 
-**Last Updated:** May 5, 2026  
-**Status:** Master document consolidation complete  
-**Next Review:** Upon completion of next development milestone
+**Last Updated:** May 6, 2026  
+**Status:** Cycle mode implementation plan ready - PHASE 1 about to start  
+**Next Review:** Upon completion of PHASE 1 (May 13)

@@ -2005,17 +2005,23 @@ TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
 
 **Testing Checklist:**
 - [x] Static validation: `diet-tracker.html` reports no errors
-- [ ] Phase calculation correct for 21-day cycle
-- [ ] Phase calculation correct for 28-day cycle
-- [ ] Phase calculation correct for 35-day cycle
+- [x] Phase calculation correct for 21-day cycle
+- [x] Phase calculation correct for 28-day cycle
+- [x] Phase calculation correct for 35-day cycle
 - [ ] BMR modifiers match Solomon et al. 1982 data
-- [ ] Date math correct across month boundaries
+- [x] Date math correct across month boundaries
 - [ ] Settings persist and load correctly
-- [ ] Disable still works (feature gate)
+- [x] Disable still works (feature gate)
 
 **Validation Notes (May 6):**
 - Browser file-open sanity check is currently blocked by missing local `config.js` / Supabase env injection in `file://` mode; this is an environment issue, not a syntax issue in the cycle feature.
 - Next validation step: run against the normal configured app environment and verify female opt-in flow, male auto-disable behavior, and target recalculation.
+
+**Validation Notes (May 7):**
+- Verified the pure cycle-phase helpers against 21-day, 28-day, and 35-day cycle scenarios.
+- Verified late-luteal override behavior (`+225 kcal`) on day 24 of a 28-day cycle.
+- Verified cross-month date handling with a 35-day cycle starting in January and continuing into February.
+- Verified `CYCLE.normalizeProfile()` disables cycle mode for male profiles.
 
 ---
 
@@ -2029,7 +2035,7 @@ TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
 - [x] TODAY tab phase banner (emoji, day counter, nutrition tip)
 - [x] Phase detail modal (full description, science explanation, recommendations)
 - [x] Kcal adjustment flow: cycle-aware targets displayed in header, TODAY, and Settings
-- [ ] Mobile responsive design
+- [x] Mobile responsive design
 - [x] Bilingual support (EN/ES)
 
 **Integration Points:**
@@ -2042,6 +2048,9 @@ TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
 - Static validation clean: `diet-tracker.html` reports no errors after banner/modal integration.
 - Responsive layout rules were added for the cycle banner and detail grid, but live mobile verification is still pending.
 - Runtime browser validation remains blocked in `file://` mode by missing local Supabase env injection.
+
+**Validation Notes (May 7):**
+- Deployed-site mobile-width check (~390px) confirmed the cycle banner stacks correctly and the detail modal remains readable without layout breakage.
 
 **Success Metric:** User sees cycle info daily, kcal targets adjust automatically
 

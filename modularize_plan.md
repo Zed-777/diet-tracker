@@ -64,7 +64,7 @@ Phase 1 note:
 
 ### Phase 2 Details: Extract Pure Logic
 
-- [ ] Move `CALC` into a domain module
+- [x] Move `CALC` into a domain module
 - [ ] Move `CYCLE` and cycle helpers into a domain module
 - [ ] Move `VALID` into a domain module
 - [ ] Move `PLAN` into a domain module
@@ -73,7 +73,8 @@ Phase 1 note:
 
 Phase 2 next target:
 
-- Start with `CALC` as the next smallest high-value pure-logic extraction.
+- `CALC` is extracted and validated locally against production using direct helper parity and rendered water-target output.
+- Next target: move `VALID` into a domain module.
 
 ### Phase 3 Details: Extract Services And App Shell
 

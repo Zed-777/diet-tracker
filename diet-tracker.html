@@ -656,6 +656,7 @@ create policy "allow all" on diet_data
 <script src="src/data/meals.js"></script>
 <script src="src/data/meal-translations.js"></script>
 <script src="src/data/translations.js"></script>
+<script src="src/domain/calc.js"></script>
 <script src="src/domain/cost.js"></script>
 <script>
 if (!window.__ENV?.SUPABASE_URL || !window.__ENV?.SUPABASE_KEY) {
@@ -802,46 +803,10 @@ if (!navigator.onLine) {
 // ═══════════════════════════════════════════════════════════════
 // CALCULATION MODULE
 // ═══════════════════════════════════════════════════════════════
-const CALC = {
-  bmr(gender, weight, height, age) {
-    // Mifflin-St Jeor
-    const base = (10 * weight) + (6.25 * height) - (5 * age);
-    return gender === 'male' ? base + 5 : base - 161;
-  },
-  tdee(bmr, activity) {
-    return Math.round(bmr * parseFloat(activity));
-  },
-  goalCalories(tdee, goal) {
-    const adj = { lose: -500, build: 300, definition: -250, maintenance: 0 };
-    return Math.max(1200, tdee + (adj[goal] || 0));
-  },
-  macros(calories, goal) {
-    const splits = {
-      lose:        { p: .35, c: .35, f: .30 },
-      build:       { p: .30, c: .45, f: .25 },
-      definition:  { p: .40, c: .35, f: .25 },
-      maintenance: { p: .30, c: .40, f: .30 }
-    };
-    const s = splits[goal] || splits.maintenance;
-    return {
-      protein: Math.round((calories * s.p) / 4),
-      carbs:   Math.round((calories * s.c) / 4),
-      fat:     Math.round((calories * s.f) / 9)
-    };
-  },
-  bmi(weight, height) {
-    const h = height / 100;
-    return (weight / (h * h)).toFixed(1);
-  },
-  bmiLabel(bmi) {
-    const b = parseFloat(bmi);
-    if (b < 18.5) return 'Underweight';
-    if (b < 25)   return 'Healthy';
-    if (b < 30)   return 'Overweight';
-    return 'Obese';
-  },
-  waterTarget(weight) { return Math.round(weight * 0.033 * 10) / 10; } // litres
-};
+const CALC = window.CALC;
+if (!CALC) {
+  throw new Error('Missing calc helpers. Ensure src/domain/calc.js loads before the app script.');
+}
 
 const CYCLE = {
   phases: {

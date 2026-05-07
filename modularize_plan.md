@@ -4,7 +4,7 @@ Last updated: May 7, 2026
 
 ## Status
 
-- Overall status: Phase 0 active
+- Overall status: Phase 1 active
 - Live app status: Protected; `diet-tracker.html` remains the production entrypoint
 - Deployment model: Unchanged; Cloudflare Pages serves the app and `/api/env` injects runtime credentials
 - Refactor rule: No production behavior changes are allowed during planning and scaffolding phases
@@ -54,7 +54,7 @@ The app is actively used and cannot tolerate regression, data loss, broken UI fl
 
 - [x] Move runtime `INGREDIENT_PRICES` into a shared source of truth used by the app
 - [ ] Move `MEALS` into a data module
-- [ ] Move `MEAL_TRANSLATIONS` into a data module
+- [x] Move `MEAL_TRANSLATIONS` into a data module
 - [ ] Move `LANG` dictionary content into a data module
 
 Phase 1 note:
@@ -449,7 +449,9 @@ Run these checks against the preview deployment for every extraction PR.
 - Extracted the `COST` helper into `src/domain/cost.js` and updated `diet-tracker.html` to bind against `window.COST`.
 - Repeated the local HTTP validation path and confirmed the grocery cost output still matched production after the `COST` extraction.
 - Committed the `COST` extraction as `60d9400` (`refactor: extract cost helper module`) and pushed the branch so the rollback point is available remotely.
+- Extracted `MEAL_TRANSLATIONS` into `src/data/meal-translations.js` and updated `diet-tracker.html` to bind against `window.MEAL_TRANSLATIONS`.
+- Revalidated the branch locally over HTTP with a cache-busted URL and confirmed the Spanish meal translation sample still matched production after the extraction.
 
 ## Immediate Next Safe Step
 
-The next safe implementation step is to either configure preview environment injection for branch deployments or continue with the next smallest static-data extraction using the same local HTTP validation path and another rollback checkpoint immediately after.
+The next safe implementation step is to either configure preview environment injection for branch deployments or continue with the next smallest static-data extraction, most likely `MEALS`, using the same local HTTP validation path and another rollback checkpoint immediately after.

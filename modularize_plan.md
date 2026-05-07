@@ -448,7 +448,8 @@ Run these checks against the preview deployment for every extraction PR.
 - Validated the branch locally over HTTP with a temporary untracked `config.js`, confirmed the app booted successfully, and verified grocery cost output matched production for the same profile and week.
 - Extracted the `COST` helper into `src/domain/cost.js` and updated `diet-tracker.html` to bind against `window.COST`.
 - Repeated the local HTTP validation path and confirmed the grocery cost output still matched production after the `COST` extraction.
+- Committed the `COST` extraction as `60d9400` (`refactor: extract cost helper module`) and pushed the branch so the rollback point is available remotely.
 
 ## Immediate Next Safe Step
 
-The next safe implementation step is to checkpoint the `COST` extraction, then continue with the next smallest data move only with the same local HTTP validation path or after preview env injection is configured.
+The next safe implementation step is to either configure preview environment injection for branch deployments or continue with the next smallest static-data extraction using the same local HTTP validation path and another rollback checkpoint immediately after.

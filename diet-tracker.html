@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-  --phase-menstrual:#D64550;--phase-follicular:#2FBF71;--phase-ovulatory:#F59E0B;--phase-luteal:#8B5CF6;
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Diet Tracker">
 <meta name="theme-color" content="#10B981">
@@ -16,6 +15,15 @@
 /* ── TOKENS ── */
 :root{
   --bg:#0B0F1A;--sf:#111827;--s2:#1A1F2E;--b1:#1E293B;--b2:#2E3650;
+  --t1:#E2E8F0;--t2:#94A3B8;--t3:#64748B;
+  --ac:#10B981;--ac2:#059669;
+  --pro:#8B5CF6;--carb:#F59E0B;--fat:#EF4444;--water:#3B82F6;
+  --hdr:#0D1117;--shadow:rgba(0,0,0,.55);--overlay:rgba(0,0,0,.65);
+  --radius:10px;--tr:.2s;
+  --font:'DM Sans','Helvetica Neue',sans-serif;
+  --disp:'Barlow Condensed',sans-serif;
+  --phase-menstrual:#D64550;--phase-follicular:#2FBF71;--phase-ovulatory:#F59E0B;--phase-luteal:#8B5CF6;
+}
 .cycle-settings-card{background:var(--s2);border:1px solid var(--b2);border-radius:12px;padding:14px}
 .cycle-settings-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .cycle-settings-title{font-size:13px;font-weight:700;color:var(--t1)}
@@ -25,14 +33,6 @@
 .toggle-checkbox:checked{background:var(--ac);border-color:var(--ac)}
 .toggle-checkbox:checked::after{transform:translateX(20px)}
 .toggle-checkbox:disabled{opacity:.45;cursor:not-allowed}
-  --t1:#E2E8F0;--t2:#94A3B8;--t3:#64748B;
-  --ac:#10B981;--ac2:#059669;
-  --pro:#8B5CF6;--carb:#F59E0B;--fat:#EF4444;--water:#3B82F6;
-  --hdr:#0D1117;--shadow:rgba(0,0,0,.55);--overlay:rgba(0,0,0,.65);
-  --radius:10px;--tr:.2s;
-  --font:'DM Sans','Helvetica Neue',sans-serif;
-  --disp:'Barlow Condensed',sans-serif;
-}
 body.light{
   --bg:#F0FDF9;--sf:#FFFFFF;--s2:#F8FAFC;--b1:#E2E8F0;--b2:#CBD5E1;
   --t1:#0F172A;--t2:#475569;--t3:#94A3B8;

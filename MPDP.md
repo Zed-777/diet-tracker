@@ -1989,7 +1989,7 @@ TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
 - [x] Functions: `CYCLE.getCurrentPhase()`, `CYCLE.getCalorieAdjustment()`, `getActiveNutritionTargets()`
 - [x] Settings UI: Toggle + date picker + cycle length selector
 - [x] CSS tokens: `--phase-menstrual`, `--phase-follicular`, `--phase-ovulatory`, `--phase-luteal`
-- [ ] Testing: Phase calculation for 21-day, 28-day, 35-day cycles
+- [x] Testing: Phase calculation for 21-day, 28-day, 35-day cycles
 
 **Integration Points:**
 - Data structures save to `S.profile`, persist via `DB.set('profile', S.profile)`
@@ -2001,7 +2001,7 @@ TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
 - Settings modal selectors were scoped to the modal to avoid collisions with hidden setup fields
 
 **Commits:**
-- [ ] Pending local commit after PHASE 1 validation completes
+- [x] Validation progress recorded and committed in MPDP
 
 **Testing Checklist:**
 - [x] Static validation: `diet-tracker.html` reports no errors
@@ -2010,7 +2010,7 @@ TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
 - [x] Phase calculation correct for 35-day cycle
 - [ ] BMR modifiers match Solomon et al. 1982 data
 - [x] Date math correct across month boundaries
-- [ ] Settings persist and load correctly
+- [x] Settings persist and load correctly
 - [x] Disable still works (feature gate)
 
 **Validation Notes (May 6):**
@@ -2022,6 +2022,7 @@ TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
 - Verified late-luteal override behavior (`+225 kcal`) on day 24 of a 28-day cycle.
 - Verified cross-month date handling with a 35-day cycle starting in January and continuing into February.
 - Verified `CYCLE.normalizeProfile()` disables cycle mode for male profiles.
+- Verified live cycle-settings persistence on the deployed app by saving a temporary cycle configuration, reloading to confirm the follicular state and adjusted targets persisted, then restoring the original disabled state and confirming baseline targets after reload.
 
 ---
 

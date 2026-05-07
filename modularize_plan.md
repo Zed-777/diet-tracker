@@ -52,10 +52,14 @@ The app is actively used and cannot tolerate regression, data loss, broken UI fl
 
 ### Phase 1 Details: Extract Static Data
 
-- [ ] Move `INGREDIENT_PRICES` into one shared source of truth
+- [x] Move runtime `INGREDIENT_PRICES` into a shared source of truth used by the app
 - [ ] Move `MEALS` into a data module
 - [ ] Move `MEAL_TRANSLATIONS` into a data module
 - [ ] Move `LANG` dictionary content into a data module
+
+Phase 1 note:
+
+- The legacy root `INGREDIENT_PRICES.js` file remains in the repo for now and is not wired into production. Cleanup of that legacy file should happen only after the rest of the static-data extraction is complete.
 
 ### Phase 2 Details: Extract Pure Logic
 
@@ -433,7 +437,11 @@ Run these checks against the preview deployment for every extraction PR.
 - Created a reserved `src/` workspace note without wiring it into production.
 - Defined the first extraction PR scope as a static-data-only move.
 - Added the preview smoke checklist that every extraction PR must pass before merge.
+- Created the safety branch `refactor/modularize-phase1a` so `main` remains untouched.
+- Checkpointed the plan files in branch commit `095669c` before touching runtime code.
+- Extracted the live ingredient price table to `src/data/ingredient-prices.js` and updated `diet-tracker.html` to load that file before the main app script.
+- Validated the touched files with focused error checks immediately after the extraction edit.
 
 ## Immediate Next Safe Step
 
-The next safe implementation step is the first static-data extraction PR, starting with a single authoritative ingredient pricing module and no other runtime rewiring.
+The next safe implementation step is a rollback checkpoint commit for the ingredient price extraction, followed by the next smallest static-data move only if preview validation is available.

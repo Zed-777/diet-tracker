@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+  --phase-menstrual:#D64550;--phase-follicular:#2FBF71;--phase-ovulatory:#F59E0B;--phase-luteal:#8B5CF6;
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Diet Tracker">
 <meta name="theme-color" content="#10B981">
@@ -15,6 +16,15 @@
 /* ── TOKENS ── */
 :root{
   --bg:#0B0F1A;--sf:#111827;--s2:#1A1F2E;--b1:#1E293B;--b2:#2E3650;
+.cycle-settings-card{background:var(--s2);border:1px solid var(--b2);border-radius:12px;padding:14px}
+.cycle-settings-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.cycle-settings-title{font-size:13px;font-weight:700;color:var(--t1)}
+.cycle-settings-copy,.cycle-settings-note{font-size:12px;line-height:1.45;color:var(--t3);margin-top:4px}
+.toggle-checkbox{width:48px;height:28px;padding:0;border-radius:999px;background:var(--b2);border:1px solid var(--b2);appearance:none;-webkit-appearance:none;position:relative;flex-shrink:0;cursor:pointer;transition:background var(--tr),border-color var(--tr)}
+.toggle-checkbox::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:transform var(--tr)}
+.toggle-checkbox:checked{background:var(--ac);border-color:var(--ac)}
+.toggle-checkbox:checked::after{transform:translateX(20px)}
+.toggle-checkbox:disabled{opacity:.45;cursor:not-allowed}
   --t1:#E2E8F0;--t2:#94A3B8;--t3:#64748B;
   --ac:#10B981;--ac2:#059669;
   --pro:#8B5CF6;--carb:#F59E0B;--fat:#EF4444;--water:#3B82F6;
@@ -268,6 +278,21 @@ body.light .grocery-item{box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .settings-label{font-size:14px;color:var(--t1);font-weight:500}
 .settings-val{font-size:13px;color:var(--t3)}
 .settings-edit-btn{font-size:12px;color:var(--ac);font-weight:600;background:none;border:none;cursor:pointer;padding:4px 8px}
+.cycle-banner{border:1px solid var(--b1);border-radius:16px;padding:14px 16px;margin:0 0 14px;background:linear-gradient(135deg,rgba(139,92,246,.14),rgba(16,185,129,.08));box-shadow:0 14px 28px rgba(0,0,0,.12)}
+.cycle-banner-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.cycle-banner-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#fff}
+.cycle-banner-title{font-size:18px;font-weight:800;color:var(--t1);margin-top:10px}
+.cycle-banner-copy{font-size:13px;line-height:1.5;color:var(--t2);margin-top:6px}
+.cycle-banner-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+.cycle-banner-stat{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.05)}
+.cycle-banner-stat-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);font-weight:700}
+.cycle-banner-stat-value{font-size:14px;font-weight:700;color:var(--t1);margin-top:4px}
+.cycle-banner-detail-btn{padding:10px 12px;border-radius:12px;background:transparent;border:1px solid var(--b2);color:var(--t1);font-weight:700;font-size:12px;min-width:104px}
+.cycle-banner-detail-btn:hover{border-color:var(--ac);color:var(--ac)}
+.cycle-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.cycle-detail-card{padding:12px;border-radius:12px;background:var(--s2);border:1px solid var(--b1)}
+.cycle-detail-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);font-weight:700}
+.cycle-detail-value{font-size:13px;line-height:1.5;color:var(--t1);margin-top:6px}
 
 /* ── MODALS ── */
 .overlay{position:fixed;inset:0;background:var(--overlay);z-index:200;display:none;align-items:flex-end;justify-content:center}
@@ -308,6 +333,7 @@ body.light .sheet{box-shadow:0 -8px 40px rgba(0,0,0,.12)}
 .pill-green{background:rgba(16,185,129,.12);color:var(--ac);border:1px solid rgba(16,185,129,.3)}
 .pill-amber{background:rgba(245,158,11,.12);color:var(--carb);border:1px solid rgba(245,158,11,.3)}
 .pill-red{background:rgba(239,68,68,.12);color:var(--fat);border:1px solid rgba(239,68,68,.3)}
+@media (max-width:520px){.cycle-banner-head{flex-direction:column}.cycle-banner-metrics,.cycle-detail-grid{grid-template-columns:1fr}.cycle-banner-detail-btn{width:100%}}
 .pills-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 
 /* ── QUOTE CARD ── */
@@ -550,10 +576,76 @@ create policy "allow all" on diet_data
     </select>
   </div>
 
+    <div class="field">
+      <label id="es-cycle-title">Cycle Mode</label>
+      <div class="cycle-settings-card">
+        <div class="cycle-settings-head">
+          <div>
+            <div class="cycle-settings-title" id="es-cycle-enabled-label">Enable cycle-aware diet tracking</div>
+            <div class="cycle-settings-copy" id="es-cycle-enabled-copy">Private and optional. Adjusts daily calories and prepares phase-based food guidance.</div>
+          </div>
+          <input type="checkbox" id="es-cycle-enabled" class="toggle-checkbox" onchange="toggleCycleSettingsConfig()">
+        </div>
+        <div class="cycle-settings-note" id="es-cycle-unavailable" style="display:none"></div>
+        <div id="es-cycle-config" style="display:none;margin-top:12px">
+          <div class="grid2">
+            <div class="field">
+              <label id="es-cycle-date-label">Last Period Started</label>
+              <input type="date" id="es-cycle-start">
+            </div>
+            <div class="field">
+              <label id="es-cycle-length-label">Cycle Length</label>
+              <select id="es-cycle-length">
+                <option value="21">21</option>
+                <option value="22">22</option>
+                <option value="23">23</option>
+                <option value="24">24</option>
+                <option value="25">25</option>
+                <option value="26">26</option>
+                <option value="27">27</option>
+                <option value="28">28</option>
+                <option value="29">29</option>
+                <option value="30">30</option>
+                <option value="31">31</option>
+                <option value="32">32</option>
+                <option value="33">33</option>
+                <option value="34">34</option>
+                <option value="35">35</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label id="es-period-length-label">Period Length</label>
+            <select id="es-period-length">
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+            </select>
+          </div>
+          <div class="cycle-settings-note" id="es-cycle-support">Turn this on and add a start date to activate diet adjustments.</div>
+        </div>
+      </div>
+    </div>
+
   <div style="display:flex;gap:10px;margin-top:8px">
     <button class="btn-ghost" onclick="closeSettingsModal()" style="flex:1">Cancel</button>
     <button class="btn-primary" onclick="saveSettingsChanges()" style="flex:2">Save Changes</button>
   </div>
+</div>
+</div>
+
+<!-- CYCLE DETAIL MODAL -->
+<div class="overlay" id="cycle-detail-modal" onclick="if(event.target===this)closeCycleDetailModal()">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title" id="cycle-detail-title">🌸 Cycle Detail</div>
+    <button class="sheet-close" onclick="closeCycleDetailModal()">✕</button>
+  </div>
+  <div id="cycle-detail-content"></div>
 </div>
 </div>
 
@@ -742,6 +834,454 @@ const CALC = {
   waterTarget(weight) { return Math.round(weight * 0.033 * 10) / 10; } // litres
 };
 
+const CYCLE = {
+  phases: {
+    menstrual:  { emoji: '🩸', colorToken: '--phase-menstrual' },
+    follicular: { emoji: '🌱', colorToken: '--phase-follicular' },
+    ovulatory:  { emoji: '🌟', colorToken: '--phase-ovulatory' },
+    luteal:     { emoji: '🌕', colorToken: '--phase-luteal' }
+  },
+  adjustments: {
+    menstrual:   { multiplier: 1.00, kcalAdd: 0 },
+    follicular:  { multiplier: 1.02, kcalAdd: 50 },
+    ovulatory:   { multiplier: 1.04, kcalAdd: 75 },
+    luteal:      { multiplier: 1.08, kcalAdd: 175 },
+    late_luteal: { multiplier: 1.10, kcalAdd: 225 }
+  },
+  defaultState() {
+    return {
+      enabled: false,
+      cycleLength: 28,
+      periodLength: 5,
+      lastPeriodStart: null,
+      manualPhaseOverride: null,
+      manualPhaseOverrideDate: null,
+      symptomLog: {},
+      cycleHistory: [],
+      preferences: {
+        showPhaseBanner: true,
+        showMacroAdjustment: true,
+        showMindfulnessSuggestions: true,
+        showExerciseTips: true
+      }
+    };
+  },
+  isAvailable(profile) {
+    return profile?.gender === 'female';
+  },
+  clamp(value, min, max, fallback) {
+    const parsed = parseInt(value, 10);
+    if (Number.isNaN(parsed)) return fallback;
+    return Math.min(max, Math.max(min, parsed));
+  },
+  normalizeProfile(profile) {
+    if (!profile) return profile;
+
+    const defaults = this.defaultState();
+    const existing = profile.cycleMode || {};
+    profile.cycleMode = {
+      ...defaults,
+      ...existing,
+      enabled: !!existing.enabled,
+      cycleLength: this.clamp(existing.cycleLength, 21, 35, defaults.cycleLength),
+      periodLength: this.clamp(existing.periodLength, 2, 7, defaults.periodLength),
+      lastPeriodStart: existing.lastPeriodStart || null,
+      manualPhaseOverride: existing.manualPhaseOverride || null,
+      manualPhaseOverrideDate: existing.manualPhaseOverrideDate || null,
+      symptomLog: existing.symptomLog && typeof existing.symptomLog === 'object' ? existing.symptomLog : {},
+      cycleHistory: Array.isArray(existing.cycleHistory) ? existing.cycleHistory : [],
+      preferences: {
+        ...defaults.preferences,
+        ...(existing.preferences || {})
+      }
+    };
+
+    if (!this.isAvailable(profile)) {
+      profile.cycleMode.enabled = false;
+    }
+
+    return profile;
+  },
+  getCurrentPhase(profile, dateValue = todayStr()) {
+    if (!this.isAvailable(profile) || !profile?.cycleMode?.enabled || !profile.cycleMode.lastPeriodStart) {
+      return null;
+    }
+
+    const targetDate = new Date(`${dateValue}T00:00:00`);
+    const startDate = new Date(`${profile.cycleMode.lastPeriodStart}T00:00:00`);
+    if (Number.isNaN(targetDate.getTime()) || Number.isNaN(startDate.getTime()) || targetDate < startDate) {
+      return null;
+    }
+
+    const cycleLength = profile.cycleMode.cycleLength || 28;
+    const periodLength = profile.cycleMode.periodLength || 5;
+    const totalDays = Math.floor((targetDate - startDate) / 86400000);
+    const dayOfCycle = (totalDays % cycleLength) + 1;
+    const ovulationDay = Math.max(periodLength + 2, cycleLength - 14);
+
+    let phase = 'luteal';
+    if (dayOfCycle <= periodLength) phase = 'menstrual';
+    else if (dayOfCycle < ovulationDay - 1) phase = 'follicular';
+    else if (dayOfCycle <= ovulationDay + 1) phase = 'ovulatory';
+
+    const daysUntilPeriod = cycleLength - dayOfCycle + 1;
+    const isLateLuteal = phase === 'luteal' && daysUntilPeriod <= 5;
+    const adjustmentKey = isLateLuteal ? 'late_luteal' : phase;
+
+    return {
+      phase,
+      dayOfCycle,
+      daysUntilPeriod,
+      isLateLuteal,
+      config: this.phases[phase],
+      adjustment: this.adjustments[adjustmentKey]
+    };
+  },
+  getCalorieAdjustment(profile, dateValue = todayStr()) {
+    return this.getCurrentPhase(profile, dateValue)?.adjustment.kcalAdd || 0;
+  }
+};
+
+function getActiveNutritionTargets(profile, dateValue = todayStr()) {
+  if (!profile) {
+    return { baselineCalories: 0, calories: 0, cycleAdjustment: 0, macros: { protein: 0, carbs: 0, fat: 0 }, cycleState: null };
+  }
+
+  const baselineCalories = typeof profile.calories === 'number'
+    ? profile.calories
+    : CALC.goalCalories(profile.tdee, profile.goal);
+  const cycleAdjustment = CYCLE.getCalorieAdjustment(profile, dateValue);
+  const calories = baselineCalories + cycleAdjustment;
+
+  return {
+    baselineCalories,
+    calories,
+    cycleAdjustment,
+    macros: CALC.macros(calories, profile.goal),
+    cycleState: CYCLE.getCurrentPhase(profile, dateValue)
+  };
+}
+
+function getCyclePhaseLabel(phase) {
+  const labels = {
+    menstrual: T('cyclePhaseMenstrual'),
+    follicular: T('cyclePhaseFollicular'),
+    ovulatory: T('cyclePhaseOvulatory'),
+    luteal: T('cyclePhaseLuteal')
+  };
+  return labels[phase] || phase;
+}
+
+function getCyclePhaseContent(cycleState) {
+  if (!cycleState) return null;
+
+  const lang = S.language === 'es' ? 'es' : 'en';
+  const content = {
+    menstrual: {
+      en: {
+        copy: 'Recovery and replenishment phase. Prioritize iron, hydration, and meals that are gentle on digestion.',
+        nutrition: 'Iron, omega-3 fats, vitamin C, steady hydration.',
+        movement: 'Walking, mobility work, and low-pressure training sessions.',
+        science: 'Lower estrogen and progesterone bring energy down. Diet support should focus on replacing losses and lowering friction.'
+      },
+      es: {
+        copy: 'Fase de recuperación y reposición. Prioriza hierro, hidratación y comidas suaves para la digestión.',
+        nutrition: 'Hierro, omega-3, vitamina C e hidratación constante.',
+        movement: 'Caminatas, movilidad y sesiones de entrenamiento de baja presión.',
+        science: 'El estrógeno y la progesterona bajos suelen reducir la energía. La dieta debe enfocarse en reponer pérdidas y bajar la fricción.'
+      }
+    },
+    follicular: {
+      en: {
+        copy: 'Momentum phase. Lean protein, quality carbs, and heavier training are typically better tolerated here.',
+        nutrition: 'Lean protein, complex carbs, folate, and zinc-rich foods.',
+        movement: 'Strength blocks, skill work, and higher-intensity sessions.',
+        science: 'Rising estrogen usually improves insulin sensitivity and recovery, so this is a good window for performance-focused meals.'
+      },
+      es: {
+        copy: 'Fase de impulso. La proteína magra, carbohidratos de calidad y entrenamientos más fuertes suelen tolerarse mejor aquí.',
+        nutrition: 'Proteína magra, carbohidratos complejos, folato y alimentos ricos en zinc.',
+        movement: 'Bloques de fuerza, trabajo técnico y sesiones de mayor intensidad.',
+        science: 'El aumento de estrógeno suele mejorar la sensibilidad a la insulina y la recuperación, por eso es una buena ventana para comer con enfoque de rendimiento.'
+      }
+    },
+    ovulatory: {
+      en: {
+        copy: 'Peak window. Keep meals balanced, stay hydrated, and support performance without overcomplicating the plan.',
+        nutrition: 'Balanced carbs, zinc, antioxidants, and hydration.',
+        movement: 'Peak-strength work, speed, or hard sessions if recovery feels strong.',
+        science: 'This is often the highest-energy window. The diet goal is to support output and recovery, not underfuel it.'
+      },
+      es: {
+        copy: 'Ventana pico. Mantén comidas equilibradas, buena hidratación y apoyo al rendimiento sin complicar demasiado el plan.',
+        nutrition: 'Carbohidratos equilibrados, zinc, antioxidantes e hidratación.',
+        movement: 'Fuerza máxima, velocidad o sesiones duras si la recuperación se siente sólida.',
+        science: 'Suele ser la ventana de mayor energía. El objetivo de la dieta es sostener el rendimiento y la recuperación, no quedarse corta.'
+      }
+    },
+    luteal: {
+      en: {
+        copy: 'Nourishment phase. Higher appetite and a modest calorie increase are expected, so complex carbs and magnesium matter more.',
+        nutrition: 'Complex carbs, magnesium, calcium, and structured meals.',
+        movement: 'Moderate strength, walking, and lower-stress conditioning.',
+        science: 'Progesterone raises metabolic demand. The calorie adjustment exists to reduce rebound hunger and keep the diet sustainable.'
+      },
+      es: {
+        copy: 'Fase de nutrición. Más apetito y un aumento moderado de calorías es esperable, por eso los carbohidratos complejos y el magnesio importan más.',
+        nutrition: 'Carbohidratos complejos, magnesio, calcio y comidas estructuradas.',
+        movement: 'Fuerza moderada, caminatas y acondicionamiento de menor estrés.',
+        science: 'La progesterona eleva la demanda metabólica. El ajuste calórico existe para reducir el hambre de rebote y mantener la dieta sostenible.'
+      }
+    }
+  };
+
+  return content[cycleState.phase]?.[lang] || null;
+}
+
+function getCyclePriorityRules(cycleState) {
+  if (!cycleState) return [];
+
+  return {
+    menstrual: [
+      { id: 'iron', label: { en: 'Iron', es: 'Hierro' }, color: 'pill-red', keywords: ['spinach', 'beef', 'lentils', 'turkey', 'eggs'] },
+      { id: 'omega3', label: { en: 'Omega-3', es: 'Omega-3' }, color: 'pill-green', keywords: ['salmon', 'tuna', 'walnuts', 'chia'] }
+    ],
+    follicular: [
+      { id: 'protein', label: { en: 'Protein', es: 'Proteína' }, color: 'pill-green', keywords: ['chicken', 'turkey', 'eggs', 'protein powder', 'greek yogurt', 'cottage cheese'] },
+      { id: 'folate', label: { en: 'Folate', es: 'Folato' }, color: 'pill-amber', keywords: ['spinach', 'lentils', 'asparagus', 'broccoli', 'quinoa'] }
+    ],
+    ovulatory: [
+      { id: 'antioxidants', label: { en: 'Antioxidants', es: 'Antioxidantes' }, color: 'pill-amber', keywords: ['berries', 'tomatoes', 'orange', 'lemon', 'lime'] },
+      { id: 'zinc', label: { en: 'Zinc', es: 'Zinc' }, color: 'pill-green', keywords: ['pumpkin seeds', 'beef', 'eggs', 'turkey', 'fish'] }
+    ],
+    luteal: [
+      { id: 'magnesium', label: { en: 'Magnesium', es: 'Magnesio' }, color: 'pill-green', keywords: ['spinach', 'oats', 'walnuts', 'pumpkin seeds', 'banana', 'dark chocolate'] },
+      { id: 'steadycarbs', label: { en: 'Steady carbs', es: 'Carbos estables' }, color: 'pill-amber', keywords: ['oats', 'brown rice', 'sweet potato', 'whole wheat', 'quinoa', 'banana'] }
+    ]
+  }[cycleState.phase] || [];
+}
+
+function getCycleIngredientHighlights(ingredientNames, cycleState) {
+  if (!cycleState || !Array.isArray(ingredientNames)) return [];
+
+  const normalized = ingredientNames.map(name => String(name || '').toLowerCase());
+  return getCyclePriorityRules(cycleState)
+    .filter(rule => normalized.some(name => rule.keywords.some(keyword => name.includes(keyword))))
+    .slice(0, 2)
+    .map(rule => ({
+      id: rule.id,
+      label: rule.label[S.language === 'es' ? 'es' : 'en'],
+      color: rule.color
+    }));
+}
+
+function getCycleMealHighlights(meal, cycleState) {
+  if (!meal?.ingredients) return [];
+  return getCycleIngredientHighlights(meal.ingredients.map(ing => ing.item), cycleState);
+}
+
+function renderCycleHighlightBadges(highlights) {
+  if (!highlights || !highlights.length) return '';
+
+  return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${highlights.map(highlight => `
+    <span class="badge-pill ${highlight.color}">${highlight.icon || '🌸'} ${highlight.label}</span>
+  `).join('')}</div>`;
+}
+
+function isBudgetFriendlyPrice(priceData) {
+  if (!priceData) return false;
+
+  const thresholds = {
+    'per kg': 4.5,
+    'per 500g': 1.8,
+    'per 400g': 1.6,
+    'per 250g': 1.2,
+    'per 200g': 1.0,
+    'per 150g': 0.8,
+    'per 100g': 0.7,
+    'per can': 0.8,
+    'each': 0.35,
+    'per egg': 0.2,
+    'per liter': 1.6,
+    'per 500ml': 1.1,
+    'per 400ml': 0.95,
+    'per 250ml': 0.75,
+    'per loaf': 1.0,
+    'per pack': 1.8,
+    'per bunch': 1.6,
+    'per jar': 2.2
+  };
+
+  return thresholds[priceData.unit] != null && priceData.price <= thresholds[priceData.unit];
+}
+
+function getCycleBudgetHighlight(itemName, cycleState) {
+  if (!cycleState) return null;
+  if (!getCycleIngredientHighlights([itemName], cycleState).length) return null;
+
+  const priceData = INGREDIENT_PRICES[itemName];
+  if (!isBudgetFriendlyPrice(priceData)) return null;
+
+  return {
+    id: 'budget',
+    label: S.language === 'es' ? 'Elección económica' : 'Budget pick',
+    color: 'pill-green',
+    icon: '€'
+  };
+}
+
+function getCyclePriorityRank(itemName, cycleState) {
+  const highlights = getCycleIngredientHighlights([itemName], cycleState);
+  if (!highlights.length) return Number.MAX_SAFE_INTEGER;
+  return getCyclePriorityRules(cycleState).findIndex(rule => rule.id === highlights[0].id);
+}
+
+function getCycleMealRecommendations(cycleState) {
+  if (!cycleState) return [];
+
+  const lang = S.language === 'es' ? 'es' : 'en';
+  const options = {
+    menstrual: [
+      { value: 'beef_lean', en: 'Lean Beef', es: 'Carne Magra', reasonEn: 'Iron support', reasonEs: 'Apoyo de hierro' },
+      { value: 'salmon', en: 'Salmon', es: 'Salmón', reasonEn: 'Omega-3 support', reasonEs: 'Apoyo de omega-3' },
+      { value: 'lentils', en: 'Lentils', es: 'Lentejas', reasonEn: 'Iron + folate', reasonEs: 'Hierro + folato' }
+    ],
+    follicular: [
+      { value: 'chicken_breast', en: 'Chicken Breast', es: 'Pechuga de Pollo', reasonEn: 'Lean protein', reasonEs: 'Proteína magra' },
+      { value: 'quinoa', en: 'Quinoa', es: 'Quinoa', reasonEn: 'Fuel + folate', reasonEs: 'Energía + folato' },
+      { value: 'eggs', en: 'Eggs', es: 'Huevos', reasonEn: 'Protein + choline', reasonEs: 'Proteína + colina' }
+    ],
+    ovulatory: [
+      { value: 'berries_mixed', en: 'Mixed Berries', es: 'Frutos Rojos', reasonEn: 'Antioxidants', reasonEs: 'Antioxidantes' },
+      { value: 'tuna', en: 'Tuna', es: 'Atún', reasonEn: 'Protein + zinc', reasonEs: 'Proteína + zinc' },
+      { value: 'pumpkin_seeds', en: 'Pumpkin Seeds', es: 'Semillas de Calabaza', reasonEn: 'Zinc support', reasonEs: 'Apoyo de zinc' }
+    ],
+    luteal: [
+      { value: 'oats_rolled', en: 'Rolled Oats', es: 'Avena', reasonEn: 'Steady carbs', reasonEs: 'Carbos estables' },
+      { value: 'spinach', en: 'Spinach', es: 'Espinaca', reasonEn: 'Magnesium support', reasonEs: 'Apoyo de magnesio' },
+      { value: 'yogurt_greek', en: 'Greek Yogurt', es: 'Yogur Griego', reasonEn: 'Calcium + protein', reasonEs: 'Calcio + proteína' }
+    ]
+  };
+
+  return (options[cycleState.phase] || []).map(item => ({
+    value: item.value,
+    name: item[lang],
+    reason: lang === 'es' ? item.reasonEs : item.reasonEn
+  }));
+}
+
+function getCyclePortionGuidance(cycleState) {
+  if (!cycleState) return null;
+
+  const guidance = {
+    menstrual: {
+      en: 'If appetite is lower, a small or medium portion is reasonable. Prioritize iron-rich foods over volume.',
+      es: 'Si el apetito es menor, una porción pequeña o mediana es razonable. Prioriza alimentos ricos en hierro sobre el volumen.'
+    },
+    follicular: {
+      en: 'Energy often feels steadier here. Medium portions usually pair well with lean protein and fiber.',
+      es: 'La energía suele sentirse más estable aquí. Las porciones medianas suelen funcionar bien con proteína magra y fibra.'
+    },
+    ovulatory: {
+      en: 'Keep portions balanced and protein-forward. This phase usually rewards lighter, nutrient-dense meals.',
+      es: 'Mantén las porciones equilibradas y con énfasis en proteína. Esta fase suele responder bien a comidas ligeras y densas en nutrientes.'
+    },
+    luteal: {
+      en: 'A medium or large portion can be appropriate if hunger is higher. Favor steady carbs and protein instead of grazing on sweets.',
+      es: 'Una porción mediana o grande puede ser adecuada si el hambre es mayor. Prioriza carbos estables y proteína en lugar de picar dulces.'
+    }
+  };
+
+  return guidance[cycleState.phase]?.[S.language === 'es' ? 'es' : 'en'] || null;
+}
+
+function renderCycleBanner(profile, targets, dateValue) {
+  if (!targets?.cycleState || !profile?.cycleMode?.preferences?.showPhaseBanner) return '';
+
+  const phase = targets.cycleState;
+  const content = getCyclePhaseContent(phase);
+  if (!content) return '';
+
+  return `
+    <div class="cycle-banner">
+      <div class="cycle-banner-head">
+        <div style="flex:1;min-width:0">
+          <span class="cycle-banner-chip" style="background:var(${phase.config.colorToken})">
+            <span>${phase.config.emoji}</span>
+            <span>${getCyclePhaseLabel(phase.phase)}</span>
+          </span>
+          <div class="cycle-banner-title">${T('cycleTodayTitle')}</div>
+          <div class="cycle-banner-copy">${content.copy}</div>
+        </div>
+        <button class="cycle-banner-detail-btn" onclick="openCycleDetailModal('${dateValue}')">${T('cycleDetailButton')}</button>
+      </div>
+      <div class="cycle-banner-metrics">
+        <div class="cycle-banner-stat">
+          <div class="cycle-banner-stat-label">${T('cycleDayOfCycle')}</div>
+          <div class="cycle-banner-stat-value">${phase.dayOfCycle} / ${profile.cycleMode.cycleLength}</div>
+        </div>
+        <div class="cycle-banner-stat">
+          <div class="cycle-banner-stat-label">${T('cycleAdjustmentLabel')}</div>
+          <div class="cycle-banner-stat-value">${targets.cycleAdjustment > 0 ? '+' : ''}${targets.cycleAdjustment} kcal</div>
+        </div>
+        <div class="cycle-banner-stat">
+          <div class="cycle-banner-stat-label">${T('cycleNutritionFocus')}</div>
+          <div class="cycle-banner-stat-value">${content.nutrition}</div>
+        </div>
+        <div class="cycle-banner-stat">
+          <div class="cycle-banner-stat-label">${T('cycleMovementFocus')}</div>
+          <div class="cycle-banner-stat-value">${content.movement}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function openCycleDetailModal(dateValue = S.viewDate) {
+  const targets = getActiveNutritionTargets(S.profile, dateValue);
+  if (!targets?.cycleState) return;
+
+  const phase = targets.cycleState;
+  const content = getCyclePhaseContent(phase);
+  document.getElementById('cycle-detail-title').textContent = `${phase.config.emoji} ${getCyclePhaseLabel(phase.phase)}`;
+  document.getElementById('cycle-detail-content').innerHTML = `
+    <div class="view-sub" style="margin-bottom:0">${content.copy}</div>
+    <div class="cycle-detail-grid">
+      <div class="cycle-detail-card">
+        <div class="cycle-detail-label">${T('cycleDayOfCycle')}</div>
+        <div class="cycle-detail-value">${phase.dayOfCycle} / ${S.profile.cycleMode.cycleLength}</div>
+      </div>
+      <div class="cycle-detail-card">
+        <div class="cycle-detail-label">${T('cycleDaysUntilPeriod')}</div>
+        <div class="cycle-detail-value">${phase.daysUntilPeriod}</div>
+      </div>
+      <div class="cycle-detail-card">
+        <div class="cycle-detail-label">${T('cycleAdjustmentLabel')}</div>
+        <div class="cycle-detail-value">${targets.cycleAdjustment > 0 ? '+' : ''}${targets.cycleAdjustment} kcal</div>
+      </div>
+      <div class="cycle-detail-card">
+        <div class="cycle-detail-label">${T('dailyCalories')}</div>
+        <div class="cycle-detail-value">${targets.calories} kcal</div>
+      </div>
+      <div class="cycle-detail-card">
+        <div class="cycle-detail-label">${T('cycleNutritionFocus')}</div>
+        <div class="cycle-detail-value">${content.nutrition}</div>
+      </div>
+      <div class="cycle-detail-card">
+        <div class="cycle-detail-label">${T('cycleMovementFocus')}</div>
+        <div class="cycle-detail-value">${content.movement}</div>
+      </div>
+    </div>
+    <div class="cycle-detail-card" style="margin-top:12px">
+      <div class="cycle-detail-label">${T('cycleScienceWhy')}</div>
+      <div class="cycle-detail-value">${content.science}</div>
+    </div>`;
+  document.getElementById('cycle-detail-modal').classList.add('open');
+}
+
+function closeCycleDetailModal() {
+  document.getElementById('cycle-detail-modal').classList.remove('open');
+}
+
 // ═══════════════════════════════════════════════════════════════
 // VALIDATION MODULE - INPUT VALIDATION & SANITIZATION
 // ═══════════════════════════════════════════════════════════════
@@ -773,6 +1313,15 @@ const VALID = {
     
     if (p.name !== undefined && typeof p.name !== 'string') throw new Error('Name must be a string');
     if (typeof p.bmr !== 'number' || p.bmr < 1000 || p.bmr > 3000) throw new Error('Invalid BMR');
+    if (p.cycleMode) {
+      if (typeof p.cycleMode.enabled !== 'boolean') throw new Error('Invalid cycle mode setting');
+      this.numeric(p.cycleMode.cycleLength, 21, 35, 'Cycle length');
+      this.numeric(p.cycleMode.periodLength, 2, 7, 'Period length');
+      if (p.cycleMode.lastPeriodStart) {
+        const cycleStart = new Date(`${p.cycleMode.lastPeriodStart}T00:00:00`);
+        if (Number.isNaN(cycleStart.getTime())) throw new Error('Invalid cycle start date');
+      }
+    }
     
     return true;
   },
@@ -2840,6 +3389,37 @@ const LANG = {
     editButton: '✏️ Edit',
     profileSection: 'Profile',
     planSection: 'Plan',
+    cycleMode: 'Cycle Mode',
+    cycleModeDesc: 'Optional diet support that adjusts targets by menstrual cycle phase.',
+    cycleModeStatus: 'Cycle Status',
+    cycleModeOn: 'Enabled',
+    cycleModeOff: 'Off',
+    cycleModeNeedsStart: 'Turn this on and add a start date to activate diet adjustments.',
+    cycleModeNeedsStartShort: 'Needs start date',
+    cycleModeUnavailableShort: 'Not available',
+    cycleModeMaleNote: 'Available when the profile gender is Female.',
+    cycleModeEnableLabel: 'Enable cycle-aware diet tracking',
+    cycleModeEnableDesc: 'Private and optional. Adjusts daily calories and prepares phase-based food guidance.',
+    lastPeriodStart: 'Last Period Started',
+    cycleLength: 'Cycle Length',
+    periodLength: 'Period Length',
+    cycleAdjustedCalories: "Today's Adjusted Calories",
+    cyclePrivateNote: 'Private, optional, and can be disabled anytime.',
+    cyclePhaseMenstrual: 'Menstrual',
+    cyclePhaseFollicular: 'Follicular',
+    cyclePhaseOvulatory: 'Ovulatory',
+    cyclePhaseLuteal: 'Luteal',
+    cycleTodayTitle: 'Today\'s Cycle Guidance',
+    cycleDetailButton: 'See Full Detail',
+    cycleDayOfCycle: 'Day of Cycle',
+    cycleDaysUntilPeriod: 'Days Until Next Period',
+    cycleAdjustmentLabel: 'Diet Adjustment',
+    cycleNutritionFocus: 'Diet Focus',
+    cycleMovementFocus: 'Training Focus',
+    cycleScienceWhy: 'Why It Changes',
+    cycleMealRecommendedTodayTitle: 'Recommended for Today',
+    cycleMealRecommendedTodayBody: 'Cycle mode is surfacing easy food picks for this phase.',
+    cycleUseSuggestion: 'Use This',
     favouritesSection: 'My Favourites',
     favouritesDesc: 'Manage meals you love — these are suggested more often',
     noFavourites: 'No favourite meals yet. Mark meals as ★ to add them.',
@@ -3272,6 +3852,37 @@ const LANG = {
     editButton: '✏️ Editar',
     profileSection: 'Perfil',
     planSection: 'Plan',
+    cycleMode: 'Modo de Ciclo',
+    cycleModeDesc: 'Soporte opcional para la dieta que ajusta objetivos según la fase del ciclo menstrual.',
+    cycleModeStatus: 'Estado del Ciclo',
+    cycleModeOn: 'Activado',
+    cycleModeOff: 'Apagado',
+    cycleModeNeedsStart: 'Activa esta opción y agrega una fecha de inicio para usar ajustes en la dieta.',
+    cycleModeNeedsStartShort: 'Falta fecha inicial',
+    cycleModeUnavailableShort: 'No disponible',
+    cycleModeMaleNote: 'Disponible cuando el género del perfil es Femenino.',
+    cycleModeEnableLabel: 'Activar seguimiento dietético según el ciclo',
+    cycleModeEnableDesc: 'Privado y opcional. Ajusta calorías diarias y prepara guía de alimentos por fase.',
+    lastPeriodStart: 'Inicio del Último Período',
+    cycleLength: 'Duración del Ciclo',
+    periodLength: 'Duración del Período',
+    cycleAdjustedCalories: 'Calorías Ajustadas de Hoy',
+    cyclePrivateNote: 'Privado, opcional y se puede desactivar en cualquier momento.',
+    cyclePhaseMenstrual: 'Menstrual',
+    cyclePhaseFollicular: 'Folicular',
+    cyclePhaseOvulatory: 'Ovulatoria',
+    cyclePhaseLuteal: 'Lútea',
+    cycleTodayTitle: 'Guía del Ciclo de Hoy',
+    cycleDetailButton: 'Ver Detalle Completo',
+    cycleDayOfCycle: 'Día del Ciclo',
+    cycleDaysUntilPeriod: 'Días Hasta el Próximo Período',
+    cycleAdjustmentLabel: 'Ajuste de la Dieta',
+    cycleNutritionFocus: 'Enfoque de Dieta',
+    cycleMovementFocus: 'Enfoque de Entrenamiento',
+    cycleScienceWhy: 'Por Qué Cambia',
+    cycleMealRecommendedTodayTitle: 'Recomendado para Hoy',
+    cycleMealRecommendedTodayBody: 'El modo ciclo muestra alimentos fáciles de priorizar en esta fase.',
+    cycleUseSuggestion: 'Usar Esto',
     favouritesSection: 'Mis Favoritos',
     favouritesDesc: 'Gestiona las comidas que te encantan — se sugieren más a menudo',
     noFavourites: 'Sin comidas favoritas aún. Marca comidas como ★ para añadirlas.',
@@ -3745,8 +4356,11 @@ async function submitSetup() {
       targetWeight: tgtW, goal: S.setupPicks.goal, activity: act,
       bmr, tdee, calories: cal, macros: mac,
       createdAt: new Date().toISOString(), favourites: [],
+      cycleMode: CYCLE.defaultState(),
       language: S.language || 'en'
     };
+
+    CYCLE.normalizeProfile(profile);
 
     // Validate before saving
     VALID.profile(profile);
@@ -3784,9 +4398,10 @@ async function submitSetup() {
 function updateHeader() {
   const p = S.profile;
   if (!p) return;
-  const goalLabels = {lose:'Weight Loss',build:'Muscle Building',definition:'Definition',maintenance:'Maintenance'};
+  const goalLabels = {lose:T('loseWeightFull'),build:T('buildMuscleFull'),definition:T('definitionFull'),maintenance:T('maintainFull')};
+  const targets = getActiveNutritionTargets(p, todayStr());
   document.getElementById('h-sub').textContent =
-    (p.name ? p.name + ' · ' : '') + goalLabels[p.goal] + ' · ' + p.calories + ' kcal/day';
+    (p.name ? p.name + ' · ' : '') + goalLabels[p.goal] + ' · ' + targets.calories + ' kcal/day';
 }
 
 function getLog(dateStr) {
@@ -4441,6 +5056,8 @@ function renderManualMealScreen() {
     case 3: // Screen 4: Food Classification - Now with 100+ foods!
       // Show template button if templates exist for this meal type
       const hasTemplates = (S.profile.mealTemplates || []).filter(t => t.mealType === _manualMealQuestionnaire.mealType).length > 0;
+      const activeTargets = getActiveNutritionTargets(S.profile);
+      const cycleRecommendations = getCycleMealRecommendations(activeTargets.cycleState);
       let templateBtn = '';
       if (hasTemplates && !_manualMealQuestionnaire.isFromTemplate) {
         templateBtn = `
@@ -4472,6 +5089,28 @@ function renderManualMealScreen() {
         ${templateBtn}
         <h2 style="color:var(--t1); margin-bottom:20px;">🍗 Select Your Main Food</h2>
         <p style="color:var(--t2); font-size:13px; margin-bottom:12px;">Choose from 100+ foods with accurate USDA data</p>
+        ${cycleRecommendations.length ? `
+          <div style="margin-bottom:16px; padding:14px; border:1px solid rgba(217,119,6,.25); border-radius:12px; background:linear-gradient(135deg, rgba(255,247,237,.92), rgba(254,243,199,.82));">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+              <div>
+                <div style="color:#92400e; font-weight:700; font-size:13px; letter-spacing:.04em; text-transform:uppercase;">${T('cycleMealRecommendedTodayTitle') || 'Recommended for today'}</div>
+                <div style="color:#9a3412; font-size:12px; margin-top:2px;">${getCyclePhaseLabel(activeTargets.cycleState.phase)}</div>
+              </div>
+              <div style="color:#b45309; font-size:11px; font-weight:600;">${T('cycleMealRecommendedTodayBody') || 'Cycle mode is surfacing easy food picks for this phase.'}</div>
+            </div>
+            <div style="display:grid; gap:8px;">
+              ${cycleRecommendations.map(item => `
+                <button onclick="updateManualMealQuestionnaire('foodType', '${item.value}')" style="display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; padding:12px 14px; border:1px solid ${_manualMealQuestionnaire.foodType === item.value ? 'rgba(146,64,14,.55)' : 'rgba(180,83,9,.18)'}; border-radius:10px; background:${_manualMealQuestionnaire.foodType === item.value ? 'rgba(251,191,36,.16)' : 'rgba(255,255,255,.75)'}; color:var(--t1); cursor:pointer; text-align:left; transition:all .2s;">
+                  <span>
+                    <span style="display:block; font-weight:700; font-size:14px;">${item.name}</span>
+                    <span style="display:block; color:var(--t2); font-size:12px; margin-top:3px;">${item.reason}</span>
+                  </span>
+                  <span style="color:#b45309; font-size:12px; font-weight:700;">${T('cycleUseSuggestion') || 'Use this'}</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
         <select id="q-foodType" style="width:100%; padding:12px; border:2px solid var(--b1); border-radius:8px; background:var(--sf); color:var(--t1); box-sizing:border-box; font-size:14px;">
           ${foodOptions}
         </select>
@@ -4615,8 +5254,16 @@ function renderManualMealScreen() {
       break;
       
     case 6: // Screen 7: Portion Size
+      const portionTargets = getActiveNutritionTargets(S.profile);
+      const portionGuidance = getCyclePortionGuidance(portionTargets.cycleState);
       html = `
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('portionSizeQ')}</h2>
+        ${portionGuidance ? `
+          <div style="margin-bottom:16px; padding:12px 14px; border-radius:10px; border:1px solid rgba(180,83,9,.18); background:linear-gradient(135deg, rgba(255,247,237,.9), rgba(254,243,199,.8)); color:#9a3412; font-size:12px; line-height:1.5;">
+            <div style="font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#b45309; margin-bottom:4px;">${T('cycleAdjustmentLabel')}</div>
+            <div>${portionGuidance}</div>
+          </div>
+        ` : ''}
         <div style="display:grid; gap:10px;">
           ${['small', 'medium', 'large', 'huge'].map(size => `
             <label style="display:flex; align-items:center; padding:14px; border:2px solid ${_manualMealQuestionnaire.portionSize === size ? 'var(--ac)' : 'var(--b1)'}; border-radius:8px; cursor:pointer; background:${_manualMealQuestionnaire.portionSize === size ? 'rgba(16,185,129,.12)' : 'transparent'}; transition:all .2s;">
@@ -5357,6 +6004,7 @@ function renderToday() {
   const dt  = S.viewDate;
   const log = getLog(dt);
   const day = PLAN.generateDay(dt, p.goal, p.favourites || []);
+  const activeTargets = getActiveNutritionTargets(p, dt);
 
   // Apply any swaps from log
   const slots = PLAN.mealSlots(day);
@@ -5379,8 +6027,8 @@ function renderToday() {
     fat: actualData.fat || 0
   };
 
-  const tgt = p.macros;
-  const tCal = p.calories;
+  const tgt = activeTargets.macros;
+  const tCal = activeTargets.calories;
 
   const isToday = dt === todayStr();
   const dLabel = isToday ? 'Today' : fmtDateFull(dt);
@@ -5407,6 +6055,8 @@ function renderToday() {
     </div>
     <button onclick="S.viewDate='${nextStr}';renderView()" style="background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:6px 12px;color:${isFuture?'var(--b2)':'var(--t2)'};font-size:14px" ${isFuture?'disabled':''}>›</button>
   </div>`;
+
+  html += renderCycleBanner(p, activeTargets, dt);
 
   // Macro ring
   const pPct  = Math.min(100, Math.round((consumed.protein / tgt.protein) * 100));
@@ -5483,6 +6133,7 @@ function renderToday() {
     const done = log.completed.includes(slot.key);
     const m = slot.meal;
     const isFav = (p.favourites||[]).includes(m.id);
+    const cycleHighlights = getCycleMealHighlights(m, activeTargets.cycleState);
     html += `
     <div class="meal-card ${done?'done':''}" id="mc-${slot.key}">
       <div class="meal-header" onclick="toggleMealDetail('${slot.key}')">
@@ -5491,6 +6142,7 @@ function renderToday() {
         </div>
         <div class="meal-info">
           <div class="meal-name" style="${done?'text-decoration:line-through;color:var(--t3)':''}"> ${getMealDisplayName(m.id) || m.name}</div>
+          ${renderCycleHighlightBadges(cycleHighlights)}
           <div class="meal-macros">
             <span class="meal-macro-item" style="color:#8B5CF6">●&thinsp;${m.protein}g P</span>
             <span class="meal-macro-item" style="color:#F59E0B">●&thinsp;${m.carbs}g C</span>
@@ -7585,16 +8237,23 @@ async function saveWeight() {
 
 function openSettingsModal() {
   const p = S.profile;
+  const cycleMode = p.cycleMode || CYCLE.defaultState();
   document.getElementById('es-name').value = p.name || '';
-  document.querySelectorAll('[data-field="gender"]').forEach(btn => btn.classList.remove('sel'));
-  document.querySelector(`[data-field="gender"][data-val="${p.gender}"]`).classList.add('sel');
+  document.querySelectorAll('#settings-modal [data-field="gender"]').forEach(btn => btn.classList.remove('sel'));
+  document.querySelector(`#settings-modal [data-field="gender"][data-val="${p.gender}"]`).classList.add('sel');
   document.getElementById('es-age').value = p.age;
   document.getElementById('es-height').value = p.height;
   document.getElementById('es-weight').value = p.weight;
   document.getElementById('es-target-weight').value = p.targetWeight;
-  document.querySelectorAll('[data-field="goal"]').forEach(btn => btn.classList.remove('sel'));
-  document.querySelector(`[data-field="goal"][data-val="${p.goal}"]`).classList.add('sel');
+  document.querySelectorAll('#settings-modal [data-field="goal"]').forEach(btn => btn.classList.remove('sel'));
+  document.querySelector(`#settings-modal [data-field="goal"][data-val="${p.goal}"]`).classList.add('sel');
   document.getElementById('es-activity').value = p.activity;
+  document.getElementById('es-cycle-enabled').checked = !!cycleMode.enabled;
+  document.getElementById('es-cycle-start').value = cycleMode.lastPeriodStart || '';
+  document.getElementById('es-cycle-length').value = String(cycleMode.cycleLength || 28);
+  document.getElementById('es-period-length').value = String(cycleMode.periodLength || 5);
+  refreshCycleSettingsCopy();
+  syncCycleSettingsAvailability();
   document.getElementById('settings-err').style.display = 'none';
   document.getElementById('settings-modal').classList.add('open');
 }
@@ -7604,8 +8263,49 @@ function closeSettingsModal() {
 }
 
 function esPick(field, elem) {
-  document.querySelectorAll(`[data-field="${field}"]`).forEach(e => e.classList.remove('sel'));
+  document.querySelectorAll(`#settings-modal [data-field="${field}"]`).forEach(e => e.classList.remove('sel'));
   elem.classList.add('sel');
+  if (field === 'gender') {
+    syncCycleSettingsAvailability();
+  }
+}
+
+function refreshCycleSettingsCopy() {
+  const labels = {
+    'es-cycle-title': T('cycleMode'),
+    'es-cycle-enabled-label': T('cycleModeEnableLabel'),
+    'es-cycle-enabled-copy': T('cycleModeEnableDesc'),
+    'es-cycle-date-label': T('lastPeriodStart'),
+    'es-cycle-length-label': T('cycleLength'),
+    'es-period-length-label': T('periodLength'),
+    'es-cycle-support': T('cycleModeNeedsStart'),
+    'es-cycle-unavailable': T('cycleModeMaleNote')
+  };
+
+  Object.entries(labels).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
+  });
+}
+
+function toggleCycleSettingsConfig() {
+  const enabled = document.getElementById('es-cycle-enabled');
+  const config = document.getElementById('es-cycle-config');
+  if (!enabled || !config) return;
+  config.style.display = enabled.checked && !enabled.disabled ? 'block' : 'none';
+}
+
+function syncCycleSettingsAvailability() {
+  const selectedGender = document.querySelector('#settings-modal [data-field="gender"].sel')?.getAttribute('data-val');
+  const cycleToggle = document.getElementById('es-cycle-enabled');
+  const unavailableNote = document.getElementById('es-cycle-unavailable');
+  if (!cycleToggle || !unavailableNote) return;
+
+  const available = selectedGender === 'female';
+  cycleToggle.disabled = !available;
+  if (!available) cycleToggle.checked = false;
+  unavailableNote.style.display = available ? 'none' : 'block';
+  toggleCycleSettingsConfig();
 }
 
 async function saveSettingsChanges() {
@@ -7615,13 +8315,17 @@ async function saveSettingsChanges() {
   try {
     // Parse inputs with validation
     const name = VALID.sanitizeString(document.getElementById('es-name').value);
-    const gender = document.querySelector('[data-field="gender"].sel').getAttribute('data-val');
+    const gender = document.querySelector('#settings-modal [data-field="gender"].sel').getAttribute('data-val');
     const age = VALID.numeric(document.getElementById('es-age').value, 16, 99, 'Age');
     const height = VALID.numeric(document.getElementById('es-height').value, 140, 220, 'Height (cm)');
     const weight = VALID.numeric(document.getElementById('es-weight').value, 40, 200, 'Current weight (kg)');
     const targetWeight = VALID.numeric(document.getElementById('es-target-weight').value, 40, 200, 'Target weight (kg)');
-    const goal = document.querySelector('[data-field="goal"].sel').getAttribute('data-val');
+    const goal = document.querySelector('#settings-modal [data-field="goal"].sel').getAttribute('data-val');
     const activity = document.getElementById('es-activity').value;
+    const cycleLength = VALID.numeric(document.getElementById('es-cycle-length').value, 21, 35, 'Cycle length');
+    const periodLength = VALID.numeric(document.getElementById('es-period-length').value, 2, 7, 'Period length');
+    const lastPeriodStart = document.getElementById('es-cycle-start').value || null;
+    const cycleEnabled = CYCLE.isAvailable({ gender }) && document.getElementById('es-cycle-enabled').checked;
     
     if (!gender || !['male', 'female'].includes(gender)) throw new Error('Invalid gender');
     if (!goal || !['lose', 'build', 'definition', 'maintenance'].includes(goal)) throw new Error('Invalid goal');
@@ -7639,8 +8343,17 @@ async function saveSettingsChanges() {
       name: name || S.profile.name,
       gender, age, height, weight, targetWeight, goal, activity,
       bmr, tdee, calories, macros,
+      cycleMode: {
+        ...(S.profile.cycleMode || CYCLE.defaultState()),
+        enabled: cycleEnabled,
+        cycleLength,
+        periodLength,
+        lastPeriodStart
+      },
       language: S.language || 'en'
     };
+
+    CYCLE.normalizeProfile(updatedProfile);
 
     // Validate complete profile before saving
     VALID.profile(updatedProfile);
@@ -7706,6 +8419,7 @@ function getMealForSlot(day, slotKey, goal) {
 function renderGrocery() {
   const p = S.profile;
   const dates = getGroceryDates();
+  const groceryCycleState = getActiveNutritionTargets(p, S.groceryMode === 'day' ? S.viewDate : todayStr()).cycleState;
   const storageKey = S.groceryMode === 'day' ? S.viewDate : 
                      S.groceryMode === 'week' ? dateStr(weekStart(new Date())) :
                      `month_${S.viewMonth.y}_${S.viewMonth.m}`;
@@ -7744,6 +8458,14 @@ function renderGrocery() {
 
   Object.values(agg).forEach(ing => {
     if (cats[ing.cat]) cats[ing.cat].items.push(ing);
+  });
+
+  Object.values(cats).forEach(cat => {
+    cat.items.sort((left, right) => {
+      const rankDiff = getCyclePriorityRank(left.item, groceryCycleState) - getCyclePriorityRank(right.item, groceryCycleState);
+      if (rankDiff !== 0) return rankDiff;
+      return left.displayName.localeCompare(right.displayName);
+    });
   });
 
   // Calculate costs by category
@@ -7859,10 +8581,16 @@ function renderGrocery() {
         const isChecked = !!checked[ing.key];
         const amt = Number.isInteger(ing.amount) ? ing.amount : parseFloat(ing.amount.toFixed(1));
         const cost = COST.getIngredientCost(ing.item, ing.amount, ing.unit);
+        const highlights = getCycleIngredientHighlights([ing.item], groceryCycleState);
+        const budgetHighlight = getCycleBudgetHighlight(ing.item, groceryCycleState);
+        const displayHighlights = budgetHighlight ? [...highlights, budgetHighlight] : highlights;
         html += `
         <div class="grocery-item ${isChecked?'checked':''}" onclick="toggleGrocery('${storageKey}','${ing.key}')">
           <div class="gi-check ${isChecked?'on':''}">✓</div>
-          <div class="gi-name">${ing.displayName || ing.item}</div>
+          <div>
+            <div class="gi-name">${ing.displayName || ing.item}</div>
+            ${renderCycleHighlightBadges(displayHighlights)}
+          </div>
           <div class="gi-quantity">${amt} ${ing.unit}</div>
           <div class="gi-price">€${cost.toFixed(2)}</div>
         </div>`;
@@ -7912,6 +8640,21 @@ async function clearGrocery(storageKey) {
 // ═══════════════════════════════════════════════════════════════
 function renderSettings() {
   const p = S.profile;
+  const activeTargets = getActiveNutritionTargets(p, todayStr());
+  const cycleMode = p.cycleMode || CYCLE.defaultState();
+  const cyclePhaseLabels = {
+    menstrual: T('cyclePhaseMenstrual'),
+    follicular: T('cyclePhaseFollicular'),
+    ovulatory: T('cyclePhaseOvulatory'),
+    luteal: T('cyclePhaseLuteal')
+  };
+  const cycleStatus = !CYCLE.isAvailable(p)
+    ? T('cycleModeUnavailableShort')
+    : !cycleMode.enabled
+      ? T('cycleModeOff')
+      : activeTargets.cycleState
+        ? `${T('cycleModeOn')} · ${cyclePhaseLabels[activeTargets.cycleState.phase]}`
+        : T('cycleModeNeedsStartShort');
   const goalLabels = {lose:T('loseWeightFull'),build:T('buildMuscleFull'),definition:T('definitionFull'),maintenance:T('maintainFull')};
   const actLabels  = {'1.2':T('sedentary'),'1.375':T('lightlyActive'),'1.55':T('moderatelyActive'),'1.725':T('veryActive'),'1.9':T('extremelyActive')};
 
@@ -7933,7 +8676,7 @@ function renderSettings() {
       <div class="settings-section-title">${T('profileSection')}</div>
       ${[
         {label:T('name'), val: p.name||'Not set'},
-        {label:T('gender'), val: p.gender.charAt(0).toUpperCase()+p.gender.slice(1)},
+        {label:T('gender'), val: T(p.gender)},
         {label:T('age'), val: p.age + ' ' + T('yearsOld')},
         {label:T('height'), val: p.height + ' cm'},
         {label:T('currentWeight'), val: p.weight + ' kg'},
@@ -7951,10 +8694,10 @@ function renderSettings() {
       ${[
         {label:T('goal'), val: goalLabels[p.goal]},
         {label:T('activityLevel'), val: actLabels[p.activity]},
-        {label:T('dailyCalories'), val: p.calories + ' kcal'},
-        {label:T('proteinTarget'), val: p.macros.protein + 'g'},
-        {label:T('carbsTarget'), val: p.macros.carbs + 'g'},
-        {label:T('fatTarget'), val: p.macros.fat + 'g'},
+        {label:T('dailyCalories'), val: activeTargets.calories + ' kcal' + (activeTargets.cycleAdjustment ? ` (${activeTargets.cycleAdjustment > 0 ? '+' : ''}${activeTargets.cycleAdjustment})` : '')},
+        {label:T('proteinTarget'), val: activeTargets.macros.protein + 'g'},
+        {label:T('carbsTarget'), val: activeTargets.macros.carbs + 'g'},
+        {label:T('fatTarget'), val: activeTargets.macros.fat + 'g'},
         {label:T('waterTarget'), val: CALC.waterTarget(p.weight) + 'L / ' + T('perDay')}
       ].map(r => `
         <div class="settings-row">
@@ -7962,6 +8705,22 @@ function renderSettings() {
           <span class="settings-val">${r.val}</span>
         </div>
       `).join('')}
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">🌸 ${T('cycleMode')}</div>
+      <div class="view-sub" style="margin-bottom:10px">${T('cycleModeDesc')}</div>
+      ${[
+        {label:T('cycleModeStatus'), val: cycleStatus},
+        {label:T('cycleAdjustedCalories'), val: activeTargets.calories + ' kcal' + (activeTargets.cycleAdjustment ? ` (${activeTargets.cycleAdjustment > 0 ? '+' : ''}${activeTargets.cycleAdjustment})` : '')},
+        {label:T('lastPeriodStart'), val: cycleMode.lastPeriodStart ? fmtDate(cycleMode.lastPeriodStart) : 'Not set'}
+      ].map(r => `
+        <div class="settings-row">
+          <span class="settings-label">${r.label}</span>
+          <span class="settings-val">${r.val}</span>
+        </div>
+      `).join('')}
+      <div class="view-sub" style="margin:10px 0 0">${CYCLE.isAvailable(p) ? T('cyclePrivateNote') : T('cycleModeMaleNote')}</div>
     </div>
 
     <div class="settings-section">
@@ -8259,7 +9018,7 @@ async function init() {
   // Close modals on escape
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-      closeSwap(); closeWeightModal();
+      closeSwap(); closeWeightModal(); closeCycleDetailModal();
     }
   });
 
@@ -8271,6 +9030,9 @@ async function init() {
       updateSetupLabels();
       return;
     }
+
+    const cycleSnapshot = JSON.stringify(profile.cycleMode || null);
+    CYCLE.normalizeProfile(profile);
     
     // VALIDATION: Verify profile data is not corrupted or malicious
     try {
@@ -8278,6 +9040,10 @@ async function init() {
     } catch(validationErr) {
       console.error('Profile validation failed - data is corrupted:', validationErr);
       throw new Error('Profile data is corrupted or invalid. Please reset and recreate your profile.');
+    }
+
+    if (JSON.stringify(profile.cycleMode || null) !== cycleSnapshot) {
+      DB.set('profile', profile).catch(err => console.error('Failed to persist cycle mode defaults:', err));
     }
     
     S.profile = profile;

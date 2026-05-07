@@ -1963,9 +1963,9 @@ TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
 
 # 🌸 SECTION VIII: CYCLE MODE IMPLEMENTATION (IN PROGRESS)
 
-**Status:** Ready for implementation - fully optional feature  
+**Status:** PHASE 1 foundation complete; PHASE 2 UI and expanded PHASE 3 diet + cost hooks implemented  
 **Started:** May 6, 2026  
-**Current Phase:** 1 of 5 (Foundation)  
+**Current Phase:** 3 of 5 (Diet Integration)  
 **Git Tag:** `clean-state/pre-cycle-mode` (backup checkpoint)
 
 ## Key Requirements (Verified)
@@ -1984,42 +1984,53 @@ TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
 **Target Completion:** May 13, 2026
 
 **Deliverables:**
-- [ ] Data structure: `S.profile.cycleMode` with all fields
-- [ ] Constants: `CYCLE_PHASE_CONFIG` (phases, BMR modifiers, micronutrients)
-- [ ] Functions: `getCurrentCyclePhase()`, `getCycleKcalAdjustment()`, `getCycleBMRMultiplier()`
-- [ ] Settings UI: Toggle + date picker + cycle length selector
-- [ ] CSS tokens: `--phase-menstrual`, `--phase-follicular`, `--phase-ovulatory`, `--phase-luteal`
+- [x] Data structure: `S.profile.cycleMode` with all fields
+- [x] Constants: `CYCLE` phase map + BMR adjustment table
+- [x] Functions: `CYCLE.getCurrentPhase()`, `CYCLE.getCalorieAdjustment()`, `getActiveNutritionTargets()`
+- [x] Settings UI: Toggle + date picker + cycle length selector
+- [x] CSS tokens: `--phase-menstrual`, `--phase-follicular`, `--phase-ovulatory`, `--phase-luteal`
 - [ ] Testing: Phase calculation for 21-day, 28-day, 35-day cycles
 
 **Integration Points:**
 - Data structures save to `S.profile`, persist via `DB.set('profile', S.profile)`
 - Calculation functions pure (testable, no side effects)
 - Feature gate: `if (S.profile.cycleMode?.enabled)` checks prevent baseline impact
+- Daily targets now flow through `getActiveNutritionTargets()` in header, TODAY view, and Settings
+- Male profiles automatically disable cycle mode; settings toggle is only usable when gender is Female
+- Existing profiles are auto-normalized at boot so rollout is backward-compatible
+- Settings modal selectors were scoped to the modal to avoid collisions with hidden setup fields
 
 **Commits:**
-- [ ] feat: Add cycle mode foundation (data + engine + settings)
+- [ ] Pending local commit after PHASE 1 validation completes
 
 **Testing Checklist:**
+- [x] Static validation: `diet-tracker.html` reports no errors
+- [ ] Phase calculation correct for 21-day cycle
 - [ ] Phase calculation correct for 28-day cycle
+- [ ] Phase calculation correct for 35-day cycle
 - [ ] BMR modifiers match Solomon et al. 1982 data
 - [ ] Date math correct across month boundaries
 - [ ] Settings persist and load correctly
 - [ ] Disable still works (feature gate)
 
+**Validation Notes (May 6):**
+- Browser file-open sanity check is currently blocked by missing local `config.js` / Supabase env injection in `file://` mode; this is an environment issue, not a syntax issue in the cycle feature.
+- Next validation step: run against the normal configured app environment and verify female opt-in flow, male auto-disable behavior, and target recalculation.
+
 ---
 
-### PHASE 2: UI Integration (Week 2-3) [PENDING]
+### PHASE 2: UI Integration (Week 2-3) [IN PROGRESS]
 
 **Objective:** TODAY tab banner + phase details + kcal integration  
 **Time:** 6-8 hours  
 **Target Completion:** May 20, 2026
 
 **Deliverables:**
-- [ ] TODAY tab phase banner (emoji, day counter, nutrition tip)
-- [ ] Phase detail modal (full description, science explanation, recommendations)
-- [ ] Kcal adjustment flow: `dailyTargetKcal += getCycleKcalAdjustment()`
+- [x] TODAY tab phase banner (emoji, day counter, nutrition tip)
+- [x] Phase detail modal (full description, science explanation, recommendations)
+- [x] Kcal adjustment flow: cycle-aware targets displayed in header, TODAY, and Settings
 - [ ] Mobile responsive design
-- [ ] Bilingual support (EN/ES)
+- [x] Bilingual support (EN/ES)
 
 **Integration Points:**
 - Banner shows only if cycleMode.enabled
@@ -2027,28 +2038,45 @@ TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
 - Kcal adjustment affects macro target rings
 - WEEK/MONTH view shows phase color bands (visual context)
 
+**Validation Notes (May 6):**
+- Static validation clean: `diet-tracker.html` reports no errors after banner/modal integration.
+- Responsive layout rules were added for the cycle banner and detail grid, but live mobile verification is still pending.
+- Runtime browser validation remains blocked in `file://` mode by missing local Supabase env injection.
+
 **Success Metric:** User sees cycle info daily, kcal targets adjust automatically
 
 ---
 
-### PHASE 3: Diet Integration (Week 3-4) [PENDING]
+### PHASE 3: Diet Integration (Week 3-4) [IN PROGRESS]
 
 **Objective:** Micronutrient highlighting, shopping list prioritization, meal suggestions  
 **Time:** 7-9 hours  
 **Target Completion:** May 27, 2026
 
 **Deliverables:**
-- [ ] Micronutrient badges on meal cards (magnesium icon during luteal, iron during menstrual, etc.)
-- [ ] Shopping list phase-aware filtering (prioritize phase-appropriate items)
-- [ ] Manual meal logger "Recommended for today" section with phase-optimal foods
-- [ ] Portion sizing adjusts by phase (luteal: allow +1 size without warning)
-- [ ] Cost analysis phase-aware (highlight affordable magnesium sources during luteal)
+- [x] Micronutrient badges on meal cards (magnesium icon during luteal, iron during menstrual, etc.)
+- [x] Shopping list phase-aware filtering (prioritize phase-appropriate items)
+- [x] Manual meal logger "Recommended for today" section with phase-optimal foods
+- [x] Portion guidance note by phase in the manual meal flow
+- [ ] Portion sizing auto-adjust by phase (luteal: allow +1 size without warning)
+- [x] Cost analysis phase-aware (highlight affordable phase-priority grocery items)
 
 **Integration Points:**
 - Meal database tagged with micronutrients
 - Shopping list respects phase priorities in sort order
+- Shopping list also flags lower-cost phase-priority items using existing ingredient price data
 - Add meal questionnaire shows phase-specific foods in section 2
+- Add meal questionnaire portion-size step surfaces phase-aware appetite guidance without changing macro math
 - Daily meal plan reflects phase needs
+
+**Validation Notes (May 6):**
+- Static validation clean after meal-card badge and grocery sorting changes.
+- Current implementation uses ingredient-name heuristics to surface phase-priority nutrients without a risky meal-database migration.
+- Static validation remained clean after adding manual meal recommendations and portion guidance to the questionnaire flow.
+- Manual meal guidance is advisory only for now; it does not silently alter kcal/macros, which keeps estimation behavior predictable.
+- Grocery cost analysis now surfaces budget-friendly phase-priority ingredients with unit-price thresholds rather than introducing a new pricing model.
+- Runtime sanity check in local `file://` mode still stops at the existing missing `config.js` / `/api/env` Supabase injection boundary; no new cycle-specific runtime error surfaced before app initialization.
+- Next refinement: move from heuristic matching to explicit nutrient metadata if broader meal coverage is needed.
 
 **Success Metric:** User's daily nutrition plan adapts to cycle phase automatically
 
@@ -2134,9 +2162,14 @@ TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
 **Week 1 (May 6-12):**
 - [x] Clean state checkpoint created
 - [x] Implementation plan created
-- [ ] PHASE 1 data structures
-- [ ] PHASE 1 calculation engine
-- [ ] PHASE 1 settings UI
+- [x] PHASE 1 data structures
+- [x] PHASE 1 calculation engine
+- [x] PHASE 1 settings UI
+- [x] PHASE 2 TODAY banner
+- [x] PHASE 2 detail modal + bilingual guidance
+- [x] PHASE 3 meal badges + grocery prioritization
+- [x] PHASE 3 manual meal recommendations + portion guidance
+- [x] PHASE 3 grocery budget-friendly cycle badges
 
 **Week 2 (May 13-19):**
 - [ ] PHASE 1 testing & validation
@@ -2146,6 +2179,8 @@ TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
 **Week 3 (May 20-26):**
 - [ ] PHASE 2 completion
 - [ ] PHASE 3 diet integration
+- [x] Manual meal questionnaire guidance
+- [x] Grocery budget cues
 - [ ] Micronutrient tagging
 
 **Week 4 (May 27 - June 2):**
@@ -2170,6 +2205,34 @@ TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
 3. Respectful of all users (opt-in, can disable)
 4. Tracked in MPDP.md (transparency)
 
+**May 6, 2026:** PHASE 1 implementation added:
+1. Optional cycle data model on `S.profile`
+2. Pure cycle-phase and calorie-adjustment helpers
+3. Settings toggle with female-profile gate
+4. Cycle-aware calorie/macro display in header, TODAY, and Settings
+5. Backward-compatible boot normalization for existing profiles
+
+**May 6, 2026:** PHASE 2 UI implementation added:
+1. TODAY cycle banner with phase-specific diet and training focus
+2. Detail modal explaining the current phase in practical nutrition terms
+3. Bilingual phase guidance content (EN/ES)
+4. Responsive banner/detail layout for smaller screens
+
+**May 6, 2026:** PHASE 3 first diet integration slice added:
+1. Meal cards now highlight phase-priority nutrients from existing ingredients
+2. Grocery items sort toward current-phase priorities first
+3. Ingredient matching uses conservative heuristics so rollout stays low-risk
+
+**May 6, 2026:** PHASE 3 manual meal integration expanded:
+1. Manual meal main-food selection now surfaces phase-specific recommended foods
+2. Portion-size step now shows phase-aware appetite guidance
+3. Guidance remains advisory, preserving the existing macro estimation model
+
+**May 6, 2026:** PHASE 3 grocery cost cues added:
+1. Grocery items now flag budget-friendly phase-priority ingredients
+2. Cost cues reuse the existing ingredient price table and unit thresholds
+3. This keeps the rollout low-risk while making cycle guidance more practical for constrained budgets
+
 ---
 
 ## Document Consolidation Summary
@@ -2188,5 +2251,5 @@ TOTAL SCORE: 8.5/10 ← PRIORITIZE FIRST
 ---
 
 **Last Updated:** May 6, 2026  
-**Status:** Cycle mode implementation plan ready - PHASE 1 about to start  
-**Next Review:** Upon completion of PHASE 1 (May 13)
+**Status:** PHASE 3 manual meal and grocery cost-aware guidance implemented; configured-environment runtime/mobile validation still pending  
+**Next Review:** After runtime validation or remaining portion auto-adjust refinement

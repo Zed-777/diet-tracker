@@ -55,11 +55,12 @@ The app is actively used and cannot tolerate regression, data loss, broken UI fl
 - [x] Move runtime `INGREDIENT_PRICES` into a shared source of truth used by the app
 - [x] Move `MEALS` into a data module
 - [x] Move `MEAL_TRANSLATIONS` into a data module
-- [ ] Move `LANG` dictionary content into a data module
+- [x] Move `LANG` dictionary content into a data module
 
 Phase 1 note:
 
 - The legacy root `INGREDIENT_PRICES.js` file remains in the repo for now and is not wired into production. Cleanup of that legacy file should happen only after the rest of the static-data extraction is complete.
+- Phase 1 static-data extraction is now complete. Local parity validation after the `LANG` move confirmed matching translation key lookups and visible navigation labels versus production.
 
 ### Phase 2 Details: Extract Pure Logic
 
@@ -69,6 +70,10 @@ Phase 1 note:
 - [ ] Move `PLAN` into a domain module
 - [ ] Move date and formatting helpers into utility modules
 - [x] Move `COST` helpers into a domain module
+
+Phase 2 next target:
+
+- Start with `CALC` as the next smallest high-value pure-logic extraction.
 
 ### Phase 3 Details: Extract Services And App Shell
 

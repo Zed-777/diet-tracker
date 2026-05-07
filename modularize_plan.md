@@ -68,7 +68,7 @@ Phase 1 note:
 - [ ] Move `VALID` into a domain module
 - [ ] Move `PLAN` into a domain module
 - [ ] Move date and formatting helpers into utility modules
-- [ ] Move `COST` helpers into a domain module
+- [x] Move `COST` helpers into a domain module
 
 ### Phase 3 Details: Extract Services And App Shell
 
@@ -446,8 +446,9 @@ Run these checks against the preview deployment for every extraction PR.
 - Discovered that the branch preview URL does not currently receive `/api/env` injection, so preview validation is blocked until preview environment injection is configured.
 - Found and fixed a fallback loader bug where the `config.js` `document.write()` path used an over-escaped closing script tag and swallowed the main app script whenever the fallback path was exercised.
 - Validated the branch locally over HTTP with a temporary untracked `config.js`, confirmed the app booted successfully, and verified grocery cost output matched production for the same profile and week.
+- Extracted the `COST` helper into `src/domain/cost.js` and updated `diet-tracker.html` to bind against `window.COST`.
+- Repeated the local HTTP validation path and confirmed the grocery cost output still matched production after the `COST` extraction.
 
 ## Immediate Next Safe Step
 
-The next safe implementation step is to checkpoint the fallback fix and local validation result, then proceed to the next smallest static-data move only with the same local HTTP validation path or after preview env injection is configured.
-
+The next safe implementation step is to checkpoint the `COST` extraction, then continue with the next smallest data move only with the same local HTTP validation path or after preview env injection is configured.

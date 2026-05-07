@@ -441,7 +441,9 @@ Run these checks against the preview deployment for every extraction PR.
 - Checkpointed the plan files in branch commit `095669c` before touching runtime code.
 - Extracted the live ingredient price table to `src/data/ingredient-prices.js` and updated `diet-tracker.html` to load that file before the main app script.
 - Validated the touched files with focused error checks immediately after the extraction edit.
+- Committed the first runtime extraction as `cb3df13` (`refactor: extract ingredient pricing data`).
+- Pushed `refactor/modularize-phase1a` to origin so the rollback and continuation point is backed up remotely.
 
 ## Immediate Next Safe Step
 
-The next safe implementation step is a rollback checkpoint commit for the ingredient price extraction, followed by the next smallest static-data move only if preview validation is available.
+The next safe implementation step is preview validation of Phase 1A, followed by the next smallest static-data move only after that checkpoint is confirmed clean.

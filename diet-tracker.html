@@ -652,12 +652,12 @@ create policy "allow all" on diet_data
 <div id="toast"></div>
 
 <script src="/api/env"></script>
+<script src="src/data/ingredient-prices.js"></script>
 <script>
 if (!window.__ENV?.SUPABASE_URL || !window.__ENV?.SUPABASE_KEY) {
-  document.write('<script src="config.js"><\\/script>');
+  document.write('<script src="config.js"><\/script>');
 }
 </script>
-<script src="src/data/ingredient-prices.js"></script>
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════════════

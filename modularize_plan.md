@@ -443,7 +443,11 @@ Run these checks against the preview deployment for every extraction PR.
 - Validated the touched files with focused error checks immediately after the extraction edit.
 - Committed the first runtime extraction as `cb3df13` (`refactor: extract ingredient pricing data`).
 - Pushed `refactor/modularize-phase1a` to origin so the rollback and continuation point is backed up remotely.
+- Discovered that the branch preview URL does not currently receive `/api/env` injection, so preview validation is blocked until preview environment injection is configured.
+- Found and fixed a fallback loader bug where the `config.js` `document.write()` path used an over-escaped closing script tag and swallowed the main app script whenever the fallback path was exercised.
+- Validated the branch locally over HTTP with a temporary untracked `config.js`, confirmed the app booted successfully, and verified grocery cost output matched production for the same profile and week.
 
 ## Immediate Next Safe Step
 
-The next safe implementation step is preview validation of Phase 1A, followed by the next smallest static-data move only after that checkpoint is confirmed clean.
+The next safe implementation step is to checkpoint the fallback fix and local validation result, then proceed to the next smallest static-data move only with the same local HTTP validation path or after preview env injection is configured.
+

@@ -652,7 +652,11 @@ create policy "allow all" on diet_data
 <div id="toast"></div>
 
 <script src="/api/env"></script>
-<script src="config.js"></script>
+<script>
+if (!window.__ENV?.SUPABASE_URL || !window.__ENV?.SUPABASE_KEY) {
+  document.write('<script src="config.js"><\\/script>');
+}
+</script>
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════════════
@@ -3498,6 +3502,7 @@ const LANG = {
     manualMealQuest: 'What did you eat?',
     mealNameLabel: 'Meal name (optional)',
     mealNamePlaceholder: 'e.g., Grilled Chicken Salad',
+    selectMealType: 'What type of meal?',
     mealTypeLabel: 'Which meal is this?',
     breakfast: 'Breakfast',
     morningSnack: 'Morning Snack',
@@ -3961,6 +3966,7 @@ const LANG = {
     manualMealQuest: '¿Qué comiste?',
     mealNameLabel: 'Nombre de la comida (opcional)',
     mealNamePlaceholder: 'p. ej., Ensalada de Pollo a la Parrilla',
+    selectMealType: '¿Qué tipo de comida es?',
     mealTypeLabel: '¿Cuál comida es esta?',
     breakfast: 'Desayuno',
     morningSnack: 'Refrigerio Matutino',

@@ -747,14 +747,12 @@ const OFFLINE = {
       operation,
       retries: 0
     });
-    console.log(`Queued operation (${_operationQueue.length} pending)`);
   },
   
   // Retry all queued operations
   async retryQueuedOperations() {
     if (_operationQueue.length === 0) return;
     
-    console.log(`Retrying ${_operationQueue.length} queued operations`);
     const queue = [..._operationQueue];
     _operationQueue = [];
     
@@ -2892,7 +2890,6 @@ const MEAL_TRANSLATIONS = {
 
 function getMealInSpanish(mealId) {
   const meal = Object.values(MEALS).flat().find(m => m.id === mealId);
-  console.log('🌮 getMealInSpanish called for:', mealId, '| Found meal:', meal?.name || 'NOT FOUND');
   if (!meal) return null;
   
   // Translation dictionary for units
@@ -4490,7 +4487,6 @@ function estimateMealMacros(questionnaire) {
   
   // Validate required fields
   if (!foodType) {
-    console.warn('No food type selected');
     return { kcal: 0, protein: 0, carbs: 0, fat: 0, confidence: 0.3 };
   }
   

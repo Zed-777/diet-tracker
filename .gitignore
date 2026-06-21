@@ -12,6 +12,24 @@ node_modules/
 # VS Code settings
 .vscode/
 
-# Local runtime config (contains secrets)
+# Local runtime config (contains secrets - NEVER commit)
+# But DO track config.example.js (template with placeholders, no real secrets)
+!config.example.js
 config.js
 config.local.js
+config.*.js
+
+# Environment files
+*.env
+*.env.local
+*.env.*.local
+
+# Backups
+*.backup
+*.bak
+*.swp
+*.swo
+*~
+
+# IDE caches
+.idea/

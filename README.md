@@ -1,6 +1,6 @@
 # 🍽️ Diet Tracker
 
-A production-ready meal tracking application with personalized nutrition planning, progress analytics, and offline support.
+A stable meal tracking application with personalized nutrition planning, progress analytics, and offline support.
 
 ## ✨ Features
 
@@ -13,7 +13,7 @@ A production-ready meal tracking application with personalized nutrition plannin
 - **Progress Analytics** — Weight trends, adherence stats, streaks
 - **Offline Support** — Works without internet, syncs when online
 - **3 Themes** — Dark, light, and pink modes
-- **Bilingual** — English and Spanish support (100% accurate translations)
+- **Bilingual** — Complete English and Spanish translations
 - **Error Handling** — Comprehensive error boundaries and validation
 - **Mobile Optimized** — Responsive design for all devices
 

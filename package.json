@@ -1,7 +1,7 @@
 {
   "name": "diet-tracker",
   "version": "1.0.0",
-  "description": "Production-ready meal tracking application with Supabase backend",
+  "description": "Stable meal tracking application with Supabase backend",
   "main": "diet-tracker.html",
   "type": "module",
   "scripts": {

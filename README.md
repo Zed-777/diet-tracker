@@ -45,12 +45,17 @@ CREATE POLICY "allow all" ON diet_data
 
 ### 2. Configure Cloudflare Environment Variables
 
-In Cloudflare Pages → Settings → Environment variables, add:
+In your Cloudflare Pages project → Settings → Environment variables, add:
 
 ```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your-anon-public-key
+SUPABASE_URL=https://[your-project-ref].supabase.co
+SUPABASE_KEY=[your-anon-public-key]
 ```
+
+**Where to find these:**
+- Go to your Supabase project → Settings → API Keys
+- Copy the Project URL and anon public key
+- Paste into Cloudflare environment variables
 
 ### 3. Deploy to Cloudflare Pages
 
@@ -59,16 +64,16 @@ npm install -D wrangler
 wrangler publish
 ```
 
-Or connect your GitHub repo to Cloudflare Pages for auto-deploy.
+Or connect your GitHub repo to Cloudflare Pages for automatic deployment on every push.
 
 ### 4. Verify Setup
 
-Visit your Cloudflare Pages URL. The app should:
+Once deployed, visit your Cloudflare Pages deployment URL. The app should:
 
 - Load the Diet Tracker UI
-- Create your profile
-- Save meals to Supabase
-- Work offline
+- Allow profile creation
+- Save meals to your Supabase database
+- Work offline with sync support
 
 ---
 
@@ -247,7 +252,7 @@ Users can export their data as JSON from Settings view. Useful for:
 
 ---
 
-**Built with ❤️ — Production Ready** 🚀
+**Built with ❤️ — Stable & Maintained**
 
 ### Persistence
 

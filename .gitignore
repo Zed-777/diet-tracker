@@ -1,0 +1,35 @@
+# Ignore common editor and OS files
+.DS_Store
+Thumbs.db
+*.log
+
+# Node modules if any accidentally added
+node_modules/
+
+# Netlify build output
+.netlify/
+
+# VS Code settings
+.vscode/
+
+# Local runtime config (contains secrets - NEVER commit)
+# But DO track config.example.js (template with placeholders, no real secrets)
+!config.example.js
+config.js
+config.local.js
+config.*.js
+
+# Environment files
+*.env
+*.env.local
+*.env.*.local
+
+# Backups
+*.backup
+*.bak
+*.swp
+*.swo
+*~
+
+# IDE caches
+.idea/

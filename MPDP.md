@@ -7,9 +7,11 @@
 ## 📋 Executive Summary
 
 **Current Version:** 4.3  
-**Last Updated:** May 3, 2026  
-**Status:** Production (Cloudflare Pages)  
+**Last Updated:** July 5, 2026  
+**Status:** MVP in Active Development  
 **Region:** Castellón supermarket pricing (Mercadona/Consum/Carrefour)  
+
+**Version Control Update:** The current repository state represents the MVP baseline for Diet Tracker. Core functionality is in place, but the project remains in active development and future commits will continue to refine features, validation, and user experience.
 
 ### Active Development Focus
 
@@ -1280,24 +1282,28 @@ Cost = €6.50 × (150 ÷ 1000) = €0.98
 ### The 4 Cycle Phases
 
 #### Phase 1: Menstrual (Days 1-5)
+
 - **Hormones:** Estrogen/Progesterone at baseline
 - **Metabolism:** Standard RMR
 - **Recommendations:** Higher iron, light exercise, restorative mindfulness
 - **Mood:** Naturally lower energy, introspection appropriate
 
 #### Phase 2: Follicular (Days 6-12)
+
 - **Hormones:** Rising estrogen, improving insulin sensitivity
 - **Metabolism:** +2% RMR
 - **Recommendations:** Maintain standard intake, strength training optimal
 - **Mood:** Increasing confidence, verbal ability, energy
 
 #### Phase 3: Ovulatory (Days 13-15)
+
 - **Hormones:** Estrogen/testosterone PEAK, highest insulin sensitivity
 - **Metabolism:** +4-5% RMR
 - **Recommendations:** Peak athletic performance window, test PRs
 - **Mood:** Peak confidence, social engagement, physical capability
 
 #### Phase 4: Luteal (Days 16-28)
+
 - **Hormones:** Progesterone rising, both hormones drop late luteal
 - **Metabolism:** +8-10% RMR (progesterone thermogenic)
 - **Recommendations:** +175 kcal/day, magnesium + B6 priority, moderate exercise
@@ -1320,7 +1326,7 @@ S.profile.cycleMode = {
 
 ### Nutrition Adaptations Table
 
-| Nutrient | Menstrual | Follicular | Ovulatory | Luteal | 
+| Nutrient | Menstrual | Follicular | Ovulatory | Luteal |
 |---|---|---|---|---|
 | **Iron** | ★★★ 27mg | ★ 18mg | ★ 18mg | ★ 18mg |
 | **Magnesium** | ★★ | ★ 310mg | ★ 310mg | ★★★ 360mg |
@@ -1436,6 +1442,7 @@ A detailed in-depth review of all Spanish translations throughout the Diet Track
 ## All Planned Features by Phase
 
 ### 🟢 PHASE 0: Core MVP (COMPLETED)
+
 - ✅ 5 meal slots/day with planning
 - ✅ Macro tracking (P/C/F/Water)
 - ✅ Cost analysis (Castellón prices)
@@ -1444,6 +1451,7 @@ A detailed in-depth review of all Spanish translations throughout the Diet Track
 - ✅ Bilingual (EN/ES)
 
 ### 🟡 PHASE 1: Mind Enhancement (80% COMPLETE)
+
 - ✅ Breathing meditation
 - ✅ Body Love acupressure (5 points)
 - ✅ Body Scan MBSR (7 regions)
@@ -1454,6 +1462,7 @@ A detailed in-depth review of all Spanish translations throughout the Diet Track
 - ⏳ Streaks & gamification
 
 ### 🔵 PHASE 2: Real-World Tracking (70% COMPLETE)
+
 - ✅ Manual meal logger
 - ✅ Questionnaire UI (9 screens)
 - ✅ Macro estimation engine
@@ -1463,6 +1472,7 @@ A detailed in-depth review of all Spanish translations throughout the Diet Track
 - ⏳ Variance reporting
 
 ### 🟣 PHASE 3: Cycle Mode (PENDING APPROVAL)
+
 - ⏳ Cycle tracking settings
 - ⏳ Phase calculation engine
 - ⏳ Symptom logging
@@ -1472,6 +1482,7 @@ A detailed in-depth review of all Spanish translations throughout the Diet Track
 - ⏳ Cycle analytics
 
 ### 🟠 PHASE 4: Advanced Analytics (FUTURE)
+
 - ⏳ Trends dashboard
 - ⏳ Goal tracking system
 - ⏳ Achievement badges
@@ -1479,6 +1490,7 @@ A detailed in-depth review of all Spanish translations throughout the Diet Track
 - ⏳ Data correlations
 
 ### ⚫ PHASE 5: Social & Community (LONG-TERM)
+
 - ⏳ Share progress
 - ⏳ Group challenges
 - ⏳ Leaderboards

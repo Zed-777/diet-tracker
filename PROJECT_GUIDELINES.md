@@ -15,11 +15,13 @@
 ## Core Architecture
 
 ### Single-File SPA
+
 - **Main file:** `diet-tracker.html` (~4500 lines)
 - **Structure:** HTML + CSS + Vanilla JavaScript in one file
 - **No build step:** Runs directly in browser
 
 ### Modules
+
 - `DB` — Supabase REST wrapper (CRUD operations)
 - `CALC` — Nutritional calculations (BMR, TDEE, macros)
 - `MEALS` — Recipe database (42+ meals, 5 categories)
@@ -29,6 +31,7 @@
 - `COST` — Meal and daily cost calculations
 
 ### Views (8 Screens)
+
 - **Today** — Daily meal logging and summary
 - **Meals** — Browse and select meals
 - **Grocery** — Generate shopping lists
@@ -43,6 +46,7 @@
 ## Development Workflow
 
 ### Setup
+
 ```bash
 # 1. Clone repo
 git clone https://github.com/Zed-777/diet-tracker.git
@@ -58,12 +62,14 @@ npx http-server . -p 8000
 ```
 
 ### Making Changes
+
 1. Edit `diet-tracker.html` (or module files in `src/`)
 2. Refresh browser
 3. Test locally (all views, offline mode, bilingual)
 4. Commit and push
 
 ### Deployment
+
 - Push to `main` → Cloudflare auto-deploys
 - Environment variables managed in Cloudflare dashboard
 - Zero downtime deployments
@@ -73,6 +79,7 @@ npx http-server . -p 8000
 ## Code Organization
 
 ### HTML Structure
+
 ```html
 <body>
   <!-- Navigation -->
@@ -88,12 +95,14 @@ npx http-server . -p 8000
 ```
 
 ### CSS Architecture
+
 - **Variables:** Color scheme, spacing, typography
 - **Utilities:** Flexbox helpers, responsive breakpoints
 - **Components:** Buttons, cards, forms, modals
 - **Themes:** Dark, light, pink (CSS variables)
 
 ### JavaScript Patterns
+
 - **IIFE modules:** Encapsulation with `window` attachment
 - **State object `S`:** Single source of truth
 - **Render functions:** `renderTodayView()`, `renderMeals()`, etc.
@@ -104,6 +113,7 @@ npx http-server . -p 8000
 ## Database Schema
 
 ### Supabase Table: `diet_data`
+
 ```sql
 id        TEXT PRIMARY KEY        -- User ID or session key
 data      JSONB NOT NULL          -- All user data (blob)
@@ -112,6 +122,7 @@ updated_at TIMESTAMPTZ            -- Auto timestamp
 ```
 
 ### Data Structure
+
 ```javascript
 {
   profile: { 
@@ -131,12 +142,14 @@ updated_at TIMESTAMPTZ            -- Auto timestamp
 ## Bilingual Support (EN/ES)
 
 ### Implementation
+
 - `LANG` object: `en: {...}`, `es: {...}`
 - `T(key)` helper: Returns translated text
 - UI labels stored in `LANG`, not hardcoded
 - Meal translations in `MEAL_TRANSLATIONS`
 
 ### Adding Translations
+
 1. Add key to `LANG.en` and `LANG.es`
 2. Use `T('keyName')` in render functions
 3. Test both languages in app
@@ -146,11 +159,13 @@ updated_at TIMESTAMPTZ            -- Auto timestamp
 ## Security Practices
 
 ### Credentials
+
 - **Production:** Cloudflare environment variables
 - **Development:** `config.js` (gitignored, never committed)
 - **Template:** `config.example.js` (tracked for reference)
 
 ### Data Protection
+
 - All communication: HTTPS
 - Database RLS policies: Enforce access control
 - Input validation: All user inputs sanitized
@@ -161,16 +176,19 @@ updated_at TIMESTAMPTZ            -- Auto timestamp
 ## Performance Guidelines
 
 ### Load Time
+
 - Keep main HTML under 5000 lines
 - Minimize external requests (just Supabase)
 - Lazy-render views when needed
 
 ### Memory Management
+
 - Clean up old data on navigation
 - Unsubscribe from listeners before unmounting
 - Use `S` state object efficiently
 
 ### Network
+
 - Batch Supabase updates when possible
 - Queue offline operations
 - Cache meal/ingredient data locally

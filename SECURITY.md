@@ -8,10 +8,12 @@
 - **Where:** `config.js` (root directory, gitignored)
 - **Who:** Only developers (never committed to git)
 - **How to set up:**
+
   ```bash
   cp config.example.js config.js
   # Edit config.js with your real Supabase credentials
   ```
+
 - **Access:** Local only; not deployed
 
 ### Production (`Cloudflare Environment Variables`)
@@ -19,10 +21,10 @@
 - **What:** Production Supabase credentials
 - **Where:** Cloudflare Pages Environment Variables (Project Settings)
 - **Who:** Only you (via Cloudflare dashboard)
-- **How:** 
+- **How:**
     1. Go to your Cloudflare Pages project
-  2. Settings → Environment Variables
-  3. Add two variables:
+    2. Settings → Environment Variables
+    3. Add two variables:
      - `SUPABASE_URL`: Your Supabase project URL
      - `SUPABASE_KEY`: Your Supabase anonymous key
 - **Access:** Injected at runtime via `/api/env` endpoint
@@ -158,6 +160,7 @@ Thumbs.db
    - App will use new key immediately
 
 2. **Update Cloudflare Environment Variable:**
+
    ```
    Cloudflare Pages → diet-tracker → Settings → Environment Variables
    Edit SUPABASE_KEY → paste new key → Save

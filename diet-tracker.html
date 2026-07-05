@@ -3634,6 +3634,8 @@ const LANG = {
     sessionSummary: 'You did amazing!',
     sessionsLogged: 'Sessions logged',
     noSessions: 'No sessions yet. Start your first meditation!',
+    welcomeToMindfulness: 'Welcome to Mindfulness',
+    mindfulnessIntro: 'Start your first session to build a meditation habit',
     exerciseStats: 'Exercise Count',
     chooseExercise: 'Choose Exercise',
     weeklyStats: 'Weekly Stats',
@@ -3641,16 +3643,25 @@ const LANG = {
     acupressureGuide: 'Acupressure Wellness Guide',
     pointsTitle: 'Wellness Points',
     pointOfTotal: 'Point {{current}} of {{total}}',
+    regionOfTotal: 'Region {{current}} of {{total}}',
     bodyScanExercise: 'Body Scan',
     bodyScanGuide: 'MBSR Guided Body Scan',
     regionsTitle: 'Body Regions',
+    allPoints: 'All Points',
+    allRegions: 'All Regions',
     whatToNotice: 'What to Notice:',
     breathing: 'Breathing:',
     benefits: 'Benefits:',
     howToPractice: 'How to practice:',
     previous: 'Previous',
     next: 'Next',
+    first: 'First',
+    last: 'Last',
     finish: 'Finish',
+    minutesLabel: 'Minutes',
+    sessionDurationLabel: 'Session Duration',
+    tipsLabel: 'Tips',
+    mindfulnessTips: 'Find a quiet space, get comfortable, and let your mind settle. Regular practice builds lasting peace.',
     
     // Notes
     notesTitle: 'Notes',
@@ -4098,6 +4109,8 @@ const LANG = {
     sessionSummary: '¡Hiciste un gran trabajo!',
     sessionsLogged: 'Sesiones registradas',
     noSessions: '¡Sin sesiones aún. Comienza tu primera meditación!',
+    welcomeToMindfulness: 'Bienvenido a Atención Plena',
+    mindfulnessIntro: 'Comienza tu primera sesión para crear un hábito de meditación',
     weeklyStats: 'Estadísticas Semanales',
     exerciseStats: 'Recuento de Ejercicios',
     chooseExercise: 'Elige Ejercicio',
@@ -4105,16 +4118,25 @@ const LANG = {
     acupressureGuide: 'Guía de Bienestar con Acupresión',
     pointsTitle: 'Puntos de Bienestar',
     pointOfTotal: 'Punto {{current}} de {{total}}',
+    regionOfTotal: 'Región {{current}} de {{total}}',
     bodyScanExercise: 'Escaneo Corporal',
     bodyScanGuide: 'Escaneo Corporal Guiado MBSR',
     regionsTitle: 'Regiones del Cuerpo',
+    allPoints: 'Todos los Puntos',
+    allRegions: 'Todas las Regiones',
     whatToNotice: 'Qué Observar:',
     breathing: 'Respiración:',
     benefits: 'Beneficios:',
     howToPractice: 'Cómo practicar:',
     previous: 'Anterior',
     next: 'Siguiente',
+    first: 'Primero',
+    last: 'Último',
     finish: 'Finalizar',
+    minutesLabel: 'Minutos',
+    sessionDurationLabel: 'Duración de la Sesión',
+    tipsLabel: 'Consejos',
+    mindfulnessTips: 'Busca un espacio tranquilo, ponte cómodo y deja que tu mente se asiente. La práctica regular construye una paz duradera.',
     
     // Notas
     notesTitle: 'Notas',
@@ -7183,7 +7205,7 @@ function showBodyLovePoint(index) {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <div style="font-size:28px">${point.emoji}</div>
           <div style="text-align:right">
-            <div style="font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Point ${index + 1} of ${ACUPRESSURE_POINTS.length}</div>
+            <div style="font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">${T('pointOfTotal').replace('{{current}}', index + 1).replace('{{total}}', ACUPRESSURE_POINTS.length)}</div>
             <div style="font-size:24px;font-weight:900;color:var(--ac)" id="bodylove-timer">${String(remaining).padStart(2,'0')}s</div>
           </div>
         </div>
@@ -7197,25 +7219,25 @@ function showBodyLovePoint(index) {
         </div>
         
         <div style="background:var(--sf);border:1px solid var(--b1);border-radius:8px;padding:12px;margin-bottom:12px">
-          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600">How to Practice:</div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600">${T('howToPractice')}</div>
           <div style="font-size:13px;color:var(--t2);line-height:1.6">${point.how}</div>
         </div>
         
         <div style="background:var(--sf);border:1px solid var(--b1);border-radius:8px;padding:12px;margin-bottom:16px">
-          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600">Benefits:</div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600">${T('benefits')}</div>
           <div style="font-size:12px;color:var(--t2)">${point.benefits}</div>
         </div>
         
         <div style="padding:12px;background:var(--s2);border-radius:8px">
-          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:600">All Points</div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:600">${T('allPoints')}</div>
           <div style="display:flex;flex-direction:column;gap:8px">${pointsHtml}</div>
         </div>
       </div>
       
       <div class="meditation-controls" style="border-top:1px solid var(--b1);padding:12px;background:var(--bg)">
-        <button class="med-btn secondary" onclick="jumpToPoint(${Math.max(0, index - 1)})" ${index === 0 ? 'disabled' : ''}>${index === 0 ? 'First' : 'Prev'}</button>
-        <button class="med-btn secondary" onclick="skipBodyLove()">Finish</button>
-        <button class="med-btn secondary" onclick="jumpToPoint(${Math.min(ACUPRESSURE_POINTS.length - 1, index + 1)})" ${index === ACUPRESSURE_POINTS.length - 1 ? 'disabled' : ''}>${index === ACUPRESSURE_POINTS.length - 1 ? 'Last' : 'Next'}</button>
+        <button class="med-btn secondary" onclick="jumpToPoint(${Math.max(0, index - 1)})" ${index === 0 ? 'disabled' : ''}>${index === 0 ? T('first') : T('previous')}</button>
+        <button class="med-btn secondary" onclick="skipBodyLove()">${T('finish')}</button>
+        <button class="med-btn secondary" onclick="jumpToPoint(${Math.min(ACUPRESSURE_POINTS.length - 1, index + 1)})" ${index === ACUPRESSURE_POINTS.length - 1 ? 'disabled' : ''}>${index === ACUPRESSURE_POINTS.length - 1 ? T('last') : T('next')}</button>
       </div>
     </div>`;
 }
@@ -7369,7 +7391,7 @@ function showBodyScanRegion(index) {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <div style="font-size:28px">${region.emoji}</div>
           <div style="text-align:right">
-            <div style="font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Region ${index + 1} of ${BODY_SCAN_REGIONS.length}</div>
+            <div style="font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">${T('regionOfTotal').replace('{{current}}', index + 1).replace('{{total}}', BODY_SCAN_REGIONS.length)}</div>
             <div style="font-size:24px;font-weight:900;color:var(--ac)" id="bodyscan-timer">${String(remaining).padStart(2,'0')}s</div>
           </div>
         </div>
@@ -7383,30 +7405,30 @@ function showBodyScanRegion(index) {
         </div>
         
         <div style="background:var(--sf);border:1px solid var(--b1);border-radius:8px;padding:12px;margin-bottom:12px">
-          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600">What to Notice:</div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600">${T('whatToNotice')}</div>
           <div style="font-size:13px;color:var(--t2);line-height:1.6">${region.focus}</div>
         </div>
         
         <div style="background:var(--sf);border:1px solid var(--b1);border-radius:8px;padding:12px;margin-bottom:12px">
-          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600">Breathing:</div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600">${T('breathing')}</div>
           <div style="font-size:13px;color:var(--t2);line-height:1.6">${region.breathing}</div>
         </div>
         
         <div style="background:var(--sf);border:1px solid var(--b1);border-radius:8px;padding:12px;margin-bottom:16px">
-          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600">Benefits:</div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-weight:600">${T('benefits')}</div>
           <div style="font-size:12px;color:var(--t2)">${region.benefits}</div>
         </div>
         
         <div style="padding:12px;background:var(--s2);border-radius:8px">
-          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:600">All Regions</div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:600">${T('allRegions')}</div>
           <div style="display:flex;flex-direction:column;gap:8px">${regionsHtml}</div>
         </div>
       </div>
       
       <div class="meditation-controls" style="border-top:1px solid var(--b1);padding:12px;background:var(--bg)">
-        <button class="med-btn secondary" onclick="jumpToRegion(${Math.max(0, index - 1)})" ${index === 0 ? 'disabled' : ''}>${index === 0 ? 'First' : 'Prev'}</button>
-        <button class="med-btn secondary" onclick="skipBodyScan()">Finish</button>
-        <button class="med-btn secondary" onclick="jumpToRegion(${Math.min(BODY_SCAN_REGIONS.length - 1, index + 1)})" ${index === BODY_SCAN_REGIONS.length - 1 ? 'disabled' : ''}>${index === BODY_SCAN_REGIONS.length - 1 ? 'Last' : 'Next'}</button>
+        <button class="med-btn secondary" onclick="jumpToRegion(${Math.max(0, index - 1)})" ${index === 0 ? 'disabled' : ''}>${index === 0 ? T('first') : T('previous')}</button>
+        <button class="med-btn secondary" onclick="skipBodyScan()">${T('finish')}</button>
+        <button class="med-btn secondary" onclick="jumpToRegion(${Math.min(BODY_SCAN_REGIONS.length - 1, index + 1)})" ${index === BODY_SCAN_REGIONS.length - 1 ? 'disabled' : ''}>${index === BODY_SCAN_REGIONS.length - 1 ? T('last') : T('next')}</button>
       </div>
     </div>`;
 }
@@ -7594,7 +7616,7 @@ function renderMindfulnessComplete() {
     <div style="display:flex;flex-direction:column;align-items:center;gap:20px;padding:60px 20px;text-align:center;animation:fadeInUp .5s ease">
       <div style="font-size:64px">✨</div>
       <div class="view-title" style="margin:0">${T('sessionSummary')}</div>
-      <div class="view-sub" style="margin:0;font-size:14px">Session Duration: ${Math.floor(_meditationTime / 60)} minutes</div>
+      <div class="view-sub" style="margin:0;font-size:14px">${T('sessionDurationLabel')}: ${Math.floor(_meditationTime / 60)} ${T('minutesLabel')}</div>
       <div style="background:var(--sf);border:1px solid var(--b1);border-radius:var(--radius);padding:16px;width:100%;max-width:300px;margin-top:10px">
         <div style="font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">${T('weeklyStats')}</div>
         <div style="display:flex;justify-content:space-around;gap:12px">
@@ -7604,7 +7626,7 @@ function renderMindfulnessComplete() {
           </div>
           <div style="flex:1">
             <div style="font-size:28px;font-weight:900;color:var(--ac)">${stats.totalMinutes}</div>
-            <div style="font-size:10px;color:var(--t3);margin-top:4px">Minutes</div>
+            <div style="font-size:10px;color:var(--t3);margin-top:4px">${T('minutesLabel')}</div>
           </div>
         </div>
       </div>
@@ -8824,7 +8846,7 @@ function renderMindfulnessSetup() {
         <div class="view-sub">${T('breathingGuide')}</div>
       </div>
       
-      ${noSessionsYet ? `<div style="background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.05));border:1px solid rgba(16,185,129,.3);border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:20px;position:relative;z-index:1"><div style="font-size:48px;margin-bottom:12px">🧘</div><div style="font-size:14px;font-weight:600;color:var(--t1);margin-bottom:6px">Welcome to Mindfulness</div><div style="font-size:12px;color:var(--t3);line-height:1.6">${T('noSessions') || 'Start your first session to build a meditation habit'}</div></div>` : `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;position:relative;z-index:1"><div style="background:var(--sf);border:1px solid var(--b1);border-radius:var(--radius);padding:14px;text-align:center"><div style="font-size:24px;font-weight:900;color:var(--ac)">${stats.count}</div><div style="font-size:10px;color:var(--t3);margin-top:4px;text-transform:uppercase;letter-spacing:.1em">${T('meditationThisWeek') || 'This Week'}</div></div><div style="background:var(--sf);border:1px solid var(--b1);border-radius:var(--radius);padding:14px;text-align:center"><div style="font-size:24px;font-weight:900;color:var(--ac)">${stats.totalMinutes}</div><div style="font-size:10px;color:var(--t3);margin-top:4px;text-transform:uppercase;letter-spacing:.1em">Minutes</div></div></div>`}
+      ${noSessionsYet ? `<div style="background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.05));border:1px solid rgba(16,185,129,.3);border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:20px;position:relative;z-index:1"><div style="font-size:48px;margin-bottom:12px">🧘</div><div style="font-size:14px;font-weight:600;color:var(--t1);margin-bottom:6px">${T('welcomeToMindfulness')}</div><div style="font-size:12px;color:var(--t3);line-height:1.6">${T('mindfulnessIntro')}</div></div>` : `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;position:relative;z-index:1"><div style="background:var(--sf);border:1px solid var(--b1);border-radius:var(--radius);padding:14px;text-align:center"><div style="font-size:24px;font-weight:900;color:var(--ac)">${stats.count}</div><div style="font-size:10px;color:var(--t3);margin-top:4px;text-transform:uppercase;letter-spacing:.1em">${T('meditationThisWeek') || 'This Week'}</div></div><div style="background:var(--sf);border:1px solid var(--b1);border-radius:var(--radius);padding:14px;text-align:center"><div style="font-size:24px;font-weight:900;color:var(--ac)">${stats.totalMinutes}</div><div style="font-size:10px;color:var(--t3);margin-top:4px;text-transform:uppercase;letter-spacing:.1em">${T('minutesLabel')}</div></div></div>`}
       
       ${exerciseCountsHtml}
       
@@ -8833,7 +8855,7 @@ function renderMindfulnessSetup() {
         <div class="meditation-options" style="gap:8px">${exerciseButtons}</div>
       </div>
       
-      <div style="background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(16,185,129,.08));border:1px solid rgba(16,185,129,.2);border-radius:var(--radius);padding:16px;text-align:center;position:relative;z-index:1"><div style="font-size:13px;color:var(--t2);margin-bottom:8px"><strong>✨ ${T('breathingInstructions') || 'Tips'}</strong></div><div style="font-size:12px;color:var(--t3);line-height:1.6">Find a quiet space, get comfortable, and let your mind settle. Regular practice builds lasting peace.</div></div>
+      <div style="background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(16,185,129,.08));border:1px solid rgba(16,185,129,.2);border-radius:var(--radius);padding:16px;text-align:center;position:relative;z-index:1"><div style="font-size:13px;color:var(--t2);margin-bottom:8px"><strong>✨ ${T('tipsLabel')}</strong></div><div style="font-size:12px;color:var(--t3);line-height:1.6">${T('mindfulnessTips')}</div></div>
     </div>`;
 }
 

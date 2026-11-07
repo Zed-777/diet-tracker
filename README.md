@@ -2,6 +2,8 @@
 
 A stable meal tracking application with personalized nutrition planning, progress analytics, and offline support.
 
+> **Demo / learning project.** This build has no login. Every visitor uses the same public Supabase anon key and the table policy below allows all access, so anyone with the link can read, change or delete the data. Don't enter real personal or health information. Moving to Supabase Auth with per-user RLS is the next milestone (see [Security Considerations](#security-considerations)).
+
 ## ✨ Features
 
 - **Smart Meal Planning** — 42+ recipes with goal-based selection (high protein, low carb, balanced)
@@ -39,6 +41,8 @@ CREATE TABLE diet_data (
 
 ALTER TABLE diet_data ENABLE ROW LEVEL SECURITY;
 
+-- DEMO ONLY: this policy lets anyone holding the public anon key read, write and delete every row.
+-- Use it only with test data. For real data, add Supabase Auth and user-scoped policies (see Security Considerations).
 CREATE POLICY "allow all" ON diet_data
   FOR ALL USING (true) WITH CHECK (true);
 ```
@@ -120,8 +124,10 @@ Once deployed, visit your Cloudflare Pages deployment URL. The app should:
 
 ## 🔐 Security
 
-- ✅ **Zero hardcoded secrets** — Credentials injected at runtime
-- ✅ **Environment variables** stored in Cloudflare only
+- ⚠️ **No authentication (demo)** — the anon key is public by design and the demo policy allows all access, so the data is effectively public
+- ✅ **No hardcoded secrets** — config injected at runtime; only the public URL and anon key are ever sent to the browser
+- ✅ **Output encoding** — saved meal names, notes, templates, weights and profile fields are HTML-escaped before rendering; ids and dates are sanitised before use in inline handlers
+- ✅ **Security headers** — `_headers` sets a Content-Security-Policy, frame, referrer and permissions policies
 - ✅ **Input validation** on all numeric fields
 - ✅ **Error boundaries** prevent crashes, show user-friendly messages
 - ✅ **Offline operation queueing** prevents data loss

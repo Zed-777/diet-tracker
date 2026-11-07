@@ -21,7 +21,7 @@ window.__ENV = {
   // Example: https://your-project-ref.supabase.co
   SUPABASE_URL: 'https://YOUR_ACTUAL_URL.supabase.co',
 
-  // Your Supabase anonymous public key (from Project Settings > API Keys)
-  // This is read-only, but keep it private anyway
+  // Your Supabase anon (public) key from Project Settings > API Keys.
+  // It is NOT read-only: it can do whatever your table policies allow. Never use the service_role key here.
   SUPABASE_KEY: 'YOUR_ACTUAL_KEY_HERE'
 };

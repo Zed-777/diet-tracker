@@ -50,23 +50,23 @@ Credentials never visible in network tab, console, or git history
 
 ---
 
-## What's Protected
+## Current Access Model (demo)
 
-✅ **Supabase credentials**
-- Anon key (read-only)
-- URL and project ID
-- Database connection details
+**This build has no authentication, so the data is not protected.**
 
-✅ **Cloudflare Workers**
-- Production routes
-- Domain configuration
-- API credentials
+- `/api/env` sends the Supabase project URL and **anon key** to every visitor. These are public by design and visible in the browser's Network tab. They are not secrets.
+- The app reads, writes and deletes `diet_data` with that anon key, and the demo policy (`allow all`) permits it. Anyone holding the key can do the same from outside the app.
+- Treat everything in `diet_data` as public. Do not store real personal or health information.
 
-✅ **Personal information**
-- User data (encrypted at rest, HTTPS in transit)
-- Your supermarket pricing data
-- Custom meal recipes
-- Weight/health tracking
+**Target model:** Supabase Auth with a `user_id` column and policies such as
+`using (auth.uid() = user_id) with check (auth.uid() = user_id)`, and no direct table access for the anon role.
+
+## What Is Protected
+
+- No service_role key, password or private token is used anywhere in the client or the repo.
+- Data travels over HTTPS.
+- Untrusted text is HTML-escaped before rendering, and ids/dates are sanitised before use in inline handlers.
+- `_headers` sets a Content-Security-Policy (only this site, Google Fonts and `*.supabase.co`), `X-Frame-Options: DENY`, `nosniff`, a referrer policy and a permissions policy.
 
 ---
 
@@ -104,12 +104,11 @@ Thumbs.db
 ### Verified Safeguards
 
 - ✅ No hardcoded secrets in code
-- ✅ Environment variable injection at runtime
+- ✅ Environment variable injection at runtime (values serialised with `JSON.stringify`)
 - ✅ HTTPS-only (Cloudflare Pages enforces this)
-- ✅ Credentials never logged or visible in browser console
 - ✅ Proper .gitignore excludes sensitive files
 - ✅ Local development uses gitignored config.js
-- ✅ Production uses Cloudflare managed environment variables
+- ⚠️ No authentication or per-user RLS yet (demo)
 
 ### Deployment Safety
 
@@ -118,15 +117,15 @@ Thumbs.db
 3. `/api/env` endpoint serves credentials at runtime
 4. Browser loads, app calls `window.__ENV` (secure injection)
 5. App makes authenticated requests using injected credentials
-6. Credentials never visible in Network tab, Console, or Source
+6. The anon key is visible in the Network tab by design; access control must come from Auth + RLS
 
 ### Data Protection
 
 - All requests use HTTPS (Cloudflare)
 - Requests to Supabase use HTTPS
-- Credentials not sent in URL or headers (sent in Authorization header only)
-- Supabase stores user data encrypted
-- Database RLS policies enforce access control
+- The anon key is sent in the `apikey` and `Authorization` headers on every request (public by design)
+- Supabase encrypts data at rest
+- RLS is enabled, but the demo policy allows all access; user-scoped policies are the next milestone
 
 ---
 
@@ -143,8 +142,8 @@ Thumbs.db
 
 ### Who Can See Production Credentials?
 
-- Only Cloudflare Pages (for runtime injection)
-- Never exposed to browser, users, or logs
+- The URL and anon key: every visitor (public by design)
+- The service_role key: nobody. It must never be added to this app
 
 ---
 
@@ -182,13 +181,11 @@ This repository is designed to be **safe to fork and copy**:
 - Understand the architecture
 - Deploy their own version with their own Supabase/Cloudflare
 
-**No one can:**
-- Access your Supabase database
-- Use your Cloudflare deployment
-- See your credentials (they're not there)
-- Access user data from your deployment
+**Be aware:**
+- With the demo policy, anyone with your deployment's URL can read and change its `diet_data`
+- Forks can't reach your database unless you give them your URL and key, but your live site hands both to every visitor
 
 ---
 
-**Last Updated:** June 21, 2026  
-**Status:** ✅ All protections implemented
+**Last Updated:** November 7, 2026  
+**Status:** ⚠️ Demo: no authentication. Output encoding and security headers in place; Auth + RLS pending

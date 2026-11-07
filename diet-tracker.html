@@ -109,6 +109,12 @@ body.light #nav{box-shadow:0 -1px 8px rgba(0,0,0,.08)}
 
 /* ── MAIN ── */
 #app{display:none}
+#demo-banner{display:flex;align-items:center;gap:10px;padding:8px 14px;background:rgba(245,158,11,.14);border-bottom:1px solid rgba(245,158,11,.35);color:var(--t1);font-size:12px;line-height:1.4}
+#demo-banner b{font-weight:700}
+#demo-banner span{flex:1}
+#demo-banner button{flex:none;background:none;border:none;color:var(--t2);font-size:16px;line-height:1;padding:6px;cursor:pointer;border-radius:8px}
+#demo-banner button:focus-visible{outline:2px solid #F59E0B}
+#demo-banner.hidden{display:none}
 #app.active{display:block}
 #view{max-width:720px;margin:0 auto;padding:14px 14px 90px}
 
@@ -370,6 +376,12 @@ body.light .sheet{box-shadow:0 -8px 40px rgba(0,0,0,.12)}
 </style>
 </head>
 <body>
+
+<!-- DEMO NOTICE -->
+<div id="demo-banner" role="note">
+  <span><b>Demo app.</b> There is no login, so anyone with the link can see and change this data. Don't enter real personal or health information.</span>
+  <button type="button" aria-label="Dismiss demo notice" onclick="dismissDemoBanner()">✕</button>
+</div>
 
 <!-- SETUP SCREEN -->
 <div id="setup">
@@ -667,6 +679,18 @@ const SB_KEY = window.__ENV?.SUPABASE_KEY || '';
 if (!SB_URL || !SB_KEY) {
   throw new Error('Missing Supabase config. Provide window.__ENV.SUPABASE_URL and window.__ENV.SUPABASE_KEY via config.js or deployment environment injection.');
 }
+// ═══════════════════════════════════════════════════════════════
+// OUTPUT ENCODING
+// ═══════════════════════════════════════════════════════════════
+// Everything read from diet_data (or typed by the user) is untrusted. Escape it before
+// putting it into HTML, and strip ids/dates to safe characters before putting them into
+// inline onclick handlers (HTML-escaping alone does not protect a JavaScript string there).
+function esc(v) {
+  return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function sid(v) { return String(v ?? '').replace(/[^A-Za-z0-9_-]/g, ''); }
+
 const DTABLE = SB_URL + '/rest/v1/diet_data';
 const DH = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
 
@@ -1215,12 +1239,12 @@ function renderCycleBanner(profile, targets, dateValue) {
           <div class="cycle-banner-title">${T('cycleTodayTitle')}</div>
           <div class="cycle-banner-copy">${content.copy}</div>
         </div>
-        <button class="cycle-banner-detail-btn" onclick="openCycleDetailModal('${dateValue}')">${T('cycleDetailButton')}</button>
+        <button class="cycle-banner-detail-btn" onclick="openCycleDetailModal('${sid(dateValue)}')">${T('cycleDetailButton')}</button>
       </div>
       <div class="cycle-banner-metrics">
         <div class="cycle-banner-stat">
           <div class="cycle-banner-stat-label">${T('cycleDayOfCycle')}</div>
-          <div class="cycle-banner-stat-value">${phase.dayOfCycle} / ${profile.cycleMode.cycleLength}</div>
+          <div class="cycle-banner-stat-value">${esc(phase.dayOfCycle)} / ${esc(profile.cycleMode.cycleLength)}</div>
         </div>
         <div class="cycle-banner-stat">
           <div class="cycle-banner-stat-label">${T('cycleAdjustmentLabel')}</div>
@@ -1250,7 +1274,7 @@ function openCycleDetailModal(dateValue = S.viewDate) {
     <div class="cycle-detail-grid">
       <div class="cycle-detail-card">
         <div class="cycle-detail-label">${T('cycleDayOfCycle')}</div>
-        <div class="cycle-detail-value">${phase.dayOfCycle} / ${S.profile.cycleMode.cycleLength}</div>
+        <div class="cycle-detail-value">${esc(phase.dayOfCycle)} / ${esc(S.profile.cycleMode.cycleLength)}</div>
       </div>
       <div class="cycle-detail-card">
         <div class="cycle-detail-label">${T('cycleDaysUntilPeriod')}</div>
@@ -4769,12 +4793,12 @@ function updateConsumptionLog(date) {
       if (log[slot]) {
         const meal = log[slot];
         if (meal && meal.macros) {
-          const kcal = meal.macros.kcal || 0;
+          const kcal = Number(meal.macros.kcal) || 0;
           planned.kcal += kcal;
           planned.cal += kcal;
-          planned.protein += meal.macros.protein || 0;
-          planned.carbs += meal.macros.carbs || 0;
-          planned.fat += meal.macros.fat || 0;
+          planned.protein += Number(meal.macros.protein) || 0;
+          planned.carbs += Number(meal.macros.carbs) || 0;
+          planned.fat += Number(meal.macros.fat) || 0;
         }
       }
     });
@@ -4784,12 +4808,12 @@ function updateConsumptionLog(date) {
   let manual = { kcal: 0, cal: 0, protein: 0, carbs: 0, fat: 0 };
   manualMeals.forEach(meal => {
     if (meal.macros) {
-      const kcal = meal.macros.kcal || 0;
+      const kcal = Number(meal.macros.kcal) || 0;
       manual.kcal += kcal;
       manual.cal += kcal;
-      manual.protein += meal.macros.protein || 0;
-      manual.carbs += meal.macros.carbs || 0;
-      manual.fat += meal.macros.fat || 0;
+      manual.protein += Number(meal.macros.protein) || 0;
+      manual.carbs += Number(meal.macros.carbs) || 0;
+      manual.fat += Number(meal.macros.fat) || 0;
     }
   });
   
@@ -4998,11 +5022,11 @@ function renderManualMealScreen() {
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('selectPreviousMeal') || 'Quick Select: Previous Meals'}</h2>
         <div style="display:grid; gap:10px; margin-bottom:20px;">
           ${templates.map(t => `
-            <button onclick="loadMealTemplate('${t.id}')" style="
+            <button onclick="loadMealTemplate('${sid(t.id)}')" style="
               padding:14px; border:1px solid var(--b1); border-radius:8px; 
               background:var(--sf); color:var(--t1); cursor:pointer; font-weight:600; 
               text-align:left; transition:all .2s; font-size:14px;
-            ">${t.name} <span style="color:var(--t3); font-size:12px;">- ${T(t.mealType)}</span></button>
+            ">${esc(t.name)} <span style="color:var(--t3); font-size:12px;">- ${esc(T(t.mealType))}</span></button>
           `).join('')}
         </div>
         <button onclick="_manualMealCurrentScreen = 0; renderManualMealScreen();" style="
@@ -5031,7 +5055,7 @@ function renderManualMealScreen() {
         <h2 style="color:var(--t1); margin-bottom:24px;">🍴 How Many Courses?</h2>
         <div style="background:rgba(16,185,129,.08); border-left:4px solid var(--ac); padding:12px; border-radius:6px; margin-bottom:20px;">
           <div style="color:var(--ac); font-weight:600; font-size:13px;">
-            💡 Tip: This meal (${T(_manualMealQuestionnaire.mealType)}) can have any number of courses.
+            💡 Tip: This meal (${esc(T(_manualMealQuestionnaire.mealType))}) can have any number of courses.
           </div>
           <div style="color:var(--t3); font-size:12px; margin-top:4px;">
             Track each part separately for better accuracy (e.g., appetizer, main course, dessert)
@@ -5068,7 +5092,7 @@ function renderManualMealScreen() {
         <h2 style="color:var(--t1); margin-bottom:20px;">${T('mealNameLabel') || 'Meal Name'}</h2>
         <div style="margin-bottom:20px;">
           <input type="text" id="q-mealName" placeholder="e.g., Grilled Chicken with Rice" 
-            value="${_manualMealQuestionnaire.mealName}" 
+            value="${esc(_manualMealQuestionnaire.mealName)}" 
             style="width:100%; padding:12px; border:1px solid var(--b1); border-radius:6px; background:var(--sf); color:var(--t1); box-sizing:border-box; font-size:16px;"
             onchange="_manualMealQuestionnaire.mealName = this.value;">
           <div style="color:var(--t3); font-size:11px; margin-top:6px;">${T('optional')}</div>
@@ -5415,7 +5439,7 @@ function renderManualMealScreen() {
           <label style="color:var(--t2); display:block; margin-bottom:6px; font-weight:500;">${T('notesLabel')}</label>
           <textarea id="q-notes" placeholder="e.g., Restaurant meal, estimated portion, no oil used"
             style="width:100%; padding:10px; border:1px solid var(--b1); border-radius:6px;
-              background:var(--sf); color:var(--t1); box-sizing:border-box; min-height:80px; resize:none;">${_manualMealQuestionnaire.notes}</textarea>
+              background:var(--sf); color:var(--t1); box-sizing:border-box; min-height:80px; resize:none;">${esc(_manualMealQuestionnaire.notes)}</textarea>
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
           <button onclick="_manualMealCurrentScreen--; renderManualMealScreen();" style="
@@ -5438,7 +5462,7 @@ function renderManualMealScreen() {
         </p>
         <div style="background:var(--sf); padding:14px; border-radius:8px; margin-bottom:20px; border-left:4px solid var(--ac);">
           <div style="font-size:12px; color:var(--t2); margin-bottom:6px;"><strong>Current course:</strong></div>
-          <div style="color:var(--t1); font-weight:600;">${_manualMealQuestionnaire.mealName || 'Course ' + (_manualMealCurrentCourseIndex + 1)}</div>
+          <div style="color:var(--t1); font-weight:600;">${esc(_manualMealQuestionnaire.mealName || 'Course ' + (_manualMealCurrentCourseIndex + 1))}</div>
           <div style="font-size:11px; color:var(--t3); margin-top:4px;">${estimateMealMacros(_manualMealQuestionnaire).kcal} kcal</div>
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -5510,10 +5534,10 @@ function renderManualMealScreen() {
         <h2 style="color:var(--t1); margin-bottom:20px;">${_manualMealEditId ? 'Review Changes' : T('questReview')}</h2>
         <div style="background:var(--sf); padding:16px; border-radius:8px; margin-bottom:16px;">
           <div style="color:var(--t2); font-size:14px; margin-bottom:12px;">
-            <strong>${T('mealNameLabel')}:</strong> ${_manualMealQuestionnaire.mealName || _manualMealQuestionnaire.mealType}
+            <strong>${T('mealNameLabel')}:</strong> ${esc(_manualMealQuestionnaire.mealName || _manualMealQuestionnaire.mealType)}
           </div>
           <div style="color:var(--t2); font-size:14px; margin-bottom:12px;">
-            <strong>${T('mealTypeLabel')}:</strong> ${T(_manualMealQuestionnaire.mealType)}
+            <strong>${T('mealTypeLabel')}:</strong> ${esc(T(_manualMealQuestionnaire.mealType))}
           </div>
           ${_manualMealNumCourses > 1 ? `
             <div style="color:var(--t2); font-size:14px; margin-bottom:12px;">
@@ -5528,7 +5552,7 @@ function renderManualMealScreen() {
           ` : ''}
           ${_manualMealQuestionnaire.additionalProteinType ? `
             <div style="color:var(--t2); font-size:14px; margin-bottom:12px;">
-              <strong>Additional Protein:</strong> ${T(_manualMealQuestionnaire.additionalProteinType)}
+              <strong>Additional Protein:</strong> ${esc(T(_manualMealQuestionnaire.additionalProteinType))}
             </div>
           ` : ''}
           
@@ -5563,7 +5587,7 @@ function renderManualMealScreen() {
           <div style="color:var(--t3); font-size:12px; margin-top:12px;">
             <strong>${T('confidenceQ')}</strong><br>${confidenceLabels[_manualMealQuestionnaire.accuracy] || 'Reasonable estimate'}
           </div>
-          ${_manualMealQuestionnaire.notes ? `<div style="color:var(--t3); font-size:12px; margin-top:8px;"><strong>${T('notesLabel')}:</strong> ${_manualMealQuestionnaire.notes}</div>` : ''}
+          ${_manualMealQuestionnaire.notes ? `<div style="color:var(--t3); font-size:12px; margin-top:8px;"><strong>${T('notesLabel')}:</strong> ${esc(_manualMealQuestionnaire.notes)}</div>` : ''}
         </div>
         ${!_manualMealQuestionnaire.isFromTemplate ? `
         <button onclick="saveMealAsTemplate()" style="
@@ -6138,7 +6162,7 @@ function renderToday() {
     </div>
     <div class="water-cups">
       ${Array.from({length:Math.max(waterTarget,8)},(_,i) => `
-        <button class="cup-btn ${i < wGlasses ? 'filled':''}" onclick="logWater(${i+1},'${dt}')" title="${((i+1)*250)}ml">💧</button>
+        <button class="cup-btn ${i < wGlasses ? 'filled':''}" onclick="logWater(${i+1},'${sid(dt)}')" title="${((i+1)*250)}ml">💧</button>
       `).join('')}
     </div>
   </div>`;
@@ -6161,11 +6185,11 @@ function renderToday() {
     html += `
     <div class="meal-card ${done?'done':''}" id="mc-${slot.key}">
       <div class="meal-header" onclick="toggleMealDetail('${slot.key}')">
-        <div class="meal-check ${done?'checked':''}" onclick="event.stopPropagation();toggleMeal('${slot.key}','${dt}')">
+        <div class="meal-check ${done?'checked':''}" onclick="event.stopPropagation();toggleMeal('${sid(slot.key)}','${sid(dt)}')">
           ${done?'✓':''}
         </div>
         <div class="meal-info">
-          <div class="meal-name" style="${done?'text-decoration:line-through;color:var(--t3)':''}"> ${getMealDisplayName(m.id) || m.name}</div>
+          <div class="meal-name" style="${done?'text-decoration:line-through;color:var(--t3)':''}"> ${esc(getMealDisplayName(m.id) || m.name)}</div>
           ${renderCycleHighlightBadges(cycleHighlights)}
           <div class="meal-macros">
             <span class="meal-macro-item" style="color:#8B5CF6">●&thinsp;${m.protein}g P</span>
@@ -6188,8 +6212,8 @@ function renderToday() {
           <ul class="ingredient-list">
             ${(S.language === 'es' ? (getMealInSpanish(m.id)?.ingredients || m.ingredients) : m.ingredients).map(ing => `
               <li class="ingredient-item">
-                <span class="ing-name">${ing.item}</span>
-                <span class="ing-amount">${ing.amount} ${ing.unit}</span>
+                <span class="ing-name">${esc(ing.item)}</span>
+                <span class="ing-amount">${esc(ing.amount)} ${esc(ing.unit)}</span>
               </li>
             `).join('')}
           </ul>
@@ -6200,10 +6224,10 @@ function renderToday() {
           </ol>
         </div>
         <div class="meal-actions">
-          <button class="meal-action-btn ${isFav?'fav active':'fav'}" onclick="toggleFav('${m.id}')">
+          <button class="meal-action-btn ${isFav?'fav active':'fav'}" onclick="toggleFav('${sid(m.id)}')">
             ${isFav ? T('isFavourite') : T('favourite')}
           </button>
-          <button class="meal-action-btn" onclick="openSwap('${slot.key}','${dt}')">${T('swap')}</button>
+          <button class="meal-action-btn" onclick="openSwap('${sid(slot.key)}','${sid(dt)}')">${T('swap')}</button>
         </div>
       </div>
     </div>`;
@@ -6225,7 +6249,7 @@ function renderToday() {
       <div class="view-sub" style="margin-bottom:12px;">${T('manualMeals')}</div>`;
     
     manualMeals.forEach(meal => {
-      const mealId = `mm-${meal.id}`;
+      const mealId = `mm-${sid(meal.id)}`;
       const isMultiCourse = meal.questionnaire.courses && meal.questionnaire.courses.length > 1;
       const courseCount = meal.questionnaire.courses ? meal.questionnaire.courses.length : 1;
       
@@ -6234,7 +6258,7 @@ function renderToday() {
       if (isMultiCourse && meal.questionnaire.courses) {
         courseSummary = meal.questionnaire.courses.map((c, idx) => {
           const cMacros = estimateMealMacros(c);
-          return `${c.mealName || `Course ${idx + 1}`} (${cMacros.kcal}kcal)`;
+          return `${esc(c.mealName || `Course ${idx + 1}`)} (${esc(cMacros.kcal)}kcal)`;
         }).join(' • ');
       }
       
@@ -6243,26 +6267,26 @@ function renderToday() {
         <div style="display:flex; align-items:center; gap:10px; padding:12px; cursor:pointer;" onclick="toggleMealDetail('${mealId}')">
           <div style="flex:1; min-width:0;">
             <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px;">
-              <div style="font-weight:600; color:var(--t1);">${meal.mealName}</div>
+              <div style="font-weight:600; color:var(--t1);">${esc(meal.mealName)}</div>
               ${isMultiCourse ? `<span style="font-size:10px; background:var(--ac); color:#fff; padding:2px 6px; border-radius:12px; font-weight:600;">${courseCount} courses</span>` : ''}
             </div>
-            <div style="font-size:11px; color:var(--ac); font-weight:600; margin-bottom:2px;">${T(meal.mealType || 'lunch')}</div>
+            <div style="font-size:11px; color:var(--ac); font-weight:600; margin-bottom:2px;">${esc(T(meal.mealType || 'lunch'))}</div>
             ${isMultiCourse ? `<div style="font-size:10px; color:var(--t3); margin-bottom:4px;">${courseSummary}</div>` : ''}
             <div style="color:var(--t2); font-size:12px;">
-              <span style="margin-right:16px;">${meal.macros.kcal} kcal</span>
-              <span style="color:#8B5CF6; margin-right:8px;">● ${meal.macros.protein}g</span>
-              <span style="color:#F59E0B; margin-right:8px;">● ${meal.macros.carbs}g</span>
-              <span style="color:#EF4444;">● ${meal.macros.fat}g</span>
+              <span style="margin-right:16px;">${esc(meal.macros.kcal)} kcal</span>
+              <span style="color:#8B5CF6; margin-right:8px;">● ${esc(meal.macros.protein)}g</span>
+              <span style="color:#F59E0B; margin-right:8px;">● ${esc(meal.macros.carbs)}g</span>
+              <span style="color:#EF4444;">● ${esc(meal.macros.fat)}g</span>
             </div>
           </div>
           <div style="display:flex; gap:6px; flex-direction:column; align-items:flex-end;">
             <button class="meal-expand-btn" style="color:var(--t3); font-size:16px; padding:4px; background:none; border:none; cursor:pointer;">⌄</button>
             <div style="display:flex; gap:6px;">
-              <button onclick="editManualMeal('${dateStr(S.viewDate)}', '${meal.id}'); event.stopPropagation();" style="
+              <button onclick="editManualMeal('${sid(dateStr(S.viewDate))}', '${sid(meal.id)}'); event.stopPropagation();" style="
                 padding:4px 8px; background:var(--ac); border:none; border-radius:4px;
                 color:#fff; font-size:11px; cursor:pointer; white-space:nowrap;
               ">✎ Edit</button>
-              <button onclick="deleteManualMeal('${dateStr(S.viewDate)}', '${meal.id}'); event.stopPropagation();" style="
+              <button onclick="deleteManualMeal('${sid(dateStr(S.viewDate))}', '${sid(meal.id)}'); event.stopPropagation();" style="
                 padding:4px 8px; background:#EF4444; border:none; border-radius:4px;
                 color:#fff; font-size:11px; cursor:pointer; white-space:nowrap;
               ">✕ Delete</button>
@@ -6277,10 +6301,10 @@ function renderToday() {
               <strong>${T('foodType')}:</strong> ${T(meal.questionnaire.foodType || 'other')}
             </div>
             ${meal.questionnaire.protein !== null ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('protein')}:</strong> ${T(meal.questionnaire.protein === 'separate' ? 'proteinSourceSeparate' : meal.questionnaire.protein === 'mixed' ? 'proteinSourceMixed' : 'proteinSourceNo')}</div>` : ''}
-            ${meal.questionnaire.cookingMethod ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('cookingMethod')}:</strong> ${meal.questionnaire.cookingMethod}</div>` : ''}
-            ${meal.questionnaire.portionSize ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('portionSize')}:</strong> ${meal.questionnaire.portionSize}</div>` : ''}
-            ${meal.questionnaire.additions.length > 0 ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('additions')}:</strong> ${meal.questionnaire.additions.join(', ')}</div>` : ''}
-            ${meal.questionnaire.garnish.length > 0 ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('garnish')}:</strong> ${meal.questionnaire.garnish.map(g => typeof g === 'string' ? g : g.type).join(', ')}</div>` : ''}
+            ${meal.questionnaire.cookingMethod ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('cookingMethod')}:</strong> ${esc(meal.questionnaire.cookingMethod)}</div>` : ''}
+            ${meal.questionnaire.portionSize ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('portionSize')}:</strong> ${esc(meal.questionnaire.portionSize)}</div>` : ''}
+            ${meal.questionnaire.additions.length > 0 ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('additions')}:</strong> ${esc(meal.questionnaire.additions.join(', '))}</div>` : ''}
+            ${meal.questionnaire.garnish.length > 0 ? `<div style="font-size:11px; color:var(--t3); margin-bottom:6px;"><strong>${T('garnish')}:</strong> ${esc(meal.questionnaire.garnish.map(g => typeof g === 'string' ? g : g.type).join(', '))}</div>` : ''}
           ` : `
             <div style="font-size:12px; font-weight:600; color:var(--ac); margin-bottom:10px;">🍽️ ${courseCount}-Course Meal</div>
             ${meal.questionnaire.courses.map((course, idx) => {
@@ -6289,7 +6313,7 @@ function renderToday() {
               <div style="background:var(--s1); padding:10px; border-radius:6px; margin-bottom:8px; border-left:3px solid var(--ac);">
                 <div onclick="toggleCourseDetail('${mealId}-c${idx}')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
                   <div style="font-weight:600; color:var(--t1); font-size:12px;">
-                    ${course.mealName || `Course ${idx + 1}`}
+                    ${esc(course.mealName || `Course ${idx + 1}`)}
                   </div>
                   <div style="font-size:11px; color:var(--t2);">
                     ${cMacros.kcal}kcal
@@ -6303,16 +6327,16 @@ function renderToday() {
                     <div>🫒 <strong>${T('fat')}:</strong> <span style="color:#EF4444;">${cMacros.fat}g</span></div>
                     <div>🔥 <strong>Kcal:</strong> <span style="color:var(--ac);">${cMacros.kcal}</span></div>
                   </div>
-                  ${course.foodType ? `<div style="font-size:10px; color:var(--t3); margin-top:6px;"><strong>${T('foodType')}:</strong> ${T(course.foodType)}</div>` : ''}
-                  ${course.cookingMethod ? `<div style="font-size:10px; color:var(--t3);"><strong>${T('cookingMethod')}:</strong> ${course.cookingMethod}</div>` : ''}
-                  ${course.portionSize ? `<div style="font-size:10px; color:var(--t3);"><strong>${T('portionSize')}:</strong> ${course.portionSize}</div>` : ''}
+                  ${course.foodType ? `<div style="font-size:10px; color:var(--t3); margin-top:6px;"><strong>${T('foodType')}:</strong> ${esc(T(course.foodType))}</div>` : ''}
+                  ${course.cookingMethod ? `<div style="font-size:10px; color:var(--t3);"><strong>${T('cookingMethod')}:</strong> ${esc(course.cookingMethod)}</div>` : ''}
+                  ${course.portionSize ? `<div style="font-size:10px; color:var(--t3);"><strong>${T('portionSize')}:</strong> ${esc(course.portionSize)}</div>` : ''}
                 </div>
               </div>
               `;
             }).join('')}
           `}
           
-          ${meal.notes ? `<div style="font-size:11px; color:var(--t3); margin-top:12px; padding-top:12px; border-top:1px solid var(--b1);"><strong>${T('notesLabel')}:</strong> ${meal.notes}</div>` : ''}
+          ${meal.notes ? `<div style="font-size:11px; color:var(--t3); margin-top:12px; padding-top:12px; border-top:1px solid var(--b1);"><strong>${T('notesLabel')}:</strong> ${esc(meal.notes)}</div>` : ''}
           <div style="font-size:10px; color:var(--t3); margin-top:8px; padding-top:8px; border-top:1px solid var(--b1);">
             Confidence: ${Math.round(meal.macros.confidence * 100)}%
           </div>
@@ -7646,9 +7670,9 @@ function openSwap(slotKey, dt) {
   const day = PLAN.generateDay(dt, S.profile.goal, S.profile.favourites || []);
   const currentId = log.swaps[slotKey] || day[slotKey]?.id;
   const html = pool.map(m => `
-    <div class="swap-option ${m.id === currentId ? 'active':''}" onclick="doSwap('${m.id}')">
+    <div class="swap-option ${m.id === currentId ? 'active':''}" onclick="doSwap('${sid(m.id)}')">
       <div style="flex:1">
-        <div class="swap-option-name">${getMealDisplayName(m.id) || m.name} ${m.id === currentId ? '✓':''}</div>
+        <div class="swap-option-name">${esc(getMealDisplayName(m.id) || m.name)} ${m.id === currentId ? '✓':''}</div>
         <div style="font-size:11px;color:var(--t3);margin-top:2px">
           <span style="color:#8B5CF6">${m.protein}g P</span> &nbsp;
           <span style="color:#F59E0B">${m.carbs}g C</span> &nbsp;
@@ -7711,7 +7735,7 @@ function renderWeek() {
     const col = pct === 100 ? 'var(--ac)' : pct >= 60 ? 'var(--carb)' : 'var(--t3)';
     dayCards += `
     <div class="week-day-card ${isToday?'today':''} ${pct===100?'complete':''}"
-         onclick="S.viewDate='${day.date}';navigate('today')">
+         onclick="S.viewDate='${sid(day.date)}';navigate('today')">
       <div class="wday-name">${dayNames[i]}</div>
       <div class="wday-num" style="color:${isToday?'var(--ac)':'var(--t1)'}">${parseInt(day.date.slice(8))}</div>
       <div class="wday-pct" style="color:${col}">${done}/5</div>
@@ -7745,7 +7769,7 @@ function renderWeek() {
       .filter(sl => log.completed.includes(sl.key))
       .reduce((a,sl) => a + sl.meal.cal, 0);
     // Manual meals
-    const manualCal = manualMeals.reduce((a, m) => a + (m.macros?.kcal || 0), 0);
+    const manualCal = manualMeals.reduce((a, m) => a + (Number(m.macros?.kcal) || 0), 0);
     return s + plannedCal + manualCal;
   }, 0);
   const weekCost = days.reduce((s,day) => {
@@ -7827,7 +7851,7 @@ function renderMonth() {
     if (!isFuture && done === 5) cls += ' done-full';
     else if (!isFuture && done > 0) cls += ' done-partial';
     const dotCol = isFuture ? 'var(--b2)' : done === 5 ? 'var(--ac)' : done > 0 ? 'var(--carb)' : 'var(--b2)';
-    cal += `<div class="${cls}" onclick="S.viewDate='${ds}';navigate('today')">
+    cal += `<div class="${cls}" onclick="S.viewDate='${sid(ds)}';navigate('today')">
       <div class="cal-day-num">${d}</div>
       <div class="cal-day-dot" style="background:${dotCol}"></div>
     </div>`;
@@ -8059,8 +8083,8 @@ function renderProgress() {
       delta = `<span class="wlog-delta ${col}">${diff > 0 ? '+':''}${diff.toFixed(1)} kg</span>`;
     }
     return `<div class="wlog-entry">
-      <div><div class="wlog-date">${fmtDate(e.date)}</div>${e.note?`<div style="font-size:11px;color:var(--t3)">${e.note}</div>`:''}</div>
-      <div style="display:flex;align-items:center;gap:8px"><div class="wlog-weight">${e.weight} kg</div>${delta}</div>
+      <div><div class="wlog-date">${fmtDate(e.date)}</div>${e.note?`<div style="font-size:11px;color:var(--t3)">${esc(e.note)}</div>`:''}</div>
+      <div style="display:flex;align-items:center;gap:8px"><div class="wlog-weight">${esc(e.weight)} kg</div>${delta}</div>
     </div>`;
   }).join('');
 
@@ -8082,7 +8106,7 @@ function renderProgress() {
 
   document.getElementById('view').innerHTML = `
     <div class="view-title">📈 ${T('progressTitle').slice(3)}</div>
-    <div class="view-sub">${p.name ? p.name + ' · ' : ''}${goalLabels[p.goal]}</div>
+    <div class="view-sub">${p.name ? esc(p.name) + ' · ' : ''}${esc(goalLabels[p.goal])}</div>
     
     <!-- WEEKLY SNAPSHOT -->
     <div class="chart-title" style="margin-top:20px; margin-bottom:12px;">📊 This Week's Snapshot</div>
@@ -8119,7 +8143,7 @@ function renderProgress() {
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
         <div style="background:var(--sf); padding:12px; border-radius:8px;">
           <div style="font-size:12px; color:var(--t3);">Target Daily</div>
-          <div style="font-size:20px; font-weight:bold; color:var(--t1); margin-top:4px;">${p.calories} kcal</div>
+          <div style="font-size:20px; font-weight:bold; color:var(--t1); margin-top:4px;">${esc(p.calories)} kcal</div>
         </div>
         <div style="background:var(--sf); padding:12px; border-radius:8px;">
           <div style="font-size:12px; color:var(--t3);">Your Average</div>
@@ -8140,7 +8164,7 @@ function renderProgress() {
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
         <div style="background:var(--sf); padding:12px; border-radius:8px;">
           <div style="font-size:12px; color:var(--t3);">Target Daily</div>
-          <div style="font-size:20px; font-weight:bold; color:var(--t1); margin-top:4px;">${p.calories} kcal</div>
+          <div style="font-size:20px; font-weight:bold; color:var(--t1); margin-top:4px;">${esc(p.calories)} kcal</div>
         </div>
         <div style="background:var(--sf); padding:12px; border-radius:8px;">
           <div style="font-size:12px; color:var(--t3);">Your Average</div>
@@ -8179,9 +8203,9 @@ function renderProgress() {
     <!-- CURRENT STATS (keep existing) -->
     <div class="stat-cards">
       <div class="stat-card">
-        <div class="cal-num">${p.weight}<span style="font-size:16px;color:var(--t3)"> kg</span></div>
+        <div class="cal-num">${esc(p.weight)}<span style="font-size:16px;color:var(--t3)"> kg</span></div>
         <div class="stat-card-lbl">${T('currentWeight')}</div>
-        <div class="stat-card-sub">${T('targetWeight')}: ${p.targetWeight} kg</div>
+        <div class="stat-card-sub">${T('targetWeight')}: ${esc(p.targetWeight)} kg</div>
       </div>
       <div class="stat-card">
         <div class="cal-num">${bmi}</div>
@@ -8189,7 +8213,7 @@ function renderProgress() {
         <div class="stat-card-sub" style="color:${bmiLbl==='Healthy'?'var(--ac)':'var(--carb)'}">${bmiLbl}</div>
       </div>
       <div class="stat-card">
-        <div class="cal-num">${p.calories}</div>
+        <div class="cal-num">${esc(p.calories)}</div>
         <div class="stat-card-lbl">${T('dailyTarget')}</div>
         <div class="stat-card-sub">${T('kcalPerDay')}</div>
       </div>
@@ -8612,10 +8636,10 @@ function renderGrocery() {
         <div class="grocery-item ${isChecked?'checked':''}" onclick="toggleGrocery('${storageKey}','${ing.key}')">
           <div class="gi-check ${isChecked?'on':''}">✓</div>
           <div>
-            <div class="gi-name">${ing.displayName || ing.item}</div>
+            <div class="gi-name">${esc(ing.displayName || ing.item)}</div>
             ${renderCycleHighlightBadges(displayHighlights)}
           </div>
-          <div class="gi-quantity">${amt} ${ing.unit}</div>
+          <div class="gi-quantity">${esc(amt)} ${esc(ing.unit)}</div>
           <div class="gi-price">€${cost.toFixed(2)}</div>
         </div>`;
       });
@@ -8708,7 +8732,7 @@ function renderSettings() {
       ].map(r => `
         <div class="settings-row">
           <span class="settings-label">${r.label}</span>
-          <span class="settings-val">${r.val}</span>
+          <span class="settings-val">${esc(r.val)}</span>
         </div>
       `).join('')}
     </div>
@@ -8726,7 +8750,7 @@ function renderSettings() {
       ].map(r => `
         <div class="settings-row">
           <span class="settings-label">${r.label}</span>
-          <span class="settings-val">${r.val}</span>
+          <span class="settings-val">${esc(r.val)}</span>
         </div>
       `).join('')}
     </div>
@@ -8741,7 +8765,7 @@ function renderSettings() {
       ].map(r => `
         <div class="settings-row">
           <span class="settings-label">${r.label}</span>
-          <span class="settings-val">${r.val}</span>
+          <span class="settings-val">${esc(r.val)}</span>
         </div>
       `).join('')}
       <div class="view-sub" style="margin:10px 0 0">${CYCLE.isAvailable(p) ? T('cyclePrivateNote') : T('cycleModeMaleNote')}</div>
@@ -8755,10 +8779,10 @@ function renderSettings() {
         : favMeals.map(meal => `
           <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--s2);border-radius:8px;margin-bottom:6px">
             <div>
-              <div style="font-size:13px;color:var(--t1);font-weight:600">${getMealDisplayName(meal.id) || meal.name}</div>
+              <div style="font-size:13px;color:var(--t1);font-weight:600">${esc(getMealDisplayName(meal.id) || meal.name)}</div>
               <div style="font-size:11px;color:var(--t3);margin-top:2px">${meal.cal} kcal</div>
             </div>
-            <button onclick="removeFavourite('${meal.id}')" style="background:none;border:none;color:#EF4444;cursor:pointer;font-weight:600;padding:4px 8px">${T('removeFav')}</button>
+            <button onclick="removeFavourite('${sid(meal.id)}')" style="background:none;border:none;color:#EF4444;cursor:pointer;font-weight:600;padding:4px 8px">${T('removeFav')}</button>
           </div>
         `).join('')}
     </div>
@@ -8771,10 +8795,10 @@ function renderSettings() {
         : p.mealTemplates.map(template => `
           <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--s2);border-radius:8px;margin-bottom:6px">
             <div>
-              <div style="font-size:13px;color:var(--t1);font-weight:600">${template.name}</div>
-              <div style="font-size:11px;color:var(--t3);margin-top:2px">${T(template.mealType || 'lunch')} • ${template.cal} kcal</div>
+              <div style="font-size:13px;color:var(--t1);font-weight:600">${esc(template.name)}</div>
+              <div style="font-size:11px;color:var(--t3);margin-top:2px">${esc(T(template.mealType || 'lunch'))} • ${esc(template.cal)} kcal</div>
             </div>
-            <button onclick="deleteTemplate('${template.id}')" style="background:none;border:none;color:#EF4444;cursor:pointer;font-weight:600;padding:4px 8px">${T('deleteMeal')}</button>
+            <button onclick="deleteTemplate('${sid(template.id)}')" style="background:none;border:none;color:#EF4444;cursor:pointer;font-weight:600;padding:4px 8px">${T('deleteMeal')}</button>
           </div>
         `).join('')}
     </div>
@@ -9150,6 +9174,14 @@ document.addEventListener('keydown', e => {
     skipMeditation();
   }
 });
+
+// Demo notice: this build has no authentication and the Supabase anon key is public by design,
+// so diet_data must not hold real data. Real protection needs Supabase Auth + RLS (see SECURITY.md).
+function dismissDemoBanner() {
+  document.getElementById('demo-banner').classList.add('hidden');
+  try { sessionStorage.setItem('demo-banner-dismissed', '1'); } catch (_) {}
+}
+try { if (sessionStorage.getItem('demo-banner-dismissed') === '1') document.getElementById('demo-banner').classList.add('hidden'); } catch (_) {}
 
 init();
 </script>
